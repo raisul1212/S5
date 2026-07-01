@@ -584,6 +584,13 @@ def train_step(state,
     setting), the intrinsic loss is computed but contributes 0 to the
     total loss -- it is logged only.  Vanilla S5SSM never calls sow
     so the intermediates dict has no intrinsic_loss entries either way.
+
+    Returns:
+        state:           updated TrainState
+        loss:            total loss = task_loss + lambda_pc * intrinsic_total
+        task_loss:       pure CE loss (for telemetry, no gradient consumer)
+        intrinsic_total: sum over blocks of mean(||eps||^2) (0 for vanilla S5)
+        per_block:       dict {"layers_i": scalar_L_int} (empty for vanilla S5)
     """
     def loss_fn(params):
 
@@ -604,19 +611,26 @@ def train_step(state,
 
         task_loss = np.mean(cross_entropy_loss(logits, batch_labels))
 
-        # MambinoSSM's intrinsic loss aggregation.  No-op for vanilla S5.
-        intrinsic_total = _sum_intrinsic_losses(mod_vars.get("intermediates", {}))
+        # MambinoSSM's intrinsic loss: per-block breakdown for telemetry,
+        # summed for the gradient consumer.  Empty dict for vanilla S5.
+        per_block = _collect_intrinsic_per_block(
+            mod_vars.get("intermediates", {}))
+        if per_block:
+            intrinsic_total = sum(per_block.values())
+        else:
+            intrinsic_total = np.float32(0.0)
         total_loss = task_loss + lambda_pc * intrinsic_total
 
-        return total_loss, (mod_vars, logits)
+        return total_loss, (mod_vars, logits, task_loss, intrinsic_total, per_block)
 
-    (loss, (mod_vars, logits)), grads = jax.value_and_grad(loss_fn, has_aux=True)(state.params)
+    (loss, (mod_vars, logits, task_loss, intrinsic_total, per_block)), grads = \
+        jax.value_and_grad(loss_fn, has_aux=True)(state.params)
 
     if batchnorm:
         state = state.apply_gradients(grads=grads, batch_stats=mod_vars["batch_stats"])
     else:
         state = state.apply_gradients(grads=grads)
-    return state, loss
+    return state, loss, task_loss, intrinsic_total, per_block
 
 
 @partial(jax.jit, static_argnums=(4, 5))
