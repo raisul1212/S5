@@ -162,10 +162,18 @@ def create_train_state(model_cls,
                            dummy_input, integration_timesteps,
                            )
     if batchnorm:
-        params = variables["params"].unfreeze()
+        # Flax >= 0.8 returns plain dict, not FrozenDict; .unfreeze() only
+        # exists on the legacy FrozenDict.  Use flax.core.unfreeze() which
+        # accepts either and returns a plain dict either way.
+        from flax.core import unfreeze as _unfreeze
+        params = _unfreeze(variables["params"])
         batch_stats = variables["batch_stats"]
     else:
-        params = variables["params"].unfreeze()
+        # Flax >= 0.8 returns plain dict, not FrozenDict; .unfreeze() only
+        # exists on the legacy FrozenDict.  Use flax.core.unfreeze() which
+        # accepts either and returns a plain dict either way.
+        from flax.core import unfreeze as _unfreeze
+        params = _unfreeze(variables["params"])
         # Note: `unfreeze()` is for using Optax.
 
     if opt_config in ["standard"]:
