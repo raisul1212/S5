@@ -7,7 +7,7 @@ import wandb
 
 from .train_helpers import create_train_state, reduce_lr_on_plateau,\
     linear_warmup, cosine_annealing, constant_lr, train_epoch, validate,\
-    save_checkpoint
+    save_checkpoint, compute_predictor_frobenius
 from .dataloading import Datasets
 from .seq_model import BatchClassificationModel, RetrievalModel
 from .ssm import init_S5SSM
@@ -206,15 +206,57 @@ def train(args):
         lr_params = (decay_function, ssm_lr, lr, step, end_step, args.opt_config, args.lr_min)
 
         train_rng, skey = random.split(train_rng)
-        state, train_loss, step = train_epoch(state,
-                                              skey,
-                                              model_cls,
-                                              trainloader,
-                                              seq_len,
-                                              in_dim,
-                                              args.batchnorm,
-                                              lr_params,
-                                              lambda_pc=getattr(args, 'lambda_pc', 0.0))
+        state, train_loss, step, epoch_metrics = train_epoch(
+            state,
+            skey,
+            model_cls,
+            trainloader,
+            seq_len,
+            in_dim,
+            args.batchnorm,
+            lr_params,
+            lambda_pc=getattr(args, 'lambda_pc', 0.0),
+        )
+
+        # ── Mambino-style predictor-pathway telemetry ──
+        # Format matches ncb/v04_train.py:1889-1897:
+        #   E{epoch} ... intr {L_int:.4f}  W_eps {mean:.4f}  C_s {mean:.4f}
+        # Adds B_s (predictor-input) frobenius + per-block L_int space-string.
+        # No-op for vanilla S5 (empty per_block dict; Frobenius dict lacks
+        # predictor keys -> Nones, gracefully skipped).
+        per_block_L_int = epoch_metrics.get("per_block_L_int", {})
+        intrinsic_eval = epoch_metrics.get("intrinsic_loss", 0.0)
+        task_loss_epoch = epoch_metrics.get("task_loss", float(train_loss))
+        frob_report = compute_predictor_frobenius(state.params)
+        # Aggregate mean-across-blocks for the print line
+        def _mean_across(key):
+            vals = [b[key] for b in frob_report.values() if key in b]
+            return (sum(vals) / len(vals)) if vals else None
+        weps_frob_mean = _mean_across("W_eps")
+        cs_frob_mean = _mean_across("C_s")
+        bs_frob_mean = _mean_across("B_s")
+        b_frob_mean = _mean_across("B")
+        weps_over_b_mean = _mean_across("W_eps_over_B")
+        # Per-block L_int as space-separated string (sorted by layer index)
+        if per_block_L_int:
+            sorted_items = sorted(
+                per_block_L_int.items(),
+                key=lambda kv: int(kv[0].split("_")[-1]))
+            block_intrinsics_str = " ".join(f"{v:.4g}" for _, v in sorted_items)
+        else:
+            block_intrinsics_str = ""
+        if intrinsic_eval > 0 or weps_frob_mean is not None:
+            def _fmt(x):
+                return f"{x:.4f}" if x is not None else "n/a"
+            print(
+                f"[Mambino] E{epoch + 1}  task {task_loss_epoch:.4f}  "
+                f"intr {intrinsic_eval:.4f}  "
+                f"W_eps {_fmt(weps_frob_mean)}  C_s {_fmt(cs_frob_mean)}  "
+                f"B_s {_fmt(bs_frob_mean)}  B {_fmt(b_frob_mean)}  "
+                f"W_eps/B {_fmt(weps_over_b_mean)}"
+            )
+            if block_intrinsics_str:
+                print(f"[Mambino] E{epoch + 1}  per_block_L_int: {block_intrinsics_str}")
 
         if valloader is not None:
             print(f"[*] Running Epoch {epoch + 1} Validation...")
@@ -372,6 +414,36 @@ def train(args):
         wandb.run.summary["Best Epoch"] = best_epoch
         wandb.run.summary["Best Test Loss"] = best_test_loss
         wandb.run.summary["Best Test Accuracy"] = best_test_acc
+
+        # ── Mambino predictor-pathway telemetry to wandb ──
+        # Log aggregates + per-block breakdown so we can plot L_int(l, epoch)
+        # and Frobenius trajectories across epochs.  All keys namespaced
+        # under "mambino/" for easy filtering.
+        if intrinsic_eval > 0 or weps_frob_mean is not None:
+            mambino_log = {
+                "mambino/task_loss": task_loss_epoch,
+                "mambino/intrinsic_loss": intrinsic_eval,
+            }
+            if weps_frob_mean is not None:
+                mambino_log["mambino/W_eps_frob_mean"] = weps_frob_mean
+            if cs_frob_mean is not None:
+                mambino_log["mambino/C_s_frob_mean"] = cs_frob_mean
+            if bs_frob_mean is not None:
+                mambino_log["mambino/B_s_frob_mean"] = bs_frob_mean
+            if b_frob_mean is not None:
+                mambino_log["mambino/B_frob_mean"] = b_frob_mean
+            if weps_over_b_mean is not None:
+                mambino_log["mambino/W_eps_over_B_mean"] = weps_over_b_mean
+            # Per-block L_int
+            for lk, v in per_block_L_int.items():
+                mambino_log[f"mambino/L_int/{lk}"] = float(v)
+            # Per-block Frobenius (predictor-branch matrices only)
+            for lk, sub in frob_report.items():
+                for pkey in ("B_s", "C_s", "W_eps",
+                             "Lambda_s_abs", "W_eps_over_B"):
+                    if pkey in sub:
+                        mambino_log[f"mambino/frob/{lk}/{pkey}"] = sub[pkey]
+            wandb.log(mambino_log)
 
         # ── Save FINAL checkpoint every epoch (overwrites previous).  ──
         # This guarantees that on early-stop / SLURM timeout / crash we

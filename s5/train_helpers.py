@@ -385,17 +385,26 @@ def train_epoch(state, rng, model, trainloader, seq_len, in_dim, batchnorm, lr_p
 
     `lambda_pc` scales MambinoSSM's intrinsic predictive-coding loss.
     Default 0.0 -> harmless for vanilla S5.
+
+    Returns (state, mean_total_loss, step, epoch_metrics) where
+    epoch_metrics is a dict:
+      { "task_loss": float, "intrinsic_loss": float,
+        "per_block_L_int": {"layers_0": float, ..., "layers_{L-1}": float} }
+    Empty dict for vanilla S5 (no sows).
     """
     # Store Metrics
     model = model(training=True)
     batch_losses = []
+    batch_task_losses = []
+    batch_intrinsic_totals = []
+    per_block_accum = {}  # {layer_key: [values across batches]}
 
     decay_function, ssm_lr, lr, step, end_step, opt_config, lr_min = lr_params
 
     for batch_idx, batch in enumerate(tqdm(trainloader)):
         inputs, labels, integration_times = prep_batch(batch, seq_len, in_dim)
         rng, drop_rng = jax.random.split(rng)
-        state, loss = train_step(
+        state, loss, task_loss, intrinsic_total, per_block = train_step(
             state,
             drop_rng,
             inputs,
@@ -406,11 +415,24 @@ def train_epoch(state, rng, model, trainloader, seq_len, in_dim, batchnorm, lr_p
             float(lambda_pc),
         )
         batch_losses.append(loss)
+        batch_task_losses.append(task_loss)
+        batch_intrinsic_totals.append(intrinsic_total)
+        for k, v in per_block.items():
+            per_block_accum.setdefault(k, []).append(v)
         lr_params = (decay_function, ssm_lr, lr, step, end_step, opt_config, lr_min)
         state, step = update_learning_rate_per_step(lr_params, state)
 
+    per_block_mean = {
+        k: float(np.mean(np.array(v)))
+        for k, v in per_block_accum.items()
+    }
+    epoch_metrics = {
+        "task_loss": float(np.mean(np.array(batch_task_losses))),
+        "intrinsic_loss": float(np.mean(np.array(batch_intrinsic_totals))),
+        "per_block_L_int": per_block_mean,
+    }
     # Return average loss over batches
-    return state, np.mean(np.array(batch_losses)), step
+    return state, np.mean(np.array(batch_losses)), step, epoch_metrics
 
 
 def validate(state, model, testloader, seq_len, in_dim, batchnorm, step_rescale=1.0):
@@ -452,6 +474,96 @@ def _sum_intrinsic_losses(intermediates):
         elif isinstance(val, dict):
             total = total + _sum_intrinsic_losses(val)
     return total
+
+
+def _collect_intrinsic_per_block(intermediates):
+    """Walk intermediates pytree; key each `intrinsic_loss` scalar by its
+    containing block ID (path segment matching r"layers_\\d+").
+
+    Returns dict {"layers_0": scalar_jnp, ..., "layers_{L-1}": scalar_jnp}
+    with STATIC keys (fixed across jit traces because model layer count
+    is fixed).  Empty dict for vanilla S5 (no sows) -> compiled-through
+    empty pytree, downstream sum() returns Python 0.
+    """
+    result = {}
+
+    def _walk(node, current_layer=None):
+        if not isinstance(node, dict):
+            return
+        for k, v in node.items():
+            if k == "intrinsic_loss":
+                if current_layer is not None:
+                    val = v[0] if isinstance(v, tuple) else v
+                    result[current_layer] = np.mean(val)
+            else:
+                next_layer = k if k.startswith("layers_") else current_layer
+                _walk(v, current_layer=next_layer)
+
+    _walk(intermediates)
+    return result
+
+
+def compute_predictor_frobenius(params):
+    """Read state.params, compute Frobenius norms of Mambino's predictor
+    branch matrices (B_s, C_s, W_eps) + main-branch reference norms (B, C1/C2)
+    + |Lambda_s|/|Lambda| magnitude per block.
+
+    Returns dict keyed by block:
+      {"layers_0": {"B_s": float, "C_s": float, "W_eps": float,
+                    "Lambda_s_abs": float,
+                    "B": float, "C1": float, "C2": float,
+                    "Lambda_abs": float,
+                    "W_eps_over_B": float},
+       ...}
+
+    W_eps_over_B is the ratio ||W_eps||_F / ||B||_F — the primary
+    "how much is the PC pathway carrying vs the direct input" metric.
+    If W_eps_over_B stays near 0 across epochs, the predictor branch
+    is inert.  If it grows meaningfully, the PC path is being used.
+
+    For vanilla S5 (no predictor params), returned dict just has main
+    B/C1/C2/Lambda entries — safe no-op-ish.
+    """
+    result = {}
+
+    def _walk(node, current_layer=None):
+        if not isinstance(node, dict):
+            return
+        for k, v in node.items():
+            if k.startswith("layers_"):
+                _walk(v, current_layer=k)
+                continue
+            if isinstance(v, dict):
+                _walk(v, current_layer=current_layer)
+                continue
+            if current_layer is None:
+                continue
+            # v is a leaf param array
+            if k in ("B", "C1", "C2", "C", "B_s", "C_s", "W_eps",
+                     "Lambda_re", "Lambda_im",
+                     "Lambda_s_re", "Lambda_s_im"):
+                arr = jax.device_get(v)
+                import numpy as onp
+                frob = float(onp.sqrt(onp.sum(onp.asarray(arr) ** 2)))
+                result.setdefault(current_layer, {})[k] = frob
+
+    _walk(params)
+
+    # Post-process: combine Lambda_re/Lambda_im -> |Lambda|,
+    # Lambda_s_re/Lambda_s_im -> |Lambda_s|, and compute ratio.
+    import numpy as onp
+    for lk, sub in result.items():
+        lre = sub.pop("Lambda_re", 0.0)
+        lim = sub.pop("Lambda_im", 0.0)
+        sub["Lambda_abs"] = float(onp.sqrt(lre * lre + lim * lim))
+        lsre = sub.pop("Lambda_s_re", 0.0)
+        lsim = sub.pop("Lambda_s_im", 0.0)
+        sub["Lambda_s_abs"] = float(onp.sqrt(lsre * lsre + lsim * lsim))
+        # W_eps over B ratio (primary "PC path activity" metric)
+        b_norm = sub.get("B", 0.0)
+        w_norm = sub.get("W_eps", 0.0)
+        sub["W_eps_over_B"] = float(w_norm / b_norm) if b_norm > 0 else 0.0
+    return result
 
 
 @partial(jax.jit, static_argnums=(5, 6, 7))

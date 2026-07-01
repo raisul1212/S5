@@ -53,7 +53,7 @@ echo "Checkpoints: $CKPT_DIR"
 
 python -u run_train.py \
     --use_mambino_ssm=True \
-    --lambda_pc=0.0 \
+    --lambda_pc=0.1 \
     --ckpt_dir="$CKPT_DIR" \
     \
     --C_init=lecun_normal --activation_fn=half_glu2 --batchnorm=True \
