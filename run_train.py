@@ -98,4 +98,28 @@ if __name__ == "__main__":
 	parser.add_argument("--jax_seed", type=int, default=1919,
 						help="seed randomness")
 
+	# ── MambinoSSM extension (drop-in replacement for S5SSM) ──
+	parser.add_argument("--use_mambino_ssm", type=str2bool, default=False,
+						help="If True, replace S5SSM with MambinoSSM "
+							 "(adds proprioceptive predictor branch + "
+							 "W_eps additive PC path).  All other S5 "
+							 "machinery is unchanged.  Default False = "
+							 "vanilla S5.")
+	parser.add_argument("--lambda_pc", type=float, default=0.0,
+						help="Weight on MambinoSSM's intrinsic loss "
+							 "(L_int = mean ||eps||^2 summed across "
+							 "blocks).  Added to task CE: "
+							 "total = task_CE + lambda_pc * L_int.  "
+							 "Default 0.0 = predictor branch is "
+							 "architecturally active but no separate "
+							 "prediction-quality gradient.  Matches "
+							 "the 0.4965 Mambino hero recipe.  "
+							 "Ignored when --use_mambino_ssm=False.")
+	parser.add_argument("--ckpt_dir", type=str, default="",
+						help="Directory for best.pkl + final.pkl "
+							 "checkpoints.  Empty = do not save "
+							 "(preserves original S5 behavior).  "
+							 "Recommended: set to a per-run output "
+							 "directory so reload is possible.")
+
 	train(parser.parse_args())

@@ -1,4 +1,6 @@
 from functools import partial
+import os
+import pickle
 import jax
 import jax.numpy as np
 from jax.nn import one_hot
@@ -6,6 +8,34 @@ from tqdm import tqdm
 from flax.training import train_state
 import optax
 from typing import Any, Tuple
+
+
+def save_checkpoint(state, path, epoch, test_acc, test_loss,
+                    args_dict=None, batchnorm=False):
+    """Save a checkpoint atomically (write tmp, rename) containing model
+    params, optimizer state, BN stats (if applicable), epoch, test_acc,
+    test_loss, and a snapshot of args.  Pickle format -- compatible with
+    Flax train_state; minimal external dependencies (no orbax pin).
+
+    S5's original train.py saves NOTHING; this helper is added so we
+    can reload + extend training (the equivalent of NCB's --init-from).
+    """
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    ckpt = {
+        "epoch": int(epoch),
+        "test_acc": float(test_acc),
+        "test_loss": float(test_loss),
+        "params": jax.device_get(state.params),
+        "opt_state": jax.device_get(state.opt_state),
+        "step": int(state.step),
+        "args": args_dict or {},
+    }
+    if batchnorm and hasattr(state, "batch_stats"):
+        ckpt["batch_stats"] = jax.device_get(state.batch_stats)
+    tmp = path + ".tmp"
+    with open(tmp, "wb") as f:
+        pickle.dump(ckpt, f)
+    os.replace(tmp, path)
 
 
 # LR schedulers
@@ -195,20 +225,32 @@ def create_train_state(model_cls,
         )
 
     elif opt_config in ["BfastandCdecay"]:
-        """This option applies weight decay to both C and B. Note here we apply 
+        """This option applies weight decay to both C and B. Note here we apply
            faster global learning rate to B also.
+
+           Extended to recognize MambinoSSM's predictor branch parameters:
+             - Lambda_s_re, Lambda_s_im, log_step_s -> 'ssm' group (no wd, ssm_lr)
+                                                       same as Lambda_re/im/log_step
+             - B_s -> 'regular' group (with wd, faster lr)
+                      same as B for the main scan
+             - C_s -> 'regular' group (with wd, faster lr)
+                      same as C for the main scan
+             - W_eps -> 'regular' group (with wd, faster lr)
+                        new additive PC matrix; treat as a normal projection
         """
         print("configuring optimization with B in AdamW setup with lr")
         if dt_global:
             ssm_fn = map_nested_fn(
                 lambda k, _: "ssm"
-                if k in ["Lambda_re", "Lambda_im", "norm"]
+                if k in ["Lambda_re", "Lambda_im", "norm",
+                         "Lambda_s_re", "Lambda_s_im"]
                 else ("none" if k in [] else "regular")
             )
         else:
             ssm_fn = map_nested_fn(
                 lambda k, _: "ssm"
-                if k in ["Lambda_re", "Lambda_im", "log_step", "norm"]
+                if k in ["Lambda_re", "Lambda_im", "log_step", "norm",
+                         "Lambda_s_re", "Lambda_s_im", "log_step_s"]
                 else ("none" if k in [] else "regular")
             )
         tx = optax.multi_transform(
@@ -329,9 +371,12 @@ def prep_batch(batch: tuple,
     return full_inputs, targets.astype(float), integration_timesteps
 
 
-def train_epoch(state, rng, model, trainloader, seq_len, in_dim, batchnorm, lr_params):
+def train_epoch(state, rng, model, trainloader, seq_len, in_dim, batchnorm, lr_params, lambda_pc=0.0):
     """
     Training function for an epoch that loops over batches.
+
+    `lambda_pc` scales MambinoSSM's intrinsic predictive-coding loss.
+    Default 0.0 -> harmless for vanilla S5.
     """
     # Store Metrics
     model = model(training=True)
@@ -350,6 +395,7 @@ def train_epoch(state, rng, model, trainloader, seq_len, in_dim, batchnorm, lr_p
             integration_times,
             model,
             batchnorm,
+            float(lambda_pc),
         )
         batch_losses.append(loss)
         lr_params = (decay_function, ssm_lr, lr, step, end_step, opt_config, lr_min)
@@ -373,7 +419,34 @@ def validate(state, model, testloader, seq_len, in_dim, batchnorm, step_rescale=
     return aveloss, aveaccu
 
 
-@partial(jax.jit, static_argnums=(5, 6))
+def _sum_intrinsic_losses(intermediates):
+    """Recursively sum all values stored under 'intrinsic_loss' keys in
+    Flax's intermediates pytree.  MambinoSSM sows one scalar per block
+    via `self.sow('intermediates', 'intrinsic_loss', ...)`; for a
+    StackedEncoderModel with L blocks this yields L scalars.  We sum
+    them so the resulting term `lambda_pc * total_intrinsic` has the
+    same shape as Mambino's native loss: task_CE + lambda_pc * sum_l L_int_l.
+
+    For vanilla S5SSM (no sow call), the intermediates dict has no
+    'intrinsic_loss' entries and this returns 0.0 -> harmless no-op.
+    """
+    total = 0.0
+    if not isinstance(intermediates, dict):
+        return total
+    for key, val in intermediates.items():
+        if key == "intrinsic_loss":
+            # val is a tuple of sown values (Flax stores as tuples)
+            if isinstance(val, tuple):
+                for v in val:
+                    total = total + np.mean(v)
+            else:
+                total = total + np.mean(val)
+        elif isinstance(val, dict):
+            total = total + _sum_intrinsic_losses(val)
+    return total
+
+
+@partial(jax.jit, static_argnums=(5, 6, 7))
 def train_step(state,
                rng,
                batch_inputs,
@@ -381,8 +454,17 @@ def train_step(state,
                batch_integration_timesteps,
                model,
                batchnorm,
+               lambda_pc,
                ):
-    """Performs a single training step given a batch of data"""
+    """Performs a single training step given a batch of data.
+
+    `lambda_pc` (static arg) scales the predictive-coding intrinsic loss
+    aggregated from MambinoSSM's self.sow('intermediates', 'intrinsic_loss', ...)
+    calls.  When lambda_pc == 0.0 (default / S5 baseline / Mambino-hero
+    setting), the intrinsic loss is computed but contributes 0 to the
+    total loss -- it is logged only.  Vanilla S5SSM never calls sow
+    so the intermediates dict has no intrinsic_loss entries either way.
+    """
     def loss_fn(params):
 
         if batchnorm:
@@ -400,9 +482,13 @@ def train_step(state,
                 mutable=["intermediates"],
             )
 
-        loss = np.mean(cross_entropy_loss(logits, batch_labels))
+        task_loss = np.mean(cross_entropy_loss(logits, batch_labels))
 
-        return loss, (mod_vars, logits)
+        # MambinoSSM's intrinsic loss aggregation.  No-op for vanilla S5.
+        intrinsic_total = _sum_intrinsic_losses(mod_vars.get("intermediates", {}))
+        total_loss = task_loss + lambda_pc * intrinsic_total
+
+        return total_loss, (mod_vars, logits)
 
     (loss, (mod_vars, logits)), grads = jax.value_and_grad(loss_fn, has_aux=True)(state.params)
 

@@ -1,15 +1,18 @@
 from functools import partial
+import os
 from jax import random
 import jax.numpy as np
 from jax.scipy.linalg import block_diag
 import wandb
 
 from .train_helpers import create_train_state, reduce_lr_on_plateau,\
-    linear_warmup, cosine_annealing, constant_lr, train_epoch, validate
+    linear_warmup, cosine_annealing, constant_lr, train_epoch, validate,\
+    save_checkpoint
 from .dataloading import Datasets
 from .seq_model import BatchClassificationModel, RetrievalModel
 from .ssm import init_S5SSM
 from .ssm_init import make_DPLR_HiPPO
+from .mambino_ssm import init_MambinoSSM
 
 
 def train(args):
@@ -93,19 +96,38 @@ def train(args):
     print("V.shape={}".format(V.shape))
     print("Vinv.shape={}".format(Vinv.shape))
 
-    ssm_init_fn = init_S5SSM(H=args.d_model,
-                             P=ssm_size,
-                             Lambda_re_init=Lambda.real,
-                             Lambda_im_init=Lambda.imag,
-                             V=V,
-                             Vinv=Vinv,
-                             C_init=args.C_init,
-                             discretization=args.discretization,
-                             dt_min=args.dt_min,
-                             dt_max=args.dt_max,
-                             conj_sym=args.conj_sym,
-                             clip_eigs=args.clip_eigs,
-                             bidirectional=args.bidirectional)
+    # ── Mambino-SSM route: replace S5SSM with MambinoSSM (predictor branch
+    # + additive PC W_eps) when --use_mambino_ssm is set.  Drop-in
+    # compatible signature so all S5 downstream code is unchanged.
+    if getattr(args, 'use_mambino_ssm', False):
+        print("[*] Using MambinoSSM (proprioceptive predictor + W_eps additive PC)")
+        ssm_init_fn = init_MambinoSSM(H=args.d_model,
+                                       P=ssm_size,
+                                       Lambda_re_init=Lambda.real,
+                                       Lambda_im_init=Lambda.imag,
+                                       V=V,
+                                       Vinv=Vinv,
+                                       C_init=args.C_init,
+                                       discretization=args.discretization,
+                                       dt_min=args.dt_min,
+                                       dt_max=args.dt_max,
+                                       conj_sym=args.conj_sym,
+                                       clip_eigs=args.clip_eigs,
+                                       bidirectional=args.bidirectional)
+    else:
+        ssm_init_fn = init_S5SSM(H=args.d_model,
+                                 P=ssm_size,
+                                 Lambda_re_init=Lambda.real,
+                                 Lambda_im_init=Lambda.imag,
+                                 V=V,
+                                 Vinv=Vinv,
+                                 C_init=args.C_init,
+                                 discretization=args.discretization,
+                                 dt_min=args.dt_min,
+                                 dt_max=args.dt_max,
+                                 conj_sym=args.conj_sym,
+                                 clip_eigs=args.clip_eigs,
+                                 bidirectional=args.bidirectional)
 
     if retrieval:
         # Use retrieval head for AAN task
@@ -191,7 +213,8 @@ def train(args):
                                               seq_len,
                                               in_dim,
                                               args.batchnorm,
-                                              lr_params)
+                                              lr_params,
+                                              lambda_pc=getattr(args, 'lambda_pc', 0.0))
 
         if valloader is not None:
             print(f"[*] Running Epoch {epoch + 1} Validation...")
@@ -248,6 +271,19 @@ def train(args):
                 best_test_loss, best_test_acc = test_loss, test_acc
             else:
                 best_test_loss, best_test_acc = best_loss, best_acc
+
+            # ── Save BEST checkpoint on every val-acc improvement ──
+            # Path controlled by --ckpt_dir.  If --ckpt_dir is empty,
+            # skip saving (preserves old S5 behavior).
+            ckpt_dir = getattr(args, 'ckpt_dir', '') or ''
+            if ckpt_dir:
+                best_path = os.path.join(ckpt_dir, "best.pkl")
+                save_checkpoint(state, best_path, epoch=epoch,
+                                test_acc=best_test_acc,
+                                test_loss=best_test_loss,
+                                args_dict=vars(args),
+                                batchnorm=args.batchnorm)
+                print(f"[*] Saved best checkpoint -> {best_path} (test_acc={best_test_acc:.4f})")
 
             # Do some validation on improvement.
             if speech:
@@ -336,6 +372,21 @@ def train(args):
         wandb.run.summary["Best Epoch"] = best_epoch
         wandb.run.summary["Best Test Loss"] = best_test_loss
         wandb.run.summary["Best Test Accuracy"] = best_test_acc
+
+        # ── Save FINAL checkpoint every epoch (overwrites previous).  ──
+        # This guarantees that on early-stop / SLURM timeout / crash we
+        # always have the LAST epoch's state to resume from.  Best ckpt
+        # is saved separately above when val_acc improves.
+        ckpt_dir = getattr(args, 'ckpt_dir', '') or ''
+        if ckpt_dir:
+            final_path = os.path.join(ckpt_dir, "final.pkl")
+            current_test_acc = test_acc if valloader is not None else val_acc
+            current_test_loss = test_loss if valloader is not None else val_loss
+            save_checkpoint(state, final_path, epoch=epoch,
+                            test_acc=current_test_acc,
+                            test_loss=current_test_loss,
+                            args_dict=vars(args),
+                            batchnorm=args.batchnorm)
 
         if count > args.early_stop_patience:
             break
