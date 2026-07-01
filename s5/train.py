@@ -100,7 +100,9 @@ def train(args):
     # + additive PC W_eps) when --use_mambino_ssm is set.  Drop-in
     # compatible signature so all S5 downstream code is unchanged.
     if getattr(args, 'use_mambino_ssm', False):
-        print("[*] Using MambinoSSM (proprioceptive predictor + W_eps additive PC)")
+        bidir_predictor = getattr(args, 'bidir_predictor', False)
+        print(f"[*] Using MambinoSSM (proprioceptive predictor + W_eps additive PC)"
+              f"{' [BIDIRECTIONAL PREDICTOR]' if bidir_predictor else ''}")
         ssm_init_fn = init_MambinoSSM(H=args.d_model,
                                        P=ssm_size,
                                        Lambda_re_init=Lambda.real,
@@ -113,7 +115,8 @@ def train(args):
                                        dt_max=args.dt_max,
                                        conj_sym=args.conj_sym,
                                        clip_eigs=args.clip_eigs,
-                                       bidirectional=args.bidirectional)
+                                       bidirectional=args.bidirectional,
+                                       bidir_predictor=bidir_predictor)
     else:
         ssm_init_fn = init_S5SSM(H=args.d_model,
                                  P=ssm_size,

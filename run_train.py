@@ -129,5 +129,16 @@ if __name__ == "__main__":
 							 "Used for iso-param comparisons: shrink the "
 							 "gate to redirect params to bigger SSM state "
 							 "(via --ssm_size_base).  Default 0 = full-rank.")
+	parser.add_argument("--bidir_predictor", type=str2bool, default=False,
+						help="If True, MambinoSSM's predictor scan runs "
+							 "bidirectionally (mirrors main scan), with "
+							 "an additional C_s2 readout for the backward "
+							 "direction.  x_hat(t) combines forward "
+							 "(causal, s_fwd(t-1)) + backward "
+							 "(anti-causal, s_bwd(t+1)) predictions. "
+							 "Adds ~2K params per layer (16K total for "
+							 "L=8).  Default False = causal forward-only "
+							 "predictor (streaming-inference-compatible). "
+							 "Ignored when --use_mambino_ssm=False.")
 
 	train(parser.parse_args())

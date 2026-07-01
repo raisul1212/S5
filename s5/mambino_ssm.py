@@ -93,6 +93,7 @@ class MambinoSSM(nn.Module):
     clip_eigs: bool
     bidirectional: bool
     step_rescale: float = 1.0
+    bidir_predictor: bool = False  # v0.7: symmetric bidirectional predictor
 
     def setup(self):
         """Initialize main SSM parameters (identical to S5SSM) plus
@@ -210,15 +211,30 @@ class MambinoSSM(nn.Module):
             B_shape)
         B_s_tilde = self.B_s[..., 0] + 1j * self.B_s[..., 1]
 
-        # Predictor C: forward only (predictor is causal, predicts NEXT input)
+        # Predictor readouts.
+        # Forward-only (default): single C_s, predicts x(t) from s_fwd(t-1).
+        # Bidirectional (self.bidir_predictor=True): add C_s2 for the
+        # backward direction; predicts x(t) from s_bwd(t+1) (anti-causal
+        # future context).  Total predictor readout is concat(C_s, C_s2)
+        # applied to concat(s_fwd_shifted, s_bwd_shifted), mirroring the
+        # main scan's C_tilde = concat(C1, C2).
         C_s_shape = (self.H, local_P, 2)
         self.C_s = self.param(
             "C_s",
             lambda rng, shape: init_CV(C_init_fn, rng, shape, self.V),
             C_s_shape)
         C_s_complex = self.C_s[..., 0] + 1j * self.C_s[..., 1]
-        # No bidirectional for predictor -> use single C_s (no concat)
-        self.C_s_tilde = C_s_complex
+        if self.bidir_predictor:
+            self.C_s2 = self.param(
+                "C_s2",
+                lambda rng, shape: init_CV(C_init_fn, rng, shape, self.V),
+                C_s_shape)
+            C_s2_complex = self.C_s2[..., 0] + 1j * self.C_s2[..., 1]
+            # Concat readout matches main scan's C_tilde = concat(C1, C2).
+            self.C_s_tilde = np.concatenate((C_s_complex, C_s2_complex), axis=-1)
+        else:
+            # Forward-only: single C_s (no concat).
+            self.C_s_tilde = C_s_complex
 
         # Predictor discretization step (separate from main)
         self.log_step_s = self.param(
@@ -257,32 +273,58 @@ class MambinoSSM(nn.Module):
                 self.Lambda, W_eps_tilde, step)
 
     def _apply_predictor_scan(self, input_sequence):
-        """Run the predictor scan (forward only, no bidirectional)
-        and produce x_hat(t) = C_s @ s(t-1) (causally shifted).
+        """Run the predictor scan and produce x_hat(t).
+
+        Forward-only mode: x_hat(t) = C_s @ s_fwd(t-1)  (causal prediction).
+        Bidirectional mode: x_hat(t) = C_s @ s_fwd(t-1) + C_s2 @ s_bwd(t+1)
+                            (causal + anti-causal predictions combined).
+
+        Both directions use the SAME B_s_bar for input projection and the
+        SAME Lambda_s_bar for state dynamics.  Only the READOUTS differ
+        (matches how S5's main scan handles bidirectionality: shared B,
+        separate C1/C2 readouts on concatenated state).
+
+        Causal shifts prevent trivial identity prediction:
+          Forward:  s_fwd_shifted[t] = s_fwd[t-1]  (never sees x(t))
+          Backward: s_bwd_shifted[t] = s_bwd[t+1]  (never sees x(t))
 
         Args:
             input_sequence: (L, H) input
         Returns:
-            x_hat: (L, H) one-step-ahead predictions at H.  x_hat[0] is
-                zeros (no past state at t=0).
+            x_hat: (L, H) predictions at H.  x_hat[0]=zeros in forward mode
+                (no past state at t=0); x_hat[L-1] loses the backward
+                contribution in bidirectional mode.
         """
         L = input_sequence.shape[0]
         # Predictor scan: s(t) = Lambda_s_bar * s(t-1) + B_s_bar @ x(t)
         Lambda_elements = self.Lambda_s_bar * np.ones((L, self.Lambda_s_bar.shape[0]))
         Bu_elements = jax.vmap(lambda u: self.B_s_bar @ u)(input_sequence)
-        _, s_seq = jax.lax.associative_scan(binary_operator,
+
+        # Forward scan (always runs)
+        _, s_fwd = jax.lax.associative_scan(binary_operator,
                                             (Lambda_elements, Bu_elements))
-        # x_hat(t) = C_s @ s(t-1)  ==> causal shift by 1.  s(t-1) for t=0
-        # is zero state (S5's apply_ssm starts at h(0)=0 effectively; the
-        # scan's first output is s(1) = Lambda * 0 + Bu = Bu_elements[0]).
-        # Our shifted sequence: s_shifted[t] = s[t-1] for t>=1, zero for t=0.
-        zero_state = np.zeros_like(s_seq[0:1])
-        s_shifted = np.concatenate([zero_state, s_seq[:-1]], axis=0)
-        # x_hat(t) = Re(C_s @ s_shifted(t))  (matches S5's read convention)
-        if self.conj_sym:
-            x_hat = jax.vmap(lambda x: 2 * (self.C_s_tilde @ x).real)(s_shifted)
+        # Causal shift: s_fwd_shifted[t] = s_fwd[t-1] for t>=1, zero for t=0
+        zero_fwd = np.zeros_like(s_fwd[0:1])
+        s_fwd_shifted = np.concatenate([zero_fwd, s_fwd[:-1]], axis=0)
+
+        if self.bidir_predictor:
+            # Backward scan
+            _, s_bwd = jax.lax.associative_scan(
+                binary_operator, (Lambda_elements, Bu_elements), reverse=True)
+            # Anti-causal shift: s_bwd_shifted[t] = s_bwd[t+1] for t<L-1,
+            # zero for t=L-1.  Prevents predictor from cheating with x(t).
+            zero_bwd = np.zeros_like(s_bwd[0:1])
+            s_bwd_shifted = np.concatenate([s_bwd[1:], zero_bwd], axis=0)
+            # Concat state, readout via concat(C_s, C_s2) (stored as C_s_tilde)
+            s_read = np.concatenate([s_fwd_shifted, s_bwd_shifted], axis=-1)
         else:
-            x_hat = jax.vmap(lambda x: (self.C_s_tilde @ x).real)(s_shifted)
+            s_read = s_fwd_shifted
+
+        # x_hat(t) = Re(C_s_tilde @ s_read(t))  (matches S5's read convention)
+        if self.conj_sym:
+            x_hat = jax.vmap(lambda x: 2 * (self.C_s_tilde @ x).real)(s_read)
+        else:
+            x_hat = jax.vmap(lambda x: (self.C_s_tilde @ x).real)(s_read)
         return x_hat
 
     def _apply_main_scan_with_additive_pc(self, x_seq, eps_seq):
@@ -357,9 +399,16 @@ class MambinoSSM(nn.Module):
 
 def init_MambinoSSM(H, P, Lambda_re_init, Lambda_im_init, V, Vinv,
                     C_init, discretization, dt_min, dt_max,
-                    conj_sym, clip_eigs, bidirectional):
+                    conj_sym, clip_eigs, bidirectional,
+                    bidir_predictor=False):
     """Factory matching init_S5SSM signature exactly so MambinoSSM can
-    be swapped in via a flag with no other changes."""
+    be swapped in via a flag with no other changes.
+
+    bidir_predictor (default False = original causal predictor).  When True,
+    predictor scan runs both forward and backward with separate C_s, C_s2
+    readouts (matches main scan's C1/C2 pattern).  Adds ~2K params per
+    layer (C_s2) but enables predictor to use future context.
+    """
     return partial(MambinoSSM,
                    H=H, P=P,
                    Lambda_re_init=Lambda_re_init,
@@ -370,4 +419,5 @@ def init_MambinoSSM(H, P, Lambda_re_init, Lambda_im_init, V, Vinv,
                    dt_min=dt_min, dt_max=dt_max,
                    conj_sym=conj_sym,
                    clip_eigs=clip_eigs,
-                   bidirectional=bidirectional)
+                   bidirectional=bidirectional,
+                   bidir_predictor=bidir_predictor)
