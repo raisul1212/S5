@@ -2,7 +2,14 @@
 from functools import partial
 from pathlib import Path
 import torch
-import torchaudio.functional as TF
+# torchaudio is optional -- only used by ResolutionSequenceDataset.__getitem__
+# for audio resampling (line ~121).  Non-audio datasets (LRA/IMDB/ListOps/
+# Pathfinder) don't touch it.  Guard the import so environments without
+# torchaudio can still use the non-audio dataloaders.
+try:
+    import torchaudio.functional as TF
+except (ImportError, OSError):
+    TF = None
 import torchvision
 from einops import rearrange
 
