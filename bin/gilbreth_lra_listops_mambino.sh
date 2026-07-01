@@ -27,9 +27,17 @@ module purge
 module load external
 module load anaconda/2024.10-py312
 module load cuda/13.1.0
+
+# Use the dedicated s5m env on scratch (torch 2.4.1+cu121, jax 0.4.30 [cuda12],
+# flax 0.8.5, cudnn 9 shared by torch and jax).  Built by
+# /scratch/gilbreth/raisul/install_s5m_v2.sh; env has ~3GB deps that don't
+# fit in the 25GB /home quota, hence living on scratch.  torchtext is
+# absent from this env by design (no 0.18+ wheel matches torch 2.4);
+# s5/dataloaders/lra.py falls back to an inlined _build_vocab_from_iterator
+# equivalent when _HAS_TORCHTEXT is False.
 CONDA_BASE=$(conda info --base 2>/dev/null)
 source "$CONDA_BASE/etc/profile.d/conda.sh"
-conda activate ncb
+conda activate /scratch/gilbreth/raisul/envs/s5m
 
 export PYTHONUNBUFFERED=1 PYTHONIOENCODING=utf-8 PYTHONUTF8=1
 cd $SLURM_SUBMIT_DIR

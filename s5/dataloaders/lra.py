@@ -7,8 +7,77 @@ from pathlib import Path
 import torch
 from torch import nn
 import torch.nn.functional as F
-import torchtext
+# torchtext 0.18+ has no wheels matching torch 2.4+.  We use only two
+# torchtext features in this file: vocab.build_vocab_from_iterator (for
+# ListOps/IMDB) and utils.unicode_csv_reader (for AAN retrieval only).
+# Inlined pure-Python replacements below cover the vocab path; the AAN
+# path still needs torchtext (which is fine when the environment has it).
+try:
+    import torchtext
+    _HAS_TORCHTEXT = True
+except (ImportError, OSError):
+    torchtext = None
+    _HAS_TORCHTEXT = False
 import torchvision
+
+
+class _MinimalVocab:
+    """Drop-in for torchtext.vocab.Vocab.  Supports:
+      __call__(tokens)  -> list[int]
+      __getitem__(tok)  -> int
+      get_itos()        -> list[str]
+      set_default_index(idx)
+      __len__()
+    """
+    def __init__(self, stoi):
+        self._stoi = dict(stoi)
+        self._itos = [None] * len(stoi)
+        for tok, idx in stoi.items():
+            self._itos[idx] = tok
+        self._default_idx = None
+
+    def __len__(self):
+        return len(self._stoi)
+
+    def __getitem__(self, token):
+        if token in self._stoi:
+            return self._stoi[token]
+        return self._default_idx if self._default_idx is not None else 0
+
+    def __call__(self, tokens):
+        return [self.__getitem__(t) for t in tokens]
+
+    def get_itos(self):
+        return list(self._itos)
+
+    def set_default_index(self, idx):
+        self._default_idx = int(idx)
+
+
+def _build_vocab_from_iterator(iterator, specials, min_freq=1):
+    """Drop-in for torchtext.vocab.build_vocab_from_iterator.
+    Specials are inserted at the front (positions 0..len(specials)-1);
+    remaining tokens are sorted by (-freq, token) for determinism and
+    filtered by min_freq.
+    """
+    from collections import Counter
+    counter = Counter()
+    for tokens in iterator:
+        counter.update(tokens)
+    for s in specials:
+        counter.pop(s, None)
+    items = [(tok, cnt) for tok, cnt in counter.items() if cnt >= min_freq]
+    items.sort(key=lambda kv: (-kv[1], kv[0]))
+    stoi = {}
+    for i, s in enumerate(specials):
+        stoi[s] = i
+    idx = len(specials)
+    for tok, _ in items:
+        if tok in stoi:
+            continue
+        stoi[tok] = idx
+        idx += 1
+    return _MinimalVocab(stoi)
 from einops.layers.torch import Rearrange, Reduce
 from PIL import Image  # Only used for Pathfinder
 from datasets import DatasetDict, Value, load_dataset
@@ -116,7 +185,9 @@ class IMDB(SequenceDataset):
             load_from_cache_file=False,
             num_proc=max(self.n_workers, 1),
         )
-        vocab = torchtext.vocab.build_vocab_from_iterator(
+        _build_vocab = (torchtext.vocab.build_vocab_from_iterator
+                        if _HAS_TORCHTEXT else _build_vocab_from_iterator)
+        vocab = _build_vocab(
             dataset["train"]["tokens"],
             min_freq=self.min_freq,
             specials=(
@@ -316,7 +387,9 @@ class ListOps(SequenceDataset):
             load_from_cache_file=False,
             num_proc=max(self.n_workers, 1),
         )
-        vocab = torchtext.vocab.build_vocab_from_iterator(
+        _build_vocab = (torchtext.vocab.build_vocab_from_iterator
+                        if _HAS_TORCHTEXT else _build_vocab_from_iterator)
+        vocab = _build_vocab(
             dataset["train"]["tokens"],
             specials=(
                 ["<pad>", "<unk>"]
@@ -679,7 +752,9 @@ class AAN(SequenceDataset):
             load_from_cache_file=False,
             num_proc=max(self.n_workers, 1),
         )
-        vocab = torchtext.vocab.build_vocab_from_iterator(
+        _build_vocab = (torchtext.vocab.build_vocab_from_iterator
+                        if _HAS_TORCHTEXT else _build_vocab_from_iterator)
+        vocab = _build_vocab(
             dataset["train"]["tokens1"] + dataset["train"]["tokens2"],
             specials=(
                 ["<pad>", "<unk>"]
