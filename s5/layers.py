@@ -18,6 +18,11 @@ class SequenceLayer(nn.Module):
             step_rescale  (float32):  allows for uniformly changing the timescale parameter,
                                     e.g. after training on a different resolution for
                                     the speech commands benchmark
+            glu_rank    (int32):    if > 0 and activation is half_glu*, factorize
+                                    the out2 Dense(H, H) into Dense(H, r) @ Dense(r, H)
+                                    to sparsify the gate.  Default 0 = full-rank.
+                                    Used for iso-param comparisons where main gate
+                                    capacity is redistributed elsewhere (bigger SSM state).
     """
     ssm: nn.Module
     dropout: float
@@ -28,6 +33,7 @@ class SequenceLayer(nn.Module):
     batchnorm: bool = False
     bn_momentum: float = 0.90
     step_rescale: float = 1.0
+    glu_rank: int = 0
 
     def setup(self):
         """Initializes the ssm, batch/layer norm and dropout
@@ -38,7 +44,15 @@ class SequenceLayer(nn.Module):
             self.out1 = nn.Dense(self.d_model)
             self.out2 = nn.Dense(self.d_model)
         elif self.activation in ["half_glu1", "half_glu2"]:
-            self.out2 = nn.Dense(self.d_model)
+            if self.glu_rank > 0:
+                # Low-rank factorization: Dense(H, r) -> Dense(r, H).
+                # Params: H*r + r*H + H = 2*H*r + H  (vs 2H*H + H = 2H^2 + H for full).
+                # Bias only on the final projection; the down-projection is bias-free
+                # since the gate is applied via sigmoid.
+                self.out2_down = nn.Dense(self.glu_rank, use_bias=False)
+                self.out2_up = nn.Dense(self.d_model)
+            else:
+                self.out2 = nn.Dense(self.d_model)
 
         if self.batchnorm:
             self.norm = nn.BatchNorm(use_running_average=not self.training,
@@ -76,7 +90,12 @@ class SequenceLayer(nn.Module):
         elif self.activation in ["half_glu2"]:
             # Only apply GELU to the gate input
             x1 = self.drop(nn.gelu(x))
-            x = x * jax.nn.sigmoid(self.out2(x1))
+            if self.glu_rank > 0:
+                # Low-rank gate: sigmoid(out2_up(out2_down(gelu(x))))
+                gate_raw = self.out2_up(self.out2_down(x1))
+            else:
+                gate_raw = self.out2(x1)
+            x = x * jax.nn.sigmoid(gate_raw)
             x = self.drop(x)
         elif self.activation in ["gelu"]:
             x = self.drop(nn.gelu(x))

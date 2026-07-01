@@ -160,6 +160,7 @@ def train(args):
             prenorm=args.prenorm,
             batchnorm=args.batchnorm,
             bn_momentum=args.bn_momentum,
+            glu_rank=getattr(args, 'glu_rank', 0),
         )
 
     # initialize training state

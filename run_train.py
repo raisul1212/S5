@@ -121,5 +121,13 @@ if __name__ == "__main__":
 							 "(preserves original S5 behavior).  "
 							 "Recommended: set to a per-run output "
 							 "directory so reload is possible.")
+	parser.add_argument("--glu_rank", type=int, default=0,
+						help="If > 0 and activation is half_glu*, "
+							 "factorize the out2 Dense(H, H) into "
+							 "Dense(H, r) @ Dense(r, H) with r=glu_rank. "
+							 "Reduces gate params from ~2H^2 to 2Hr. "
+							 "Used for iso-param comparisons: shrink the "
+							 "gate to redirect params to bigger SSM state "
+							 "(via --ssm_size_base).  Default 0 = full-rank.")
 
 	train(parser.parse_args())
