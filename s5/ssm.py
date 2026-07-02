@@ -7,6 +7,40 @@ from jax.nn.initializers import lecun_normal, normal
 from .ssm_init import init_CV, init_VinvB, init_log_steps, trunc_standard_normal
 
 
+# ─── Chip-realistic analog noise + ADC quantization helpers ──────────────
+# Used for the chip analysis paper section: inject signal-proportional
+# Gaussian noise only at analog compute sites (crossbar outputs, DAC/ADC
+# crossings) and quantize at the ADC boundary.  Digital operations
+# (gelu, out2, sigmoid, multiply, BN) are UNAFFECTED -- they stay clean.
+
+def inject_analog_noise(x, sigma, rng_key):
+    """Signal-proportional Gaussian noise.  sigma is the fraction of the
+    mean absolute signal magnitude.  When sigma=0, returns x unchanged
+    (no jax.random.normal call -- lets tracing skip the op).
+
+    Realistic 22nm gain-cell chip crossbars have sigma ~ 2-5% per
+    matmul; state cells ~ 2-3% per timestep; DAC/ADC ~ 1%.
+    """
+    if sigma <= 0:
+        return x
+    scale = sigma * np.mean(np.abs(x))
+    return x + jax.random.normal(rng_key, x.shape, dtype=x.dtype) * scale
+
+
+def quantize_adc(x, bits):
+    """Uniform mid-tread quantization to `bits` bits, range set by
+    max absolute magnitude in the tensor.  When bits<=0, returns x
+    unchanged.  bits=16 or more is effectively full precision at
+    float32 range.
+    """
+    if bits <= 0 or bits >= 16:
+        return x
+    max_val = np.max(np.abs(x)) + 1e-8
+    levels = float(2 ** (bits - 1))
+    q = np.round(x / max_val * levels) / levels * max_val
+    return q
+
+
 # Discretization functions
 def discretize_bilinear(Lambda, B_tilde, Delta):
     """ Discretize a diagonalized, continuous-time linear SSM
@@ -106,6 +140,13 @@ class S5SSM(nn.Module):
     clip_eigs: bool = False
     bidirectional: bool = False
     step_rescale: float = 1.0
+    # Chip analysis knobs -- default 0/0 = no-op (identical to vanilla eval).
+    # When noise_sigma > 0: inject Gaussian noise at DAC in, B crossbar out,
+    # C crossbar out.  When adc_bits > 0: quantize the final block output
+    # to `adc_bits` at the ADC boundary before returning to the digital
+    # side.  These are set only at eval time via a chip_eval script.
+    noise_sigma: float = 0.0
+    adc_bits: int = 0
 
     """ The S5 SSM
         Args:
@@ -231,22 +272,57 @@ class S5SSM(nn.Module):
     def __call__(self, input_sequence):
         """
         Compute the LxH output of the S5 SSM given an LxH input sequence
-        using a parallel scan.
+        using a parallel scan.  When noise_sigma > 0 or adc_bits > 0, the
+        SSM computation is unrolled inline so noise/quantization can be
+        injected at the analog compute sites (DAC in, B crossbar out,
+        C crossbar out, ADC out).  When both are 0, delegates to the
+        original apply_ssm function (byte-identical to prior behavior).
         Args:
              input_sequence (float32): input sequence (L, H)
         Returns:
             output sequence (float32): (L, H)
         """
-        ys = apply_ssm(self.Lambda_bar,
-                       self.B_bar,
-                       self.C_tilde,
-                       input_sequence,
-                       self.conj_sym,
-                       self.bidirectional)
+        # Fast path: no chip analysis knobs -> original behavior.
+        if self.noise_sigma <= 0 and self.adc_bits <= 0:
+            ys = apply_ssm(self.Lambda_bar,
+                           self.B_bar,
+                           self.C_tilde,
+                           input_sequence,
+                           self.conj_sym,
+                           self.bidirectional)
+            Du = jax.vmap(lambda u: self.D * u)(input_sequence)
+            return ys + Du
 
-        # Add feedthrough matrix output Du;
-        Du = jax.vmap(lambda u: self.D * u)(input_sequence)
-        return ys + Du
+        # ── Chip-analysis path: unroll apply_ssm with noise/quant hooks ──
+        # 1) DAC in (digital -> analog)
+        x = inject_analog_noise(input_sequence, self.noise_sigma,
+                                self.make_rng('noise'))
+        # 2) B crossbar: Bu = B_bar @ x
+        L = x.shape[0]
+        Bu = jax.vmap(lambda u: self.B_bar @ u)(x)
+        Bu = inject_analog_noise(Bu, self.noise_sigma, self.make_rng('noise'))
+        # Scan (state cells with RC decay -- state noise omitted for
+        # simplicity; propagated through the scan analytics).
+        Lambda_elements = self.Lambda_bar * np.ones((L, self.Lambda_bar.shape[0]))
+        _, xs = jax.lax.associative_scan(binary_operator, (Lambda_elements, Bu))
+        if self.bidirectional:
+            _, xs2 = jax.lax.associative_scan(
+                binary_operator, (Lambda_elements, Bu), reverse=True)
+            xs = np.concatenate((xs, xs2), axis=-1)
+        # 3) C crossbar readout
+        if self.conj_sym:
+            ys = jax.vmap(lambda h: 2 * (self.C_tilde @ h).real)(xs)
+        else:
+            ys = jax.vmap(lambda h: (self.C_tilde @ h).real)(xs)
+        ys = inject_analog_noise(ys, self.noise_sigma, self.make_rng('noise'))
+        # 4) D feedthrough (analog per-channel scale, small noise contribution)
+        Du = jax.vmap(lambda u: self.D * u)(x)
+        output = ys + Du
+        # 5) ADC out (analog -> digital) + quantization
+        output = inject_analog_noise(output, self.noise_sigma,
+                                     self.make_rng('noise'))
+        output = quantize_adc(output, self.adc_bits)
+        return output
 
 
 def init_S5SSM(H,
@@ -261,10 +337,13 @@ def init_S5SSM(H,
                dt_max,
                conj_sym,
                clip_eigs,
-               bidirectional
+               bidirectional,
+               noise_sigma=0.0,
+               adc_bits=0,
                ):
     """Convenience function that will be used to initialize the SSM.
-       Same arguments as defined in S5SSM above."""
+       Same arguments as defined in S5SSM above.  noise_sigma/adc_bits
+       are chip-analysis knobs -- default 0/0 leaves the SSM unchanged."""
     return partial(S5SSM,
                    H=H,
                    P=P,
@@ -278,4 +357,6 @@ def init_S5SSM(H,
                    dt_max=dt_max,
                    conj_sym=conj_sym,
                    clip_eigs=clip_eigs,
-                   bidirectional=bidirectional)
+                   bidirectional=bidirectional,
+                   noise_sigma=noise_sigma,
+                   adc_bits=adc_bits)

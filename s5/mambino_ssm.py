@@ -60,6 +60,8 @@ from .ssm import (
     discretize_bilinear,
     binary_operator,
     apply_ssm,
+    inject_analog_noise,
+    quantize_adc,
 )
 from .ssm_init import init_VinvB, init_CV, init_log_steps, trunc_standard_normal
 
@@ -94,6 +96,14 @@ class MambinoSSM(nn.Module):
     bidirectional: bool
     step_rescale: float = 1.0
     bidir_predictor: bool = False  # v0.7: symmetric bidirectional predictor
+    # Chip analysis knobs -- default 0/0 = no-op (identical to vanilla eval).
+    # Under noise_sigma > 0: inject Gaussian noise at ALL analog compute
+    # sites: DAC in, B / C / B_s / C_s / W_eps crossbars, eps subtraction,
+    # ADC out.  Mambino has ~9 injection sites per layer vs pure S5's ~5 --
+    # the "analog scalability" thesis is that Mambino tolerates this extra
+    # noise exposure via redundant pathways.
+    noise_sigma: float = 0.0
+    adc_bits: int = 0
 
     def setup(self):
         """Initialize main SSM parameters (identical to S5SSM) plus
@@ -299,6 +309,10 @@ class MambinoSSM(nn.Module):
         # Predictor scan: s(t) = Lambda_s_bar * s(t-1) + B_s_bar @ x(t)
         Lambda_elements = self.Lambda_s_bar * np.ones((L, self.Lambda_s_bar.shape[0]))
         Bu_elements = jax.vmap(lambda u: self.B_s_bar @ u)(input_sequence)
+        # B_s analog crossbar noise
+        if self.noise_sigma > 0:
+            Bu_elements = inject_analog_noise(
+                Bu_elements, self.noise_sigma, self.make_rng('noise'))
 
         # Forward scan (always runs)
         _, s_fwd = jax.lax.associative_scan(binary_operator,
@@ -325,6 +339,10 @@ class MambinoSSM(nn.Module):
             x_hat = jax.vmap(lambda x: 2 * (self.C_s_tilde @ x).real)(s_read)
         else:
             x_hat = jax.vmap(lambda x: (self.C_s_tilde @ x).real)(s_read)
+        # C_s analog crossbar noise
+        if self.noise_sigma > 0:
+            x_hat = inject_analog_noise(
+                x_hat, self.noise_sigma, self.make_rng('noise'))
         return x_hat
 
     def _apply_main_scan_with_additive_pc(self, x_seq, eps_seq):
@@ -342,7 +360,15 @@ class MambinoSSM(nn.Module):
         L = x_seq.shape[0]
         # Compute per-timestep input to main scan
         Bu_x = jax.vmap(lambda u: self.B_bar @ u)(x_seq)        # (L, local_P)
+        # Main B analog crossbar noise
+        if self.noise_sigma > 0:
+            Bu_x = inject_analog_noise(
+                Bu_x, self.noise_sigma, self.make_rng('noise'))
         Bu_eps = jax.vmap(lambda u: self.W_eps_bar @ u)(eps_seq)  # (L, local_P)
+        # W_eps analog crossbar noise
+        if self.noise_sigma > 0:
+            Bu_eps = inject_analog_noise(
+                Bu_eps, self.noise_sigma, self.make_rng('noise'))
         Bu_elements = Bu_x + Bu_eps                              # additive PC
 
         Lambda_elements = self.Lambda_bar * np.ones((L, self.Lambda_bar.shape[0]))
@@ -359,12 +385,24 @@ class MambinoSSM(nn.Module):
             xs = xs_fwd
 
         if self.conj_sym:
-            return jax.vmap(lambda x: 2 * (self.C_tilde @ x).real)(xs)
+            ys = jax.vmap(lambda x: 2 * (self.C_tilde @ x).real)(xs)
         else:
-            return jax.vmap(lambda x: (self.C_tilde @ x).real)(xs)
+            ys = jax.vmap(lambda x: (self.C_tilde @ x).real)(xs)
+        # Main C crossbar noise
+        if self.noise_sigma > 0:
+            ys = inject_analog_noise(
+                ys, self.noise_sigma, self.make_rng('noise'))
+        return ys
 
     def __call__(self, input_sequence):
         """Forward pass.  Matches S5SSM signature exactly.
+
+        Under noise_sigma > 0 / adc_bits > 0, injects noise at all analog
+        compute sites: DAC in, predictor B_s/C_s crossbars, eps analog
+        subtraction, main B/C crossbars, W_eps crossbar, ADC out.  Also
+        applies ADC quantization at the block output.  Digital operations
+        (gelu, out2, sigmoid, multiply) happen OUTSIDE this block and are
+        NOT affected -- they get clean digital input.
 
         Args:
             input_sequence: (L, H) input sequence
@@ -375,22 +413,37 @@ class MambinoSSM(nn.Module):
         collection so the train loop can aggregate across all blocks for
         logging and add lambda_pc * L_int to the task loss.
         """
-        # ── Predictor branch: x_hat(t) = C_s @ s(t-1) ──
-        x_hat = self._apply_predictor_scan(input_sequence)            # (L, H)
+        # ── 1) DAC in (digital -> analog) ──
+        if self.noise_sigma > 0:
+            x = inject_analog_noise(input_sequence, self.noise_sigma,
+                                    self.make_rng('noise'))
+        else:
+            x = input_sequence
 
-        # ── Surprise (raw, no RMSNorm, no M-gate) ──
-        eps = input_sequence - x_hat                                   # (L, H)
+        # ── 2) Predictor branch: x_hat(t) = C_s @ s(t-1) ──
+        # (predictor scan internals also emit noise if enabled -- see method)
+        x_hat = self._apply_predictor_scan(x)                          # (L, H)
 
-        # ── Main scan with additive PC: u(t) = B @ x(t) + W_eps @ eps(t) ──
-        ys = self._apply_main_scan_with_additive_pc(input_sequence, eps)  # (L, H)
+        # ── 3) Surprise: eps = x - x_hat (analog subtraction) ──
+        eps = x - x_hat
+        if self.noise_sigma > 0:
+            eps = inject_analog_noise(eps, self.noise_sigma,
+                                      self.make_rng('noise'))
 
-        # ── Feedthrough: y = ys + D * x ──
-        Du = jax.vmap(lambda u: self.D * u)(input_sequence)            # (L, H)
-        output = ys + Du                                                # (L, H)
+        # ── 4) Main scan with additive PC: u(t) = B @ x(t) + W_eps @ eps(t) ──
+        ys = self._apply_main_scan_with_additive_pc(x, eps)            # (L, H)
 
-        # ── Intrinsic loss: mean ||eps||^2 ──
-        # Sow into 'intermediates' so the train step can collect across
-        # all blocks and add lambda_pc * sum(L_int_per_block) to task loss.
+        # ── 5) Feedthrough: y = ys + D * x ──
+        Du = jax.vmap(lambda u: self.D * u)(x)                         # (L, H)
+        output = ys + Du                                               # (L, H)
+
+        # ── 6) ADC out (analog -> digital) ──
+        if self.noise_sigma > 0:
+            output = inject_analog_noise(output, self.noise_sigma,
+                                         self.make_rng('noise'))
+        output = quantize_adc(output, self.adc_bits)
+
+        # ── Intrinsic loss: mean ||eps||^2 (used during training only) ──
         intrinsic_loss = np.mean(eps * eps)
         self.sow("intermediates", "intrinsic_loss", intrinsic_loss)
 
@@ -400,7 +453,8 @@ class MambinoSSM(nn.Module):
 def init_MambinoSSM(H, P, Lambda_re_init, Lambda_im_init, V, Vinv,
                     C_init, discretization, dt_min, dt_max,
                     conj_sym, clip_eigs, bidirectional,
-                    bidir_predictor=False):
+                    bidir_predictor=False,
+                    noise_sigma=0.0, adc_bits=0):
     """Factory matching init_S5SSM signature exactly so MambinoSSM can
     be swapped in via a flag with no other changes.
 
@@ -420,4 +474,6 @@ def init_MambinoSSM(H, P, Lambda_re_init, Lambda_im_init, V, Vinv,
                    conj_sym=conj_sym,
                    clip_eigs=clip_eigs,
                    bidirectional=bidirectional,
-                   bidir_predictor=bidir_predictor)
+                   bidir_predictor=bidir_predictor,
+                   noise_sigma=noise_sigma,
+                   adc_bits=adc_bits)
