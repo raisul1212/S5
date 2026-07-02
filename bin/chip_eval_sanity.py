@@ -88,18 +88,27 @@ def build_model(args, ssm_init_fn, glu_rank):
 
 
 def apply_model(model_cls, params, batch_stats, inputs, integration_times,
-                noise_key):
+                noise_key, needs_noise_rng=True):
+    """Apply the model.  Only pass 'noise' RNG when the modules will
+    actually consume it (sigma > 0 or bits > 0).  Passing an unused
+    RNG through nn.vmap can silently disturb the forward pass in some
+    Flax versions.  For fast-path (sigma=0, bits=0), match training's
+    eval path exactly: no rngs at all.
+    """
     model = model_cls(training=False)
     variables = {"params": params}
     if batch_stats is not None:
         variables["batch_stats"] = batch_stats
-    logits = model.apply(variables, inputs, integration_times,
-                         rngs={"noise": noise_key})
+    if needs_noise_rng:
+        logits = model.apply(variables, inputs, integration_times,
+                             rngs={"noise": noise_key})
+    else:
+        logits = model.apply(variables, inputs, integration_times)
     return logits
 
 
 def eval_batches(model_cls, params, batch_stats, loader, seq_len, in_dim,
-                 noise_key, max_batches=None):
+                 noise_key, max_batches=None, needs_noise_rng=True):
     correct, count = 0, 0
     for i, batch in enumerate(loader):
         if max_batches is not None and i >= max_batches:
@@ -107,7 +116,8 @@ def eval_batches(model_cls, params, batch_stats, loader, seq_len, in_dim,
         inputs, labels, integration_times = prep_batch(batch, seq_len, in_dim)
         noise_key, sub = random.split(noise_key)
         logits = apply_model(model_cls, params, batch_stats,
-                             inputs, integration_times, sub)
+                             inputs, integration_times, sub,
+                             needs_noise_rng=needs_noise_rng)
         acc = compute_accuracy(logits, labels)
         correct += int(np.sum(acc))
         count += int(acc.shape[0])
@@ -153,8 +163,11 @@ def main():
     ssm_init = build_ssm_init(args, args.use_mambino_ssm, args.glu_rank, 0.0, 0)
     model_cls = build_model(args, ssm_init, args.glu_rank)
     key = random.PRNGKey(0)
+    # Fast path: sigma=0, bits=0 -> no noise RNG needed.  Match training's
+    # validate() exactly (no rngs passed).
     baseline_test, _ = eval_batches(model_cls, params, batch_stats,
-                                     testloader, seq_len, in_dim, key)
+                                     testloader, seq_len, in_dim, key,
+                                     needs_noise_rng=False)
     print(f"[TEST 1] baseline test_acc: {baseline_test:.4f}")
     print(f"[TEST 1] saved test_acc:    {saved_acc:.4f}")
     delta1 = abs(baseline_test - saved_acc)
@@ -187,9 +200,11 @@ def main():
     print("TEST 3: Fast path (sigma=0) with different keys gives IDENTICAL output")
     print("="*60)
     logits_c = apply_model(model_cls, params, batch_stats,
-                            inputs, integration_times, key_a)
+                            inputs, integration_times, key_a,
+                            needs_noise_rng=False)
     logits_d = apply_model(model_cls, params, batch_stats,
-                            inputs, integration_times, key_b)
+                            inputs, integration_times, key_b,
+                            needs_noise_rng=False)
     max_diff2 = float(np.max(np.abs(logits_c - logits_d)))
     print(f"[TEST 3] max |logits_c - logits_d| = {max_diff2:.6e}")
     ok3 = max_diff2 < 1e-4
