@@ -206,7 +206,11 @@ def main():
         inputs, labels, integration_times = prep_batch(batch, seq_len, in_dim)
         break
 
-    print(f"inputs shape: {inputs.shape}, dtype: {inputs.dtype}")
+    # inputs is a tuple (array, lengths) for padded input -- model unpacks internally
+    if isinstance(inputs, tuple):
+        print(f"inputs is tuple (padded=True): array shape={inputs[0].shape}, lengths shape={inputs[1].shape}")
+    else:
+        print(f"inputs shape: {inputs.shape}")
     print(f"labels shape: {labels.shape}, first 5: {labels[:5]}")
 
     # Apply with LOADED params + batch_stats via new_state
@@ -214,26 +218,33 @@ def main():
     logits_loaded = model.apply(
         {"params": new_state.params, "batch_stats": new_state.batch_stats},
         inputs, integration_times)
-    print(f"logits (loaded weights): shape={logits_loaded.shape}")
-    print(f"  {leaf_stats(logits_loaded)}")
+    print(f"\n[LOADED WEIGHTS] logits shape={logits_loaded.shape}, {leaf_stats(logits_loaded)}")
     predictions = np.argmax(logits_loaded, axis=-1)
     print(f"  first 10 predictions: {predictions[:10]}")
     print(f"  first 10 labels:      {labels[:10]}")
     correct = int(np.sum(predictions == labels))
-    print(f"  correct: {correct}/{len(labels)} = {correct/len(labels):.3f}")
+    print(f"  correct on 1 batch: {correct}/{len(labels)} = {correct/len(labels):.4f}")
 
     # Compare with FRESH state (random init) for control
     logits_fresh = model.apply(
         {"params": state.params, "batch_stats": state.batch_stats},
         inputs, integration_times)
-    print(f"\nlogits (fresh random init): {leaf_stats(logits_fresh)}")
+    print(f"\n[FRESH RANDOM INIT] logits {leaf_stats(logits_fresh)}")
     correct_f = int(np.sum(np.argmax(logits_fresh, axis=-1) == labels))
-    print(f"  correct: {correct_f}/{len(labels)} = {correct_f/len(labels):.3f}")
+    print(f"  correct on 1 batch: {correct_f}/{len(labels)} = {correct_f/len(labels):.4f}")
 
-    # If loaded gives same acc as fresh, params aren't being loaded
-    if correct / len(labels) < 0.15 and correct_f / len(labels) < 0.15:
-        print("\n!!! BOTH loaded and fresh give random accuracy !!!")
-        print("!!! Either params load isn't working OR the model itself is broken !!!")
+    print("\n" + "=" * 70)
+    print("VERDICT")
+    print("=" * 70)
+    if correct / len(labels) > 0.5:
+        print(f"PASS: loaded weights give {correct/len(labels):.4f} on 1 batch")
+        print("Load + apply works correctly. Sanity bug is elsewhere.")
+    elif correct / len(labels) < 0.2 and correct_f / len(labels) < 0.2:
+        print("BOTH loaded and fresh give random accuracy.")
+        print("Either params load isn't taking effect at apply time,")
+        print("OR the model architecture is broken.")
+    else:
+        print(f"Mid range: loaded={correct/len(labels):.4f} fresh={correct_f/len(labels):.4f}")
 
 
 if __name__ == "__main__":
