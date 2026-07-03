@@ -1,0 +1,32 @@
+architecture:
+  version: 0.2
+  subtree:
+    - name: chip
+      attributes:
+        technology: 22nm
+      local:
+        - name: main_sram
+          class: SRAM
+          attributes:
+            word_width: 8
+            n_words: 128
+            width: word_width * n_words
+            depth: 44032        # bytes: 105.7K weights + ~4.2MB activations + 2.1MB state = 6.1MB / 128 = 48K entries
+            nbanks: 1
+        - name: state_sram
+          class: SRAM
+          attributes:
+            word_width: 8
+            n_words: 32         # Pure S5 P=32 wider state
+            width: word_width * n_words
+            depth: 65536        # holds SSM state trajectory (~2.1MB for Pure S5)
+            nbanks: 1
+        - name: mac_array
+          class: intmac
+          attributes:
+            datawidth: 8
+        - name: reg_accum
+          class: regfile
+          attributes:
+            width: 32
+            depth: 128

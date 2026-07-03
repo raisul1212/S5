@@ -1,0 +1,34 @@
+action_counts:
+  version: 0.2
+  subtree:
+    - name: chip
+      local:
+        - name: main_sram
+          action_counts:
+            # Weight fetches: 1 per MAC (382M MACs total for Config 4)
+            # Activation fetches: 1 per MAC
+            # Output writes: 4.2MB activation bytes = 4,194,304
+            - name: read
+              counts: 764000000    # 2 * 382M weight+activation reads
+            - name: write
+              counts: 4194304      # activation output writes
+        - name: state_sram
+          action_counts:
+            # State trajectory: written once per token per layer, read a few times
+            # State bytes: 1.6MB = 1,572,864
+            - name: read
+              counts: 3145728      # 2 reads per byte
+              # State trajectory total nJ from my v3: 3145 nJ
+              # = 1572K * (2*0.5+1.0) pJ = 4.7 nJ per K bytes -- roughly matches
+            - name: write
+              counts: 1572864      # 1 write per byte
+        - name: mac_array
+          action_counts:
+            - name: mac_random
+              counts: 382000000    # total MACs for Config 4
+        - name: reg_accum
+          action_counts:
+            - name: read
+              counts: 382000000    # 1 read per MAC accumulate
+            - name: write
+              counts: 382000000    # 1 write per MAC accumulate

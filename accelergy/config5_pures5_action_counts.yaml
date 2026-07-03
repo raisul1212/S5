@@ -1,0 +1,29 @@
+action_counts:
+  version: 0.2
+  subtree:
+    - name: chip
+      local:
+        - name: main_sram
+          action_counts:
+            # Config 5 Pure S5: 416M total MACs (slightly more than Mambino's 382M)
+            - name: read
+              counts: 832000000    # 2 * 416M weight+activation reads
+            - name: write
+              counts: 4194304      # activation output writes (same as Mambino, H*L*L=4.2MB)
+        - name: state_sram
+          action_counts:
+            # State trajectory: 2.1MB = 2,097,152 bytes (33% more than Mambino's 1.5MB)
+            - name: read
+              counts: 4194304      # 2 reads per byte
+            - name: write
+              counts: 2097152      # 1 write per byte
+        - name: mac_array
+          action_counts:
+            - name: mac_random
+              counts: 416000000    # total MACs for Config 5
+        - name: reg_accum
+          action_counts:
+            - name: read
+              counts: 416000000
+            - name: write
+              counts: 416000000
