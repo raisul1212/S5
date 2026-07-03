@@ -202,10 +202,20 @@ def count_ops(cfg: Config):
         + encoder_MACs + decoder_MACs
     )
 
-    # SRAM: weights (INT8 = 1 byte/param) + activations (INT8, 2H/token/layer)
+    # SRAM: weights + inter-layer activations + intra-layer state trajectory
     weight_bytes = cfg.params
+    # Inter-layer activation flow (H per token per layer, INT8)
     activation_bytes = 2 * H * L * N_LAYERS
-    sram_bytes_total = weight_bytes + activation_bytes
+    # Intra-layer state trajectory (materialized during parallel scan)
+    # Complex values = 2 real bytes per element at INT8.
+    if cfg.arch == "mambino":
+        # Main bidir + predictor unidir
+        state_bytes_per_layer = 2 * L * local_P * 2 + L * local_P * 2
+    else:
+        # Main bidir only
+        state_bytes_per_layer = 2 * L * local_P * 2
+    state_bytes_total = state_bytes_per_layer * N_LAYERS
+    sram_bytes_total = weight_bytes + activation_bytes + state_bytes_total
 
     # ADC/DAC crossings (assuming crossings_every=1)
     # One DAC-in + one ADC-out per layer per token; each transfers H samples
@@ -235,6 +245,9 @@ def count_ops(cfg: Config):
         "analog_MACs": analog_MACs_total,
         "digital_MACs": digital_MACs_total,
         "sram_bytes": sram_bytes_total,
+        "weight_bytes": weight_bytes,
+        "activation_bytes": activation_bytes,
+        "state_bytes": state_bytes_total,
         "adc_samples": adc_samples,
         "dac_samples": dac_samples,
         "n_adc_units": n_adc_units,
@@ -263,25 +276,28 @@ def ppac_digital(cfg: Config, adc_bits: int = 8):
 
     # Per-MAC energy breakdown (Sze 2020):
     E_compute_pJ = total_MACs * E_INT8_MAC_COMPUTE
-    E_weight_reads_pJ = total_MACs * E_SRAM_READ_8b     # 1 weight fetch per MAC
-    E_act_reads_pJ = total_MACs * E_SRAM_READ_8b        # 1 activation fetch per MAC
+    E_weight_reads_pJ = total_MACs * E_SRAM_READ_8b
+    E_act_reads_pJ = total_MACs * E_SRAM_READ_8b
     E_reg_pJ = total_MACs * E_REG_ACCUM
-    # Output writes: 1 per output element, not per MAC
-    output_elements = ops["sram_bytes"]  # rough proxy: activation bytes
-    E_out_writes_pJ = output_elements * E_SRAM_WRITE_8b
+    # Output writes: activation buffer writes
+    E_out_writes_pJ = ops["activation_bytes"] * E_SRAM_WRITE_8b
+    # State trajectory writes+reads: within-layer scan intermediate storage
+    # For parallel associative_scan, state trajectory is written once and
+    # read a few times.  Approximate as 2 reads + 1 write per byte.
+    E_state_pJ = ops["state_bytes"] * (2 * E_SRAM_READ_8b + E_SRAM_WRITE_8b)
 
     E_total_pJ = (
         E_compute_pJ + E_weight_reads_pJ + E_act_reads_pJ
-        + E_reg_pJ + E_out_writes_pJ
+        + E_reg_pJ + E_out_writes_pJ + E_state_pJ
     )
 
-    # Component breakdown for reporting
     E_breakdown = {
         "compute_nJ": E_compute_pJ / 1000,
         "weight_read_nJ": E_weight_reads_pJ / 1000,
         "activation_read_nJ": E_act_reads_pJ / 1000,
         "register_nJ": E_reg_pJ / 1000,
         "output_write_nJ": E_out_writes_pJ / 1000,
+        "state_trajectory_nJ": E_state_pJ / 1000,
     }
 
     # Timeloop-simplified latency
