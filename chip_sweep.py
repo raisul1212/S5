@@ -199,7 +199,12 @@ def main():
                                           Lambda, V, Vinv, sigma, bits)
                 n_cls = build_model_cls(args, n_ssm, n_classes,
                                         padded, retrieval)
-                nrs = 42 if (sigma > 0 or bits > 0) else None
+                # Always pass a valid rng.  The SSM's non-fast path calls
+                # self.make_rng('noise') unconditionally (before checking
+                # sigma), and JIT caching across different (sigma, bits)
+                # traces can otherwise leave stale None-rng compilations.
+                # Unused rng is harmless.
+                nrs = 42
                 v_loss, v_acc = validate(state, n_cls, valloader,
                                          seq_len, in_dim, args.batchnorm,
                                          noise_rng_seed=nrs)
