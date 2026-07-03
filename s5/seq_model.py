@@ -32,14 +32,32 @@ class StackedEncoderModel(nn.Module):
     bn_momentum: float = 0.9
     step_rescale: float = 1.0
     glu_rank: int = 0
+    # Chip architecture knob: how many analog SSM layers between DAC/ADC
+    # boundary crossings.  1 = ADC+DAC every layer (baseline, 2L crossings
+    # total).  N = fewer boundaries, deeper analog stacks (2*ceil(L/N)).
+    # Applies only when the SSM is in chip-analysis mode (sigma>0 or
+    # bits>0); at sigma=0 bits=0 the SSM fast path ignores these bools.
+    crossings_every: int = 1
 
     def setup(self):
         """
         Initializes a linear encoder and the stack of S5 layers.
+        Per-layer dac_in_enabled / adc_out_enabled bools are computed
+        from crossings_every: within each chunk of `crossings_every`
+        contiguous layers, only the FIRST has a DAC-in boundary and only
+        the LAST has an ADC-out boundary.  Layer 0 is forced to have
+        DAC (embedding output is digital) and layer L-1 is forced to
+        have ADC (classifier is digital) -- this covers the edge case
+        where n_layers % crossings_every != 0.
         """
         self.encoder = nn.Dense(self.d_model)
-        self.layers = [
-            SequenceLayer(
+        layers = []
+        chunk_end_pos = self.crossings_every - 1
+        for i in range(self.n_layers):
+            chunk_pos = i % self.crossings_every
+            dac_in = (chunk_pos == 0) or (i == 0)
+            adc_out = (chunk_pos == chunk_end_pos) or (i == self.n_layers - 1)
+            layers.append(SequenceLayer(
                 ssm=self.ssm,
                 dropout=self.dropout,
                 d_model=self.d_model,
@@ -50,9 +68,10 @@ class StackedEncoderModel(nn.Module):
                 bn_momentum=self.bn_momentum,
                 step_rescale=self.step_rescale,
                 glu_rank=self.glu_rank,
-            )
-            for _ in range(self.n_layers)
-        ]
+                dac_in_enabled=dac_in,
+                adc_out_enabled=adc_out,
+            ))
+        self.layers = layers
 
     def __call__(self, x, integration_timesteps):
         """
@@ -126,6 +145,7 @@ class ClassificationModel(nn.Module):
     bn_momentum: float = 0.9
     step_rescale: float = 1.0
     glu_rank: int = 0
+    crossings_every: int = 1  # chip arch knob -- see StackedEncoderModel
 
     def setup(self):
         """
@@ -143,6 +163,7 @@ class ClassificationModel(nn.Module):
                             bn_momentum=self.bn_momentum,
                             step_rescale=self.step_rescale,
                             glu_rank=self.glu_rank,
+                            crossings_every=self.crossings_every,
                                         )
         self.decoder = nn.Dense(self.d_output)
 
@@ -185,7 +206,7 @@ BatchClassificationModel = nn.vmap(
     in_axes=(0, 0),
     out_axes=0,
     variable_axes={"params": None, "dropout": None, 'batch_stats': None, "cache": 0, "prime": None, "intermediates": 0},
-    split_rngs={"params": False, "dropout": True}, axis_name='batch')
+    split_rngs={"params": False, "dropout": True, "noise": True}, axis_name='batch')
 
 
 # For Document matching task (e.g. AAN)

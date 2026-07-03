@@ -34,11 +34,22 @@ class SequenceLayer(nn.Module):
     bn_momentum: float = 0.90
     step_rescale: float = 1.0
     glu_rank: int = 0
+    # Per-layer DAC/ADC enable bools set by StackedEncoderModel based on
+    # crossings_every.  Passed to SSM at instantiation; SSM uses them to
+    # skip DAC-in / ADC-out quantization when this layer is INSIDE a
+    # multi-layer analog chunk.  Defaults True (single-crossing baseline).
+    dac_in_enabled: bool = True
+    adc_out_enabled: bool = True
 
     def setup(self):
         """Initializes the ssm, batch/layer norm and dropout
         """
-        self.seq = self.ssm(step_rescale=self.step_rescale)
+        # Pass per-layer dac/adc enable bools to the SSM.  The partial's
+        # baked-in defaults (True) get overridden by these kwargs since
+        # functools.partial merges call-time kwargs with priority.
+        self.seq = self.ssm(step_rescale=self.step_rescale,
+                            dac_in_enabled=self.dac_in_enabled,
+                            adc_out_enabled=self.adc_out_enabled)
 
         if self.activation in ["full_glu"]:
             self.out1 = nn.Dense(self.d_model)

@@ -116,7 +116,13 @@ def build_ssm_init_fn(args, ssm_size, block_size, Lambda, V, Vinv,
     )
 
 
-def build_model_cls(args, ssm_init_fn, n_classes, padded, retrieval):
+def build_model_cls(args, ssm_init_fn, n_classes, padded, retrieval,
+                    crossings_every=1):
+    """crossings_every: chip arch knob threaded into ClassificationModel
+    which propagates to StackedEncoderModel which computes per-layer
+    DAC/ADC enable bools for SequenceLayer -> SSM.  Default 1 = baseline
+    (every layer has both crossings).  Retrieval task doesn't get
+    crossings_every -- not used in the chip sweep."""
     if retrieval:
         return partial(
             RetrievalModel,
@@ -134,6 +140,7 @@ def build_model_cls(args, ssm_init_fn, n_classes, padded, retrieval):
         mode=args.mode, prenorm=args.prenorm, batchnorm=args.batchnorm,
         bn_momentum=args.bn_momentum,
         glu_rank=args.glu_rank,
+        crossings_every=crossings_every,
     )
 
 
@@ -145,6 +152,13 @@ def main():
     p.add_argument("--dir_name", type=str, default="./cache_dir")
     p.add_argument("--sigmas", type=str, required=True)
     p.add_argument("--bits", type=str, required=True)
+    p.add_argument("--crossings", type=str, default="1",
+                   help="Comma-separated crossings_every values "
+                        "(e.g. '1,2,4,8').  1 = every layer has DAC+ADC "
+                        "(baseline).  Higher = fewer boundary crossings, "
+                        "deeper analog stacks between them.  Default '1' "
+                        "-> 1D sweep collapses to sigma x bits at "
+                        "crossings=1.")
     p.add_argument("--csv", type=str, required=True)
     p.add_argument("--use_mambino_ssm", type=str2bool, default=False)
     p.add_argument("--bidir_predictor", type=str2bool, default=False)
@@ -254,28 +268,39 @@ def main():
                               args.noise_seed)
     print(f"[chip_sweep] clean baseline val={v_acc0:.4f}  test={t_acc0:.4f}")
 
-    # Sweep
+    crossings_list = [int(x) for x in args.crossings.split(",")]
+
+    # 3D sweep: sigma x bits x crossings_every
     os.makedirs(os.path.dirname(args.csv) or ".", exist_ok=True)
+    total = len(sigmas) * len(bits_list) * len(crossings_list)
+    print(f"[chip_sweep] 3D sweep: {len(sigmas)} sigmas x {len(bits_list)} "
+          f"bits x {len(crossings_list)} crossings = {total} cells")
     with open(args.csv, "w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["sigma", "bits", "val_acc", "test_acc",
-                    "val_loss", "test_loss"])
+        w.writerow(["sigma", "bits", "crossings_every",
+                    "val_acc", "test_acc", "val_loss", "test_loss"])
+        cell = 0
         for sigma in sigmas:
             for bits in bits_list:
-                n_ssm = build_ssm_init_fn(args, ssm_size, block_size,
-                                          Lambda, V, Vinv, sigma, bits)
-                n_cls = build_model_cls(args, n_ssm, n_classes,
-                                        padded, retrieval)
-                v_loss, v_acc = chip_validate(state, n_cls, valloader,
-                                              seq_len, in_dim, args.batchnorm,
-                                              args.noise_seed)
-                t_loss, t_acc = chip_validate(state, n_cls, testloader,
-                                              seq_len, in_dim, args.batchnorm,
-                                              args.noise_seed)
-                print(f"[chip_sweep] sigma={sigma:.4f} bits={bits} "
-                      f"val={v_acc:.4f} test={t_acc:.4f}")
-                w.writerow([sigma, bits, f"{v_acc:.4f}", f"{t_acc:.4f}",
-                            f"{v_loss:.4f}", f"{t_loss:.4f}"])
+                for crossings in crossings_list:
+                    cell += 1
+                    n_ssm = build_ssm_init_fn(args, ssm_size, block_size,
+                                              Lambda, V, Vinv, sigma, bits)
+                    n_cls = build_model_cls(args, n_ssm, n_classes,
+                                            padded, retrieval,
+                                            crossings_every=crossings)
+                    v_loss, v_acc = chip_validate(state, n_cls, valloader,
+                                                  seq_len, in_dim, args.batchnorm,
+                                                  args.noise_seed)
+                    t_loss, t_acc = chip_validate(state, n_cls, testloader,
+                                                  seq_len, in_dim, args.batchnorm,
+                                                  args.noise_seed)
+                    print(f"[chip_sweep {cell}/{total}] sigma={sigma:.4f} "
+                          f"bits={bits} crossings={crossings} "
+                          f"val={v_acc:.4f} test={t_acc:.4f}")
+                    w.writerow([sigma, bits, crossings,
+                                f"{v_acc:.4f}", f"{t_acc:.4f}",
+                                f"{v_loss:.4f}", f"{t_loss:.4f}"])
     print(f"[chip_sweep] wrote {args.csv}")
 
 
