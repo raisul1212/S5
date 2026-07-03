@@ -212,9 +212,17 @@ def create_train_state(model_cls,
         integration_timesteps = np.ones((bsz, seq_len, ))
 
     model = model_cls(training=True)
-    init_rng, dropout_rng = jax.random.split(rng, num=2)
+    init_rng, dropout_rng, noise_rng = jax.random.split(rng, num=3)
+    # Include "noise" rng at init even when training doesn't use it.
+    # Flax records rng collections at init tracing time; if a rng name
+    # is not seen at init, apply() will REJECT it later.  The chip-eval
+    # sweep applies with rngs={"noise": ...}, so "noise" must be
+    # registered here even for vanilla training.  Cost: one extra split
+    # per training start.  No effect on training behavior (SSM's
+    # fast path at sigma=0 doesn't consume the rng).
     variables = model.init({"params": init_rng,
-                            "dropout": dropout_rng},
+                            "dropout": dropout_rng,
+                            "noise": noise_rng},
                            dummy_input, integration_timesteps,
                            )
     if batchnorm:

@@ -105,6 +105,12 @@ class MambinoSSM(nn.Module):
     noise_sigma: float = 0.0
     adc_bits: int = 0
     dac_bits: int = 0
+    # See S5SSM for semantics.  Per-layer bools set by SequenceLayer via
+    # crossings_every: False means this SSM does not sit at a boundary
+    # and skips DAC-in or ADC-out quantization.  Crossbar noise still
+    # applied (analog compute is noisy regardless of boundary layout).
+    dac_in_enabled: bool = True
+    adc_out_enabled: bool = True
 
     def setup(self):
         """Initialize main SSM parameters (identical to S5SSM) plus

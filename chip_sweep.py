@@ -213,19 +213,31 @@ def main():
     V = block_diag(*([V] * args.blocks))
     Vinv = block_diag(*([Vc] * args.blocks))
 
-    # Build clean model_cls + template state so we can load msgpack
-    clean_ssm = build_ssm_init_fn(args, ssm_size, block_size,
-                                  Lambda, V, Vinv, sigma=0.0, bits=0)
-    clean_model_cls = build_model_cls(args, clean_ssm, n_classes,
-                                      padded, retrieval)
+    # Build template state.  CRITICAL: init with a NOISE-AWARE model
+    # (sigma>0 or bits>0) so Flax's init trace hits the SSM's non-fast
+    # path and records 'noise' as a known rng collection.  If we init
+    # with a clean (fast-path) SSM, Flax's scope records only
+    # {'params', 'dropout'} and REJECTS 'noise' at apply time -- the
+    # actual root cause of the InvalidRngError.  Param shapes are
+    # identical either way, so this doesn't affect checkpoint loading.
+    noise_aware_ssm = build_ssm_init_fn(args, ssm_size, block_size,
+                                        Lambda, V, Vinv, sigma=0.01, bits=8)
+    noise_aware_model_cls = build_model_cls(args, noise_aware_ssm, n_classes,
+                                            padded, retrieval)
     template_state = create_train_state(
-        clean_model_cls, init_rng, padded, retrieval,
+        noise_aware_model_cls, init_rng, padded, retrieval,
         in_dim=in_dim, bsz=args.bsz, seq_len=seq_len,
         weight_decay=args.weight_decay, batchnorm=args.batchnorm,
         opt_config=args.opt_config,
         ssm_lr=args.ssm_lr_base, lr=args.ssm_lr_base * args.lr_factor,
         dt_global=args.dt_global,
     )
+    # For post-load clean baseline: use a truly clean model (sigma=0
+    # bits=0) that takes the fast path -- gives the FP32 reference.
+    clean_ssm = build_ssm_init_fn(args, ssm_size, block_size,
+                                  Lambda, V, Vinv, sigma=0.0, bits=0)
+    clean_model_cls = build_model_cls(args, clean_ssm, n_classes,
+                                      padded, retrieval)
 
     state, meta = load_checkpoint_msgpack(args.ckpt_prefix, template_state)
     print(f"[chip_sweep] loaded {args.ckpt_prefix}.msgpack  meta={meta}")

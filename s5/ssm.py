@@ -148,6 +148,15 @@ class S5SSM(nn.Module):
     noise_sigma: float = 0.0
     adc_bits: int = 0
     dac_bits: int = 0
+    # Whether THIS SSM instance sits at a DAC-in boundary (analog<-digital)
+    # and/or an ADC-out boundary (analog->digital).  When False, the
+    # corresponding quantization is skipped (signal stays analog across
+    # this boundary).  Crossbar noise is INDEPENDENT of these bools -- it
+    # is inherent to analog compute regardless of chip-level boundaries.
+    # Set per-layer by SequenceLayer based on `crossings_every` in the
+    # enclosing stack.
+    dac_in_enabled: bool = True
+    adc_out_enabled: bool = True
 
     """ The S5 SSM
         Args:
@@ -297,8 +306,12 @@ class S5SSM(nn.Module):
 
         # ── Chip-analysis path: unroll apply_ssm with noise/quant hooks ──
         # 1) DAC in (digital -> analog): quantize digital input to
-        # dac_bits, then add analog voltage noise from DAC nonidealities.
-        x = quantize_adc(input_sequence, self.dac_bits)
+        # dac_bits (only if this SSM sits at a DAC boundary), then add
+        # analog voltage noise from DAC nonidealities.
+        if self.dac_in_enabled:
+            x = quantize_adc(input_sequence, self.dac_bits)
+        else:
+            x = input_sequence
         x = inject_analog_noise(x, self.noise_sigma,
                                 self.make_rng('noise'))
         # 2) B crossbar: Bu = B_bar @ x
@@ -322,10 +335,14 @@ class S5SSM(nn.Module):
         # 4) D feedthrough (analog per-channel scale, small noise contribution)
         Du = jax.vmap(lambda u: self.D * u)(x)
         output = ys + Du
-        # 5) ADC out (analog -> digital) + quantization
+        # 5) ADC out (analog -> digital) + quantization -- only if this
+        # SSM sits at an ADC boundary.  When adc_out_enabled=False, signal
+        # continues in analog form into the next layer (which itself must
+        # have dac_in_enabled=False for consistency).
         output = inject_analog_noise(output, self.noise_sigma,
                                      self.make_rng('noise'))
-        output = quantize_adc(output, self.adc_bits)
+        if self.adc_out_enabled:
+            output = quantize_adc(output, self.adc_bits)
         return output
 
 
@@ -345,12 +362,16 @@ def init_S5SSM(H,
                noise_sigma=0.0,
                adc_bits=0,
                dac_bits=0,
+               dac_in_enabled=True,
+               adc_out_enabled=True,
                ):
     """Convenience function that will be used to initialize the SSM.
        Same arguments as defined in S5SSM above.  noise_sigma/adc_bits/
        dac_bits are chip-analysis knobs -- default 0 leaves the SSM
        unchanged.  DAC and ADC are typically varied in unison since
-       they share the analog<->digital boundary at each layer."""
+       they share the analog<->digital boundary at each layer.
+       dac_in_enabled/adc_out_enabled control whether THIS SSM sits at
+       a boundary; set per-layer by SequenceLayer via crossings_every."""
     return partial(S5SSM,
                    H=H,
                    P=P,
@@ -367,4 +388,6 @@ def init_S5SSM(H,
                    bidirectional=bidirectional,
                    noise_sigma=noise_sigma,
                    adc_bits=adc_bits,
-                   dac_bits=dac_bits)
+                   dac_bits=dac_bits,
+                   dac_in_enabled=dac_in_enabled,
+                   adc_out_enabled=adc_out_enabled)
