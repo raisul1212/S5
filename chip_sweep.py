@@ -24,19 +24,64 @@ import csv
 import os
 from functools import partial
 
+import jax
 from jax import random
 import jax.numpy as np
 from jax.scipy.linalg import block_diag
+from tqdm import tqdm
 
 from s5.utils.util import str2bool
 from s5.train_helpers import (
-    create_train_state, validate, load_checkpoint_msgpack,
+    create_train_state, load_checkpoint_msgpack, prep_batch,
+    cross_entropy_loss, compute_accuracy,
 )
 from s5.dataloading import Datasets
 from s5.seq_model import BatchClassificationModel, RetrievalModel
 from s5.ssm import init_S5SSM
 from s5.ssm_init import make_DPLR_HiPPO
 from s5.mambino_ssm import init_MambinoSSM
+
+
+@partial(jax.jit, static_argnums=(4, 5))
+def _chip_eval_step(batch_inputs, batch_labels, batch_integration_timesteps,
+                    state, model, batchnorm, noise_rng):
+    """Chip-mode eval step.  noise_rng is REQUIRED (never None), so the
+    trace is unambiguous: rngs={'noise': noise_rng} is always baked in.
+    This function is separate from train_helpers.eval_step to avoid any
+    JIT cache collision with the training path (which uses None default).
+    """
+    rngs = {"noise": noise_rng}
+    if batchnorm:
+        logits = model.apply(
+            {"params": state.params, "batch_stats": state.batch_stats},
+            batch_inputs, batch_integration_timesteps, rngs=rngs)
+    else:
+        logits = model.apply(
+            {"params": state.params},
+            batch_inputs, batch_integration_timesteps, rngs=rngs)
+    losses = cross_entropy_loss(logits, batch_labels)
+    accs = compute_accuracy(logits, batch_labels)
+    return losses, accs, logits
+
+
+def chip_validate(state, model_cls, testloader, seq_len, in_dim, batchnorm,
+                  noise_rng_seed):
+    """Chip-mode validate.  Always uses _chip_eval_step (never the shared
+    train_helpers.eval_step) so JIT cache is isolated to this module.
+    noise_rng_seed is REQUIRED (no default) so the caller has to think
+    about which noise realization is being sampled -- for MC over noise,
+    sweep this seed across N runs and average per-cell accuracy."""
+    model = model_cls(training=False)
+    losses, accuracies = np.array([]), np.array([])
+    noise_key = jax.random.PRNGKey(noise_rng_seed)
+    for batch in tqdm(testloader):
+        inputs, labels, integration_timesteps = prep_batch(batch, seq_len, in_dim)
+        noise_key, sub_key = jax.random.split(noise_key)
+        loss, acc, _ = _chip_eval_step(inputs, labels, integration_timesteps,
+                                       state, model, batchnorm, sub_key)
+        losses = np.append(losses, loss)
+        accuracies = np.append(accuracies, acc)
+    return float(np.mean(losses)), float(np.mean(accuracies))
 
 
 def build_ssm_init_fn(args, ssm_size, block_size, Lambda, V, Vinv,
@@ -123,6 +168,11 @@ def main():
     p.add_argument("--p_dropout", type=float, default=0.0)
     p.add_argument("--glu_rank", type=int, default=0)
     p.add_argument("--jax_seed", type=int, default=6554595)
+    p.add_argument("--noise_seed", type=int, default=0,
+                   help="Seed for the analog-noise realization in the "
+                        "sweep.  Same seed -> same noise sample per cell. "
+                        "For Monte Carlo over noise, run multiple times "
+                        "with different --noise_seed and average per cell.")
     # optimizer plumbing (only needed for create_train_state template)
     p.add_argument("--ssm_lr_base", type=float, default=1e-3)
     p.add_argument("--lr_factor", type=float, default=3.0)
@@ -180,11 +230,15 @@ def main():
     state, meta = load_checkpoint_msgpack(args.ckpt_prefix, template_state)
     print(f"[chip_sweep] loaded {args.ckpt_prefix}.msgpack  meta={meta}")
 
-    # Verify clean baseline
-    _, v_acc0 = validate(state, clean_model_cls, valloader,
-                         seq_len, in_dim, args.batchnorm)
-    _, t_acc0 = validate(state, clean_model_cls, testloader,
-                         seq_len, in_dim, args.batchnorm)
+    # Verify clean baseline using chip_validate (never uses the shared
+    # eval_step, so JIT cache is isolated).  Every call in this script
+    # goes through chip_validate to avoid None/Array cache collisions.
+    _, v_acc0 = chip_validate(state, clean_model_cls, valloader,
+                              seq_len, in_dim, args.batchnorm,
+                              args.noise_seed)
+    _, t_acc0 = chip_validate(state, clean_model_cls, testloader,
+                              seq_len, in_dim, args.batchnorm,
+                              args.noise_seed)
     print(f"[chip_sweep] clean baseline val={v_acc0:.4f}  test={t_acc0:.4f}")
 
     # Sweep
@@ -199,18 +253,12 @@ def main():
                                           Lambda, V, Vinv, sigma, bits)
                 n_cls = build_model_cls(args, n_ssm, n_classes,
                                         padded, retrieval)
-                # Always pass a valid rng.  The SSM's non-fast path calls
-                # self.make_rng('noise') unconditionally (before checking
-                # sigma), and JIT caching across different (sigma, bits)
-                # traces can otherwise leave stale None-rng compilations.
-                # Unused rng is harmless.
-                nrs = 42
-                v_loss, v_acc = validate(state, n_cls, valloader,
-                                         seq_len, in_dim, args.batchnorm,
-                                         noise_rng_seed=nrs)
-                t_loss, t_acc = validate(state, n_cls, testloader,
-                                         seq_len, in_dim, args.batchnorm,
-                                         noise_rng_seed=nrs)
+                v_loss, v_acc = chip_validate(state, n_cls, valloader,
+                                              seq_len, in_dim, args.batchnorm,
+                                              args.noise_seed)
+                t_loss, t_acc = chip_validate(state, n_cls, testloader,
+                                              seq_len, in_dim, args.batchnorm,
+                                              args.noise_seed)
                 print(f"[chip_sweep] sigma={sigma:.4f} bits={bits} "
                       f"val={v_acc:.4f} test={t_acc:.4f}")
                 w.writerow([sigma, bits, f"{v_acc:.4f}", f"{t_acc:.4f}",
