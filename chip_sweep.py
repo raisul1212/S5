@@ -45,12 +45,13 @@ from s5.mambino_ssm import init_MambinoSSM
 @partial(jax.jit, static_argnums=(4, 5))
 def _chip_eval_step(batch_inputs, batch_labels, batch_integration_timesteps,
                     state, model, batchnorm, noise_rng):
-    """Chip-mode eval step.  noise_rng is REQUIRED (never None), so the
-    trace is unambiguous: rngs={'noise': noise_rng} is always baked in.
-    This function is separate from train_helpers.eval_step to avoid any
-    JIT cache collision with the training path (which uses None default).
+    """Chip-mode eval step.  Pass ALL rngs listed in the outer
+    nn.vmap's split_rngs ('params', 'dropout', 'noise') so nn.vmap's
+    rng grouping doesn't silently drop 'noise' when other listed rngs
+    are missing.  Split from noise_rng for reproducibility.
     """
-    rngs = {"noise": noise_rng}
+    params_key, dropout_key, noise_key = jax.random.split(noise_rng, 3)
+    rngs = {"params": params_key, "dropout": dropout_key, "noise": noise_key}
     if batchnorm:
         logits = model.apply(
             {"params": state.params, "batch_stats": state.batch_stats},
