@@ -50,6 +50,8 @@ python -u chip_sweep.py \
     --sigmas=0,0.02,0.05,0.08,0.10,0.12,0.15 \
     --bits=0,4,5,6,7,8,10,12,14 \
     --crossings=1,2,4,8 \
+    --weight_sigmas=0,0.02,0.05 \
+    --mc_seeds=0,1,2 \
     --d_model=128 --ssm_size_base=16 --n_layers=8 --blocks=8 \
     --bidirectional=True --C_init=lecun_normal --batchnorm=True \
     --conj_sym=True --bsz=50 \
