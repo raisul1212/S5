@@ -38,6 +38,62 @@ def save_checkpoint(state, path, epoch, test_acc, test_loss,
     os.replace(tmp, path)
 
 
+def save_checkpoint_msgpack(state, path, epoch, test_acc, test_loss,
+                            args_dict=None, batchnorm=False):
+    """Save via Flax's native msgpack serialization.  Designed to round-trip
+    correctly with flax.serialization.from_bytes.  The previous pickle
+    format's loaded state fails to reproduce training's test_acc at reload
+    time; msgpack format is designed for pytree serialization by the Flax
+    team, so should preserve everything model.apply needs.
+
+    Layout on disk:
+      <path>.msgpack  -- flax.serialization.to_bytes({"params": ..., "batch_stats": ...})
+      <path>.meta.pkl -- {"epoch", "test_acc", "test_loss", "step", "args"}
+    """
+    import flax.serialization as fs
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    payload = {"params": state.params}
+    if batchnorm and hasattr(state, "batch_stats"):
+        payload["batch_stats"] = state.batch_stats
+    msgpack_bytes = fs.to_bytes(payload)
+    meta = {
+        "epoch": int(epoch),
+        "test_acc": float(test_acc),
+        "test_loss": float(test_loss),
+        "step": int(state.step),
+        "args": args_dict or {},
+    }
+    tmp_mp = path + ".msgpack.tmp"
+    tmp_meta = path + ".meta.pkl.tmp"
+    with open(tmp_mp, "wb") as f:
+        f.write(msgpack_bytes)
+    with open(tmp_meta, "wb") as f:
+        pickle.dump(meta, f)
+    os.replace(tmp_mp, path + ".msgpack")
+    os.replace(tmp_meta, path + ".meta.pkl")
+
+
+def load_checkpoint_msgpack(path, template_state):
+    """Round-trip counterpart to save_checkpoint_msgpack.  Returns
+    updated state (with loaded params + batch_stats) and meta dict."""
+    import flax.serialization as fs
+    with open(path + ".msgpack", "rb") as f:
+        msgpack_bytes = f.read()
+    template_payload = {"params": template_state.params}
+    if hasattr(template_state, "batch_stats"):
+        template_payload["batch_stats"] = template_state.batch_stats
+    restored = fs.from_bytes(template_payload, msgpack_bytes)
+    if "batch_stats" in restored:
+        new_state = template_state.replace(
+            params=restored["params"],
+            batch_stats=restored["batch_stats"])
+    else:
+        new_state = template_state.replace(params=restored["params"])
+    with open(path + ".meta.pkl", "rb") as f:
+        meta = pickle.load(f)
+    return new_state, meta
+
+
 # LR schedulers
 def linear_warmup(step, base_lr, end_step, lr_min=None):
     return base_lr * (step + 1) / end_step
@@ -435,13 +491,25 @@ def train_epoch(state, rng, model, trainloader, seq_len, in_dim, batchnorm, lr_p
     return state, np.mean(np.array(batch_losses)), step, epoch_metrics
 
 
-def validate(state, model, testloader, seq_len, in_dim, batchnorm, step_rescale=1.0):
-    """Validation function that loops over batches"""
+def validate(state, model, testloader, seq_len, in_dim, batchnorm, step_rescale=1.0, noise_rng_seed=None):
+    """Validation function that loops over batches.
+
+    noise_rng_seed: if not None, passes a per-batch 'noise' RNG derived
+    from this seed to the model.  Required when the SSM has
+    noise_sigma > 0 (chip analysis eval).  When None, no rngs are
+    passed (matches training's original eval path exactly).
+    """
     model = model(training=False, step_rescale=step_rescale)
     losses, accuracies, preds = np.array([]), np.array([]), np.array([])
+    noise_key = jax.random.PRNGKey(noise_rng_seed) if noise_rng_seed is not None else None
     for batch_idx, batch in enumerate(tqdm(testloader)):
         inputs, labels, integration_timesteps = prep_batch(batch, seq_len, in_dim)
-        loss, acc, pred = eval_step(inputs, labels, integration_timesteps, state, model, batchnorm)
+        if noise_key is not None:
+            noise_key, sub_key = jax.random.split(noise_key)
+        else:
+            sub_key = None
+        loss, acc, pred = eval_step(inputs, labels, integration_timesteps,
+                                    state, model, batchnorm, sub_key)
         losses = np.append(losses, loss)
         accuracies = np.append(accuracies, acc)
 
@@ -640,15 +708,23 @@ def eval_step(batch_inputs,
               state,
               model,
               batchnorm,
+              noise_rng=None,
               ):
+    """Eval one batch.  If noise_rng is not None, passes it as the
+    'noise' rng to model.apply (required when the SSM module has
+    noise_sigma > 0 for chip analysis).  Otherwise omits rngs entirely
+    to match training's original eval path.
+    """
+    rngs = {"noise": noise_rng} if noise_rng is not None else None
+    apply_kwargs = {"rngs": rngs} if rngs is not None else {}
     if batchnorm:
         logits = model.apply({"params": state.params, "batch_stats": state.batch_stats},
                              batch_inputs, batch_integration_timesteps,
-                             )
+                             **apply_kwargs)
     else:
         logits = model.apply({"params": state.params},
                              batch_inputs, batch_integration_timesteps,
-                             )
+                             **apply_kwargs)
 
     losses = cross_entropy_loss(logits, batch_labels)
     accs = compute_accuracy(logits, batch_labels)

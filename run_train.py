@@ -140,5 +140,13 @@ if __name__ == "__main__":
 							 "L=8).  Default False = causal forward-only "
 							 "predictor (streaming-inference-compatible). "
 							 "Ignored when --use_mambino_ssm=False.")
+	parser.add_argument("--chip_eval_sigmas", type=str, default="",
+						help="Comma-separated analog noise sigmas to sweep at "
+							 "end of training (e.g. '0,0.01,0.02,0.05,0.08'). "
+							 "Empty = no chip sweep.")
+	parser.add_argument("--chip_eval_bits", type=str, default="",
+						help="Comma-separated ADC bit depths to sweep at "
+							 "end of training (e.g. '0,4,5,6,7,8').  0 = no "
+							 "quantization.  Empty = no chip sweep.")
 
 	train(parser.parse_args())

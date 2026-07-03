@@ -7,7 +7,8 @@ import wandb
 
 from .train_helpers import create_train_state, reduce_lr_on_plateau,\
     linear_warmup, cosine_annealing, constant_lr, train_epoch, validate,\
-    save_checkpoint, compute_predictor_frobenius
+    save_checkpoint, save_checkpoint_msgpack, load_checkpoint_msgpack,\
+    compute_predictor_frobenius
 from .dataloading import Datasets
 from .seq_model import BatchClassificationModel, RetrievalModel
 from .ssm import init_S5SSM
@@ -320,7 +321,9 @@ def train(args):
 
             # ── Save BEST checkpoint on every val-acc improvement ──
             # Path controlled by --ckpt_dir.  If --ckpt_dir is empty,
-            # skip saving (preserves old S5 behavior).
+            # skip saving (preserves old S5 behavior).  Saves BOTH the
+            # legacy pickle format (for backward compat / debugging) AND
+            # the flax msgpack format (which round-trips correctly).
             ckpt_dir = getattr(args, 'ckpt_dir', '') or ''
             if ckpt_dir:
                 best_path = os.path.join(ckpt_dir, "best.pkl")
@@ -329,7 +332,15 @@ def train(args):
                                 test_loss=best_test_loss,
                                 args_dict=vars(args),
                                 batchnorm=args.batchnorm)
-                print(f"[*] Saved best checkpoint -> {best_path} (test_acc={best_test_acc:.4f})")
+                print(f"[*] Saved best pickle -> {best_path} (test_acc={best_test_acc:.4f})")
+                # ── Msgpack format for reliable reload ──
+                best_msgpack_base = os.path.join(ckpt_dir, "best")
+                save_checkpoint_msgpack(state, best_msgpack_base, epoch=epoch,
+                                        test_acc=best_test_acc,
+                                        test_loss=best_test_loss,
+                                        args_dict=vars(args),
+                                        batchnorm=args.batchnorm)
+                print(f"[*] Saved best msgpack -> {best_msgpack_base}.msgpack")
 
             # Do some validation on improvement.
             if speech:
@@ -452,7 +463,8 @@ def train(args):
         # ── Save FINAL checkpoint every epoch (overwrites previous).  ──
         # This guarantees that on early-stop / SLURM timeout / crash we
         # always have the LAST epoch's state to resume from.  Best ckpt
-        # is saved separately above when val_acc improves.
+        # is saved separately above when val_acc improves.  Dual-format
+        # (pickle + msgpack) for reliable reload.
         ckpt_dir = getattr(args, 'ckpt_dir', '') or ''
         if ckpt_dir:
             final_path = os.path.join(ckpt_dir, "final.pkl")
@@ -463,6 +475,108 @@ def train(args):
                             test_loss=current_test_loss,
                             args_dict=vars(args),
                             batchnorm=args.batchnorm)
+            final_msgpack_base = os.path.join(ckpt_dir, "final")
+            save_checkpoint_msgpack(state, final_msgpack_base, epoch=epoch,
+                                    test_acc=current_test_acc,
+                                    test_loss=current_test_loss,
+                                    args_dict=vars(args),
+                                    batchnorm=args.batchnorm)
 
         if count > args.early_stop_patience:
             break
+
+    # ═══════════════════════════════════════════════════════════════════
+    # POST-TRAINING: chip eval sweep + reload verification
+    # ═══════════════════════════════════════════════════════════════════
+    ckpt_dir = getattr(args, 'ckpt_dir', '') or ''
+    chip_sigmas = getattr(args, 'chip_eval_sigmas', '') or ''
+    chip_bits = getattr(args, 'chip_eval_bits', '') or ''
+
+    if chip_sigmas or chip_bits:
+        sigmas = [float(s) for s in chip_sigmas.split(',')] if chip_sigmas else [0.0]
+        bits_list = [int(b) for b in chip_bits.split(',')] if chip_bits else [0]
+
+        print("\n" + "=" * 70)
+        print("POST-TRAINING RELOAD VERIFICATION + CHIP EVAL SWEEP")
+        print("=" * 70)
+
+        # ── 1) Verify current live state gives expected test_acc ──
+        print(f"\n[chip_verify] Re-running final test with LIVE state...")
+        _, live_test_acc = validate(state, model_cls, testloader,
+                                    seq_len, in_dim, args.batchnorm)
+        print(f"[chip_verify] live_test_acc = {live_test_acc:.4f}")
+
+        # ── 2) Msgpack round-trip verify ──
+        if ckpt_dir:
+            print(f"\n[chip_verify] Reloading msgpack final ckpt...")
+            try:
+                reloaded_state, meta = load_checkpoint_msgpack(
+                    os.path.join(ckpt_dir, "final"), state)
+                _, reload_test_acc = validate(reloaded_state, model_cls, testloader,
+                                              seq_len, in_dim, args.batchnorm)
+                print(f"[chip_verify] reload_test_acc = {reload_test_acc:.4f}")
+                print(f"[chip_verify] delta live-vs-reload = "
+                      f"{abs(live_test_acc - reload_test_acc):.4f}")
+                if abs(live_test_acc - reload_test_acc) < 0.01:
+                    print(f"[chip_verify] PASS -- msgpack round-trip works")
+                else:
+                    print(f"[chip_verify] FAIL -- msgpack round-trip is broken too")
+            except Exception as e:
+                print(f"[chip_verify] Reload FAILED: {e}")
+
+        # ── 3) Chip noise + ADC sweep on LIVE state ──
+        # Build a noise-augmented model_cls for each (sigma, bits) combo
+        # by re-invoking init_S5SSM/init_MambinoSSM with the appropriate
+        # chip knobs, then calling validate() with the SAME state.
+        print(f"\n[chip_eval] Sweeping {len(sigmas)} sigmas x "
+              f"{len(bits_list)} bit depths on LIVE state...")
+
+        for sigma in sigmas:
+            for bits in bits_list:
+                # Build noisy ssm_init_fn matching the training config
+                if getattr(args, 'use_mambino_ssm', False):
+                    n_ssm = init_MambinoSSM(H=args.d_model, P=ssm_size,
+                        Lambda_re_init=Lambda.real, Lambda_im_init=Lambda.imag,
+                        V=V, Vinv=Vinv,
+                        C_init=args.C_init, discretization=args.discretization,
+                        dt_min=args.dt_min, dt_max=args.dt_max,
+                        conj_sym=args.conj_sym, clip_eigs=args.clip_eigs,
+                        bidirectional=args.bidirectional,
+                        bidir_predictor=getattr(args, 'bidir_predictor', False),
+                        noise_sigma=sigma, adc_bits=bits)
+                else:
+                    n_ssm = init_S5SSM(H=args.d_model, P=ssm_size,
+                        Lambda_re_init=Lambda.real, Lambda_im_init=Lambda.imag,
+                        V=V, Vinv=Vinv,
+                        C_init=args.C_init, discretization=args.discretization,
+                        dt_min=args.dt_min, dt_max=args.dt_max,
+                        conj_sym=args.conj_sym, clip_eigs=args.clip_eigs,
+                        bidirectional=args.bidirectional,
+                        noise_sigma=sigma, adc_bits=bits)
+                # Build noisy model_cls with same non-SSM args as training
+                if retrieval:
+                    n_model_cls = partial(RetrievalModel,
+                        ssm=n_ssm, d_output=n_classes, d_model=args.d_model,
+                        n_layers=args.n_layers, padded=padded,
+                        activation=args.activation_fn, dropout=args.p_dropout,
+                        prenorm=args.prenorm, batchnorm=args.batchnorm,
+                        bn_momentum=args.bn_momentum)
+                else:
+                    n_model_cls = partial(BatchClassificationModel,
+                        ssm=n_ssm, d_output=n_classes, d_model=args.d_model,
+                        n_layers=args.n_layers, padded=padded,
+                        activation=args.activation_fn, dropout=args.p_dropout,
+                        mode=args.mode, prenorm=args.prenorm,
+                        batchnorm=args.batchnorm, bn_momentum=args.bn_momentum,
+                        glu_rank=getattr(args, 'glu_rank', 0))
+                # Run validate with noise rng
+                nrs = 42 if sigma > 0 else None
+                v_loss, v_acc = validate(state, n_model_cls, valloader,
+                                         seq_len, in_dim, args.batchnorm,
+                                         noise_rng_seed=nrs)
+                t_loss, t_acc = validate(state, n_model_cls, testloader,
+                                         seq_len, in_dim, args.batchnorm,
+                                         noise_rng_seed=nrs)
+                print(f"[chip_eval] sigma={sigma:.4f}  bits={bits}  "
+                      f"val_acc={v_acc:.4f}  test_acc={t_acc:.4f}")
+        print(f"\n[chip_eval] Sweep complete.")
