@@ -147,6 +147,7 @@ class S5SSM(nn.Module):
     # side.  These are set only at eval time via a chip_eval script.
     noise_sigma: float = 0.0
     adc_bits: int = 0
+    dac_bits: int = 0
 
     """ The S5 SSM
         Args:
@@ -283,7 +284,8 @@ class S5SSM(nn.Module):
             output sequence (float32): (L, H)
         """
         # Fast path: no chip analysis knobs -> original behavior.
-        if self.noise_sigma <= 0 and self.adc_bits <= 0:
+        if (self.noise_sigma <= 0 and self.adc_bits <= 0
+                and self.dac_bits <= 0):
             ys = apply_ssm(self.Lambda_bar,
                            self.B_bar,
                            self.C_tilde,
@@ -294,8 +296,10 @@ class S5SSM(nn.Module):
             return ys + Du
 
         # ── Chip-analysis path: unroll apply_ssm with noise/quant hooks ──
-        # 1) DAC in (digital -> analog)
-        x = inject_analog_noise(input_sequence, self.noise_sigma,
+        # 1) DAC in (digital -> analog): quantize digital input to
+        # dac_bits, then add analog voltage noise from DAC nonidealities.
+        x = quantize_adc(input_sequence, self.dac_bits)
+        x = inject_analog_noise(x, self.noise_sigma,
                                 self.make_rng('noise'))
         # 2) B crossbar: Bu = B_bar @ x
         L = x.shape[0]
@@ -340,10 +344,13 @@ def init_S5SSM(H,
                bidirectional,
                noise_sigma=0.0,
                adc_bits=0,
+               dac_bits=0,
                ):
     """Convenience function that will be used to initialize the SSM.
-       Same arguments as defined in S5SSM above.  noise_sigma/adc_bits
-       are chip-analysis knobs -- default 0/0 leaves the SSM unchanged."""
+       Same arguments as defined in S5SSM above.  noise_sigma/adc_bits/
+       dac_bits are chip-analysis knobs -- default 0 leaves the SSM
+       unchanged.  DAC and ADC are typically varied in unison since
+       they share the analog<->digital boundary at each layer."""
     return partial(S5SSM,
                    H=H,
                    P=P,
@@ -359,4 +366,5 @@ def init_S5SSM(H,
                    clip_eigs=clip_eigs,
                    bidirectional=bidirectional,
                    noise_sigma=noise_sigma,
-                   adc_bits=adc_bits)
+                   adc_bits=adc_bits,
+                   dac_bits=dac_bits)

@@ -104,6 +104,7 @@ class MambinoSSM(nn.Module):
     # noise exposure via redundant pathways.
     noise_sigma: float = 0.0
     adc_bits: int = 0
+    dac_bits: int = 0
 
     def setup(self):
         """Initialize main SSM parameters (identical to S5SSM) plus
@@ -413,12 +414,12 @@ class MambinoSSM(nn.Module):
         collection so the train loop can aggregate across all blocks for
         logging and add lambda_pc * L_int to the task loss.
         """
-        # ── 1) DAC in (digital -> analog) ──
+        # ── 1) DAC in (digital -> analog): quantize digital input to
+        # dac_bits, then add analog voltage noise from DAC nonidealities. ──
+        x = quantize_adc(input_sequence, self.dac_bits)
         if self.noise_sigma > 0:
-            x = inject_analog_noise(input_sequence, self.noise_sigma,
+            x = inject_analog_noise(x, self.noise_sigma,
                                     self.make_rng('noise'))
-        else:
-            x = input_sequence
 
         # ── 2) Predictor branch: x_hat(t) = C_s @ s(t-1) ──
         # (predictor scan internals also emit noise if enabled -- see method)
@@ -454,7 +455,7 @@ def init_MambinoSSM(H, P, Lambda_re_init, Lambda_im_init, V, Vinv,
                     C_init, discretization, dt_min, dt_max,
                     conj_sym, clip_eigs, bidirectional,
                     bidir_predictor=False,
-                    noise_sigma=0.0, adc_bits=0):
+                    noise_sigma=0.0, adc_bits=0, dac_bits=0):
     """Factory matching init_S5SSM signature exactly so MambinoSSM can
     be swapped in via a flag with no other changes.
 
@@ -476,4 +477,5 @@ def init_MambinoSSM(H, P, Lambda_re_init, Lambda_im_init, V, Vinv,
                    bidirectional=bidirectional,
                    bidir_predictor=bidir_predictor,
                    noise_sigma=noise_sigma,
-                   adc_bits=adc_bits)
+                   adc_bits=adc_bits,
+                   dac_bits=dac_bits)

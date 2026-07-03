@@ -534,6 +534,10 @@ def train(args):
         for sigma in sigmas:
             for bits in bits_list:
                 # Build noisy ssm_init_fn matching the training config
+                # DAC and ADC precision coupled: both driven by `bits`
+                # since they share the analog<->digital boundary at each
+                # inter-layer crossing.  A chip designed with 6-bit ADC
+                # would use a matching 6-bit DAC on the next layer.
                 if getattr(args, 'use_mambino_ssm', False):
                     n_ssm = init_MambinoSSM(H=args.d_model, P=ssm_size,
                         Lambda_re_init=Lambda.real, Lambda_im_init=Lambda.imag,
@@ -543,7 +547,7 @@ def train(args):
                         conj_sym=args.conj_sym, clip_eigs=args.clip_eigs,
                         bidirectional=args.bidirectional,
                         bidir_predictor=getattr(args, 'bidir_predictor', False),
-                        noise_sigma=sigma, adc_bits=bits)
+                        noise_sigma=sigma, adc_bits=bits, dac_bits=bits)
                 else:
                     n_ssm = init_S5SSM(H=args.d_model, P=ssm_size,
                         Lambda_re_init=Lambda.real, Lambda_im_init=Lambda.imag,
@@ -552,7 +556,7 @@ def train(args):
                         dt_min=args.dt_min, dt_max=args.dt_max,
                         conj_sym=args.conj_sym, clip_eigs=args.clip_eigs,
                         bidirectional=args.bidirectional,
-                        noise_sigma=sigma, adc_bits=bits)
+                        noise_sigma=sigma, adc_bits=bits, dac_bits=bits)
                 # Build noisy model_cls with same non-SSM args as training
                 if retrieval:
                     n_model_cls = partial(RetrievalModel,
@@ -570,7 +574,9 @@ def train(args):
                         batchnorm=args.batchnorm, bn_momentum=args.bn_momentum,
                         glu_rank=getattr(args, 'glu_rank', 0))
                 # Run validate with noise rng
-                nrs = 42 if sigma > 0 else None
+                # SSM needs an rng whenever it takes the non-fast path,
+                # which is triggered by sigma > 0 OR bits > 0.
+                nrs = 42 if (sigma > 0 or bits > 0) else None
                 v_loss, v_acc = validate(state, n_model_cls, valloader,
                                          seq_len, in_dim, args.batchnorm,
                                          noise_rng_seed=nrs)
