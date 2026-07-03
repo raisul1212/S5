@@ -47,7 +47,7 @@ python -u chip_sweep.py \
     --ckpt_prefix="$CKPT_DIR/best" \
     --csv="$CKPT_DIR/sweep_v7.csv" \
     --dataset=listops-classification \
-    --sigmas=0,0.005,0.01,0.02,0.05,0.08,0.10 \
+    --sigmas=0,0.02,0.05,0.08,0.10,0.12,0.15 \
     --bits=0,4,5,6,7,8,10,12,14 \
     --crossings=1,2,4,8 \
     --d_model=128 --ssm_size_base=16 --n_layers=8 --blocks=8 \
