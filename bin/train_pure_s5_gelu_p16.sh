@@ -6,17 +6,17 @@
 #   Mambino gelu (P=8 main + P=8 predictor = 16 total states, 106K params)
 # Same total state modes, same params, only architectural difference is
 # the predictor branch (predictive SSM).
-#SBATCH --job-name=tr-pure-s5-gelu-p16
+#SBATCH --job-name=config5
 #SBATCH --partition=a30
 #SBATCH --account=raisul
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
-#SBATCH --mem=32G
-#SBATCH --time=12:00:00
-#SBATCH --output=results/slurm/tr_pure_s5_gelu_p16_%j.out
-#SBATCH --error=results/slurm/tr_pure_s5_gelu_p16_%j.err
+#SBATCH --mem=16G
+#SBATCH --time=03:00:00
+#SBATCH --output=results/slurm/config5_%j.out
+#SBATCH --error=results/slurm/config5_%j.err
 
 source /etc/profile.d/modules.sh 2>/dev/null || true
 source ~/.bashrc 2>/dev/null || true
