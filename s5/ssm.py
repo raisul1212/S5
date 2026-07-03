@@ -305,6 +305,16 @@ class S5SSM(nn.Module):
             return ys + Du
 
         # ── Chip-analysis path: unroll apply_ssm with noise/quant hooks ──
+        # DIAGNOSTIC: dump the SSM's scope rngs to find why 'noise' is
+        # missing at the failure point.  Printed once per compile via
+        # Python print (not jax.debug.print) so we see it in the log.
+        try:
+            rng_keys = list(self.scope.rngs.keys()) if self.scope else "no scope"
+            print(f"[SSM debug] scope.rngs keys = {rng_keys}  "
+                  f"sigma={self.noise_sigma}  adc={self.adc_bits}  "
+                  f"dac={self.dac_bits}", flush=True)
+        except Exception as e:
+            print(f"[SSM debug] scope introspection failed: {e}", flush=True)
         # 1) DAC in (digital -> analog): quantize digital input to
         # dac_bits (only if this SSM sits at a DAC boundary), then add
         # analog voltage noise from DAC nonidealities.
