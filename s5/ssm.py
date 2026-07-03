@@ -157,6 +157,22 @@ class S5SSM(nn.Module):
     # enclosing stack.
     dac_in_enabled: bool = True
     adc_out_enabled: bool = True
+    # State cell CORRELATED retention noise: charge injected onto the
+    # storage capacitor persists and filters through Lambda dynamics.
+    # Model: h(t+1) = Lambda*h(t) + Bu(t) + eta(t), eta white per step.
+    # Implemented as an EXACT extra associative_scan on white eta so
+    # temporal correlation is physically correct.  This noise does NOT
+    # average out under mean-pool.  Realistic well-designed chip
+    # values: 0.001 - 0.005.  Higher values represent poorly designed
+    # analog storage.
+    retention_sigma: float = 0.0
+    # State cell INDEPENDENT per-read noise: kT/C thermal noise at
+    # each capacitor read, plus switch charge injection per cycle.
+    # Fresh sample per time step, uncorrelated across time.  Averages
+    # OUT through temporal mean-pool.  Realistic well-designed chip
+    # values: 0.005 - 0.03.  Applied as post-scan Gaussian to xs before
+    # C_tilde readout.
+    read_sigma: float = 0.0
 
     """ The S5 SSM
         Args:
@@ -294,7 +310,8 @@ class S5SSM(nn.Module):
         """
         # Fast path: no chip analysis knobs -> original behavior.
         if (self.noise_sigma <= 0 and self.adc_bits <= 0
-                and self.dac_bits <= 0):
+                and self.dac_bits <= 0 and self.retention_sigma <= 0
+                and self.read_sigma <= 0):
             ys = apply_ssm(self.Lambda_bar,
                            self.B_bar,
                            self.C_tilde,
@@ -322,10 +339,33 @@ class S5SSM(nn.Module):
         # simplicity; propagated through the scan analytics).
         Lambda_elements = self.Lambda_bar * np.ones((L, self.Lambda_bar.shape[0]))
         _, xs = jax.lax.associative_scan(binary_operator, (Lambda_elements, Bu))
+        if self.retention_sigma > 0:
+            # Exact retention model: sample white per-step eta(t), run
+            # through the SAME SSM dynamics (associative_scan with same
+            # Lambda) so the noise on xs has correct temporal correlation
+            # from filtering through the state matrix.
+            eta_white = jax.random.normal(self.make_rng('noise'), Bu.shape,
+                                          dtype=Bu.dtype) * self.retention_sigma
+            _, noise_state = jax.lax.associative_scan(
+                binary_operator, (Lambda_elements, eta_white))
+            xs = xs + noise_state
         if self.bidirectional:
             _, xs2 = jax.lax.associative_scan(
                 binary_operator, (Lambda_elements, Bu), reverse=True)
+            if self.retention_sigma > 0:
+                eta_white2 = jax.random.normal(self.make_rng('noise'),
+                                               Bu.shape, dtype=Bu.dtype) \
+                             * self.retention_sigma
+                _, noise_state2 = jax.lax.associative_scan(
+                    binary_operator, (Lambda_elements, eta_white2), reverse=True)
+                xs2 = xs2 + noise_state2
             xs = np.concatenate((xs, xs2), axis=-1)
+        # Independent per-read state noise (kT/C, switch charge injection
+        # per read cycle).  Fresh Gaussian per (t, state_dim) -- averages
+        # out under mean-pool, unlike correlated retention noise.
+        if self.read_sigma > 0:
+            xs = xs + jax.random.normal(self.make_rng('noise'), xs.shape,
+                                        dtype=xs.dtype) * self.read_sigma
         # 3) C crossbar readout
         if self.conj_sym:
             ys = jax.vmap(lambda h: 2 * (self.C_tilde @ h).real)(xs)
@@ -364,6 +404,8 @@ def init_S5SSM(H,
                dac_bits=0,
                dac_in_enabled=True,
                adc_out_enabled=True,
+               retention_sigma=0.0,
+               read_sigma=0.0,
                ):
     """Convenience function that will be used to initialize the SSM.
        Same arguments as defined in S5SSM above.  noise_sigma/adc_bits/
@@ -390,4 +432,6 @@ def init_S5SSM(H,
                    adc_bits=adc_bits,
                    dac_bits=dac_bits,
                    dac_in_enabled=dac_in_enabled,
-                   adc_out_enabled=adc_out_enabled)
+                   adc_out_enabled=adc_out_enabled,
+                   retention_sigma=retention_sigma,
+                   read_sigma=read_sigma)

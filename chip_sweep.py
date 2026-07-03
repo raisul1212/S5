@@ -125,12 +125,14 @@ def chip_validate(state, model_cls, testloader, seq_len, in_dim, batchnorm,
 
 
 def build_ssm_init_fn(args, ssm_size, block_size, Lambda, V, Vinv,
-                      sigma, bits):
+                      sigma, bits, retention_sigma=0.0, read_sigma=0.0):
     """Build SSM init fn for a sweep cell.  DAC and ADC precision are
     driven from a single `bits` value: they share the analog<->digital
     boundary between adjacent layers on the physical chip, so specifying
     them independently would explore unrealistic configurations (e.g.
-    6-bit ADC feeding a 3-bit DAC).  Sweep stays 6x6 (sigma x bits)."""
+    6-bit ADC feeding a 3-bit DAC).  Sweep stays 6x6 (sigma x bits).
+    retention_sigma models state-cell thermal + charge-injection noise
+    accumulated through the scan."""
     if args.use_mambino_ssm:
         return init_MambinoSSM(
             H=args.d_model, P=ssm_size,
@@ -142,6 +144,8 @@ def build_ssm_init_fn(args, ssm_size, block_size, Lambda, V, Vinv,
             bidirectional=args.bidirectional,
             bidir_predictor=args.bidir_predictor,
             noise_sigma=sigma, adc_bits=bits, dac_bits=bits,
+            retention_sigma=retention_sigma,
+            read_sigma=read_sigma,
         )
     return init_S5SSM(
         H=args.d_model, P=ssm_size,
@@ -152,16 +156,19 @@ def build_ssm_init_fn(args, ssm_size, block_size, Lambda, V, Vinv,
         conj_sym=args.conj_sym, clip_eigs=args.clip_eigs,
         bidirectional=args.bidirectional,
         noise_sigma=sigma, adc_bits=bits, dac_bits=bits,
+        retention_sigma=retention_sigma,
     )
 
 
 def build_model_cls(args, ssm_init_fn, n_classes, padded, retrieval,
-                    crossings_every=1):
+                    crossings_every=1, digital_bits=0):
     """crossings_every: chip arch knob threaded into ClassificationModel
     which propagates to StackedEncoderModel which computes per-layer
     DAC/ADC enable bools for SequenceLayer -> SSM.  Default 1 = baseline
     (every layer has both crossings).  Retrieval task doesn't get
-    crossings_every -- not used in the chip sweep."""
+    crossings_every -- not used in the chip sweep.
+    digital_bits: precision of digital-domain math (gate matmul + gate
+    multiply) inside SequenceLayer.  0 = FP32 (idealized)."""
     if retrieval:
         return partial(
             RetrievalModel,
@@ -180,6 +187,7 @@ def build_model_cls(args, ssm_init_fn, n_classes, padded, retrieval,
         bn_momentum=args.bn_momentum,
         glu_rank=args.glu_rank,
         crossings_every=crossings_every,
+        digital_bits=digital_bits,
     )
 
 
@@ -213,6 +221,23 @@ def main():
                         "seed = one chip instance.  Multiple seeds give "
                         "std across chips (error bars).  Fixed across "
                         "batches within one seed.")
+    p.add_argument("--retention_sigmas", type=str, default="0",
+                   help="CORRELATED state noise: charge injection persists "
+                        "and filters through Lambda dynamics.  Modeled "
+                        "EXACTLY via a second associative_scan on white "
+                        "eta.  Does NOT average out under mean-pool.  "
+                        "Well-designed chip: 0.001-0.003.")
+    p.add_argument("--read_sigmas", type=str, default="0",
+                   help="INDEPENDENT per-read noise: kT/C thermal + "
+                        "switch charge injection per read cycle.  Fresh "
+                        "Gaussian per (t, dim).  Averages OUT under "
+                        "mean-pool.  Well-designed chip: 0.005-0.02.")
+    p.add_argument("--digital_bits_list", type=str, default="0",
+                   help="Digital-domain math precision list.  0 = FP32 "
+                        "(idealized, matches original behavior).  Real "
+                        "chip: 8 (INT8), 16 (FP16).  Quantizes gate "
+                        "matmul output and gate multiply result inside "
+                        "SequenceLayer.")
     p.add_argument("--csv", type=str, required=True)
     p.add_argument("--use_mambino_ssm", type=str2bool, default=False)
     p.add_argument("--bidir_predictor", type=str2bool, default=False)
@@ -325,27 +350,30 @@ def main():
     crossings_list = [int(x) for x in args.crossings.split(",")]
     weight_sigmas = [float(x) for x in args.weight_sigmas.split(",")]
     mc_seeds = [int(x) for x in args.mc_seeds.split(",")]
+    retention_sigmas = [float(x) for x in args.retention_sigmas.split(",")]
+    read_sigmas = [float(x) for x in args.read_sigmas.split(",")]
+    digital_bits_list = [int(x) for x in args.digital_bits_list.split(",")]
 
-    # 5D sweep: weight_sigma x mc_seed x sigma x bits x crossings_every.
-    # weight_sigma+mc_seed determine the STATIC chip instance.  Inner 3D
-    # varies the runtime chip conditions on that fixed chip.
+    # 8D sweep -- use narrow axis lists per invocation for DOE-style
+    # partial sweeps (avoid full factorial).
     os.makedirs(os.path.dirname(args.csv) or ".", exist_ok=True)
-    total = (len(weight_sigmas) * len(mc_seeds) *
-             len(sigmas) * len(bits_list) * len(crossings_list))
-    print(f"[chip_sweep] 5D sweep: {len(weight_sigmas)} weight_sigmas x "
-          f"{len(mc_seeds)} mc_seeds x {len(sigmas)} signal_sigmas x "
-          f"{len(bits_list)} bits x {len(crossings_list)} crossings "
-          f"= {total} cells")
+    total = (len(weight_sigmas) * len(mc_seeds) * len(sigmas) *
+             len(bits_list) * len(crossings_list) * len(retention_sigmas) *
+             len(read_sigmas) * len(digital_bits_list))
+    print(f"[chip_sweep] {total} cells "
+          f"({len(weight_sigmas)}w x {len(mc_seeds)}mc x "
+          f"{len(sigmas)}sig x {len(bits_list)}bits x "
+          f"{len(crossings_list)}cross x {len(retention_sigmas)}ret x "
+          f"{len(read_sigmas)}read x {len(digital_bits_list)}dbits)")
     with open(args.csv, "w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["weight_sigma", "mc_seed", "sigma", "bits", "crossings_every",
+        w.writerow(["weight_sigma", "mc_seed", "sigma", "bits",
+                    "crossings_every", "retention_sigma", "read_sigma",
+                    "digital_bits",
                     "val_acc", "test_acc", "val_loss", "test_loss"])
         cell = 0
         for weight_sigma in weight_sigmas:
             for mc_seed in mc_seeds:
-                # Sample chip-instance weight perturbation ONCE for this
-                # (weight_sigma, mc_seed) pair.  Fixed across all inner
-                # 3D cells and all batches -- represents ONE physical chip.
                 if weight_sigma > 0:
                     wkey = jax.random.PRNGKey(mc_seed * 1000 + 7)
                     perturbed_params = perturb_ssm_weights(
@@ -353,31 +381,47 @@ def main():
                     chip_state = state.replace(params=perturbed_params)
                 else:
                     chip_state = state
-                for sigma in sigmas:
-                    for bits in bits_list:
-                        for crossings in crossings_list:
-                            cell += 1
-                            n_ssm = build_ssm_init_fn(args, ssm_size, block_size,
-                                                      Lambda, V, Vinv, sigma, bits)
-                            n_cls = build_model_cls(args, n_ssm, n_classes,
-                                                    padded, retrieval,
-                                                    crossings_every=crossings)
-                            v_loss, v_acc = chip_validate(chip_state, n_cls,
-                                                          valloader, seq_len, in_dim,
-                                                          args.batchnorm,
-                                                          args.noise_seed)
-                            t_loss, t_acc = chip_validate(chip_state, n_cls,
-                                                          testloader, seq_len, in_dim,
-                                                          args.batchnorm,
-                                                          args.noise_seed)
-                            print(f"[chip_sweep {cell}/{total}] "
-                                  f"wsig={weight_sigma:.3f} mc={mc_seed} "
-                                  f"sig={sigma:.4f} bits={bits} "
-                                  f"cross={crossings} "
-                                  f"val={v_acc:.4f} test={t_acc:.4f}")
-                            w.writerow([weight_sigma, mc_seed, sigma, bits, crossings,
-                                        f"{v_acc:.4f}", f"{t_acc:.4f}",
-                                        f"{v_loss:.4f}", f"{t_loss:.4f}"])
+                for retention_sigma in retention_sigmas:
+                    for read_sigma in read_sigmas:
+                        for digital_bits in digital_bits_list:
+                            for sigma in sigmas:
+                                for bits in bits_list:
+                                    for crossings in crossings_list:
+                                        cell += 1
+                                        n_ssm = build_ssm_init_fn(
+                                            args, ssm_size, block_size,
+                                            Lambda, V, Vinv, sigma, bits,
+                                            retention_sigma=retention_sigma,
+                                            read_sigma=read_sigma)
+                                        n_cls = build_model_cls(
+                                            args, n_ssm, n_classes,
+                                            padded, retrieval,
+                                            crossings_every=crossings,
+                                            digital_bits=digital_bits)
+                                        v_loss, v_acc = chip_validate(
+                                            chip_state, n_cls, valloader,
+                                            seq_len, in_dim, args.batchnorm,
+                                            args.noise_seed)
+                                        t_loss, t_acc = chip_validate(
+                                            chip_state, n_cls, testloader,
+                                            seq_len, in_dim, args.batchnorm,
+                                            args.noise_seed)
+                                        print(f"[chip {cell}/{total}] "
+                                              f"w={weight_sigma:.3f} "
+                                              f"mc={mc_seed} "
+                                              f"ret={retention_sigma:.4f} "
+                                              f"rd={read_sigma:.3f} "
+                                              f"db={digital_bits} "
+                                              f"sig={sigma:.4f} b={bits} "
+                                              f"cr={crossings} "
+                                              f"v={v_acc:.4f} t={t_acc:.4f}")
+                                        w.writerow([
+                                            weight_sigma, mc_seed, sigma,
+                                            bits, crossings,
+                                            retention_sigma, read_sigma,
+                                            digital_bits,
+                                            f"{v_acc:.4f}", f"{t_acc:.4f}",
+                                            f"{v_loss:.4f}", f"{t_loss:.4f}"])
     print(f"[chip_sweep] wrote {args.csv}")
 
 

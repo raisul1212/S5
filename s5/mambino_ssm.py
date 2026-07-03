@@ -111,6 +111,12 @@ class MambinoSSM(nn.Module):
     # applied (analog compute is noisy regardless of boundary layout).
     dac_in_enabled: bool = True
     adc_out_enabled: bool = True
+    # State cell noise -- see S5SSM for physics.  Applied to BOTH main
+    # scan output AND predictor scan output (both use analog state cells).
+    #   retention_sigma: correlated (exact scan model)
+    #   read_sigma: independent (post-scan Gaussian)
+    retention_sigma: float = 0.0
+    read_sigma: float = 0.0
 
     def setup(self):
         """Initialize main SSM parameters (identical to S5SSM) plus
@@ -324,6 +330,17 @@ class MambinoSSM(nn.Module):
         # Forward scan (always runs)
         _, s_fwd = jax.lax.associative_scan(binary_operator,
                                             (Lambda_elements, Bu_elements))
+        if self.retention_sigma > 0:
+            eta_pred = jax.random.normal(self.make_rng('noise'),
+                                         Bu_elements.shape,
+                                         dtype=Bu_elements.dtype) * self.retention_sigma
+            _, noise_state = jax.lax.associative_scan(
+                binary_operator, (Lambda_elements, eta_pred))
+            s_fwd = s_fwd + noise_state
+        if self.read_sigma > 0:
+            s_fwd = s_fwd + jax.random.normal(
+                self.make_rng('noise'), s_fwd.shape,
+                dtype=s_fwd.dtype) * self.read_sigma
         # Causal shift: s_fwd_shifted[t] = s_fwd[t-1] for t>=1, zero for t=0
         zero_fwd = np.zeros_like(s_fwd[0:1])
         s_fwd_shifted = np.concatenate([zero_fwd, s_fwd[:-1]], axis=0)
@@ -332,6 +349,17 @@ class MambinoSSM(nn.Module):
             # Backward scan
             _, s_bwd = jax.lax.associative_scan(
                 binary_operator, (Lambda_elements, Bu_elements), reverse=True)
+            if self.retention_sigma > 0:
+                eta_pred_bwd = jax.random.normal(self.make_rng('noise'),
+                                                 Bu_elements.shape,
+                                                 dtype=Bu_elements.dtype) * self.retention_sigma
+                _, noise_state_bwd = jax.lax.associative_scan(
+                    binary_operator, (Lambda_elements, eta_pred_bwd), reverse=True)
+                s_bwd = s_bwd + noise_state_bwd
+            if self.read_sigma > 0:
+                s_bwd = s_bwd + jax.random.normal(
+                    self.make_rng('noise'), s_bwd.shape,
+                    dtype=s_bwd.dtype) * self.read_sigma
             # Anti-causal shift: s_bwd_shifted[t] = s_bwd[t+1] for t<L-1,
             # zero for t=L-1.  Prevents predictor from cheating with x(t).
             zero_bwd = np.zeros_like(s_bwd[0:1])
@@ -383,10 +411,32 @@ class MambinoSSM(nn.Module):
         # Forward scan
         _, xs_fwd = jax.lax.associative_scan(
             binary_operator, (Lambda_elements, Bu_elements))
+        if self.retention_sigma > 0:
+            eta_main = jax.random.normal(self.make_rng('noise'),
+                                         Bu_elements.shape,
+                                         dtype=Bu_elements.dtype) * self.retention_sigma
+            _, noise_state = jax.lax.associative_scan(
+                binary_operator, (Lambda_elements, eta_main))
+            xs_fwd = xs_fwd + noise_state
+        if self.read_sigma > 0:
+            xs_fwd = xs_fwd + jax.random.normal(
+                self.make_rng('noise'), xs_fwd.shape,
+                dtype=xs_fwd.dtype) * self.read_sigma
 
         if self.bidirectional:
             _, xs_bwd = jax.lax.associative_scan(
                 binary_operator, (Lambda_elements, Bu_elements), reverse=True)
+            if self.retention_sigma > 0:
+                eta_main_bwd = jax.random.normal(self.make_rng('noise'),
+                                                 Bu_elements.shape,
+                                                 dtype=Bu_elements.dtype) * self.retention_sigma
+                _, noise_state_bwd = jax.lax.associative_scan(
+                    binary_operator, (Lambda_elements, eta_main_bwd), reverse=True)
+                xs_bwd = xs_bwd + noise_state_bwd
+            if self.read_sigma > 0:
+                xs_bwd = xs_bwd + jax.random.normal(
+                    self.make_rng('noise'), xs_bwd.shape,
+                    dtype=xs_bwd.dtype) * self.read_sigma
             xs = np.concatenate((xs_fwd, xs_bwd), axis=-1)
         else:
             xs = xs_fwd
@@ -461,7 +511,9 @@ def init_MambinoSSM(H, P, Lambda_re_init, Lambda_im_init, V, Vinv,
                     C_init, discretization, dt_min, dt_max,
                     conj_sym, clip_eigs, bidirectional,
                     bidir_predictor=False,
-                    noise_sigma=0.0, adc_bits=0, dac_bits=0):
+                    noise_sigma=0.0, adc_bits=0, dac_bits=0,
+                    dac_in_enabled=True, adc_out_enabled=True,
+                    retention_sigma=0.0, read_sigma=0.0):
     """Factory matching init_S5SSM signature exactly so MambinoSSM can
     be swapped in via a flag with no other changes.
 
@@ -484,4 +536,8 @@ def init_MambinoSSM(H, P, Lambda_re_init, Lambda_im_init, V, Vinv,
                    bidir_predictor=bidir_predictor,
                    noise_sigma=noise_sigma,
                    adc_bits=adc_bits,
-                   dac_bits=dac_bits)
+                   dac_bits=dac_bits,
+                   dac_in_enabled=dac_in_enabled,
+                   adc_out_enabled=adc_out_enabled,
+                   retention_sigma=retention_sigma,
+                   read_sigma=read_sigma)

@@ -1,6 +1,8 @@
 from flax import linen as nn
 import jax
 
+from .ssm import quantize_adc
+
 
 class SequenceLayer(nn.Module):
     """ Defines a single S5 layer, with S5 SSM, nonlinearity,
@@ -40,6 +42,11 @@ class SequenceLayer(nn.Module):
     # multi-layer analog chunk.  Defaults True (single-crossing baseline).
     dac_in_enabled: bool = True
     adc_out_enabled: bool = True
+    # Digital-domain quantization: real chip stores digital tensors in
+    # SRAM at limited precision (INT8/INT16), not FP32.  When > 0,
+    # quantize gate matmul output and gate multiply result to
+    # digital_bits precision.  0 = FP32 (idealized, matches original).
+    digital_bits: int = 0
 
     def setup(self):
         """Initializes the ssm, batch/layer norm and dropout
@@ -92,11 +99,21 @@ class SequenceLayer(nn.Module):
 
         if self.activation in ["full_glu"]:
             x = self.drop(nn.gelu(x))
-            x = self.out1(x) * jax.nn.sigmoid(self.out2(x))
+            gate_raw = self.out2(x)
+            if self.digital_bits > 0:
+                gate_raw = quantize_adc(gate_raw, self.digital_bits)
+            x = self.out1(x) * jax.nn.sigmoid(gate_raw)
+            if self.digital_bits > 0:
+                x = quantize_adc(x, self.digital_bits)
             x = self.drop(x)
         elif self.activation in ["half_glu1"]:
             x = self.drop(nn.gelu(x))
-            x = x * jax.nn.sigmoid(self.out2(x))
+            gate_raw = self.out2(x)
+            if self.digital_bits > 0:
+                gate_raw = quantize_adc(gate_raw, self.digital_bits)
+            x = x * jax.nn.sigmoid(gate_raw)
+            if self.digital_bits > 0:
+                x = quantize_adc(x, self.digital_bits)
             x = self.drop(x)
         elif self.activation in ["half_glu2"]:
             # Only apply GELU to the gate input
@@ -106,10 +123,16 @@ class SequenceLayer(nn.Module):
                 gate_raw = self.out2_up(self.out2_down(x1))
             else:
                 gate_raw = self.out2(x1)
+            if self.digital_bits > 0:
+                gate_raw = quantize_adc(gate_raw, self.digital_bits)
             x = x * jax.nn.sigmoid(gate_raw)
+            if self.digital_bits > 0:
+                x = quantize_adc(x, self.digital_bits)
             x = self.drop(x)
         elif self.activation in ["gelu"]:
             x = self.drop(nn.gelu(x))
+            if self.digital_bits > 0:
+                x = quantize_adc(x, self.digital_bits)
         else:
             raise NotImplementedError(
                    "Activation: {} not implemented".format(self.activation))

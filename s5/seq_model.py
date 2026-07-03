@@ -38,6 +38,9 @@ class StackedEncoderModel(nn.Module):
     # Applies only when the SSM is in chip-analysis mode (sigma>0 or
     # bits>0); at sigma=0 bits=0 the SSM fast path ignores these bools.
     crossings_every: int = 1
+    # Digital-domain quantization for gate/multiply outputs.  Real chip
+    # stores digital tensors at INT8/INT16, not FP32.  0 = FP32 (idealized).
+    digital_bits: int = 0
 
     def setup(self):
         """
@@ -70,6 +73,7 @@ class StackedEncoderModel(nn.Module):
                 glu_rank=self.glu_rank,
                 dac_in_enabled=dac_in,
                 adc_out_enabled=adc_out,
+                digital_bits=self.digital_bits,
             ))
         self.layers = layers
 
@@ -146,6 +150,7 @@ class ClassificationModel(nn.Module):
     step_rescale: float = 1.0
     glu_rank: int = 0
     crossings_every: int = 1  # chip arch knob -- see StackedEncoderModel
+    digital_bits: int = 0     # chip digital precision -- see SequenceLayer
 
     def setup(self):
         """
@@ -164,6 +169,7 @@ class ClassificationModel(nn.Module):
                             step_rescale=self.step_rescale,
                             glu_rank=self.glu_rank,
                             crossings_every=self.crossings_every,
+                            digital_bits=self.digital_bits,
                                         )
         self.decoder = nn.Dense(self.d_output)
 
