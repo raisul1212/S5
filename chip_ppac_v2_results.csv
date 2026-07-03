@@ -1,0 +1,11 @@
+config,test_acc,implementation,adc_bits,latency_us,throughput_inf_per_s,energy_per_inf_nJ,power_mW,area_mm2,cost_usd_per_chip,sram_KB
+Corner_1_PureS5_hg2,0.6155,digital,8,474.11,2109,635522.352,1358.713,3.6538,10.94,4280.1
+Corner_1_PureS5_hg2,0.6155,mixed_signal,8,275.46,3630,376813.451,1396.719,5.7525,16.41,4230.9
+Corner_3p_Mambino_hg2,0.614,digital,8,539.65,1853,722764.068,1357.592,3.6540,10.94,4280.3
+Corner_3p_Mambino_hg2,0.614,mixed_signal,8,177.15,5645,247579.736,1434.119,7.3148,16.41,4182.9
+Config_3_PureS5_gelu,0.591,digital,8,209.92,4764,283697.472,1369.201,3.5508,10.94,4150.7
+Config_3_PureS5_gelu,0.591,mixed_signal,8,30.72,32552,24988.965,841.585,5.6284,16.41,4101.9
+Config_4_Mambino_gelu,0.6055,digital,8,373.76,2676,501851.280,1360.654,3.5897,10.94,4199.5
+Config_4_Mambino_gelu,0.6055,mixed_signal,8,30.72,32552,26666.686,904.323,7.2534,16.41,4101.9
+Config_5_PureS5_P16,0.583,digital,8,406.53,2460,545471.780,1359.725,3.5895,10.94,4199.3
+Config_5_PureS5_P16,0.583,mixed_signal,8,30.72,32552,27002.231,915.203,7.2449,16.41,4101.9

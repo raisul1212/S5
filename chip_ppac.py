@@ -72,10 +72,19 @@ import json
 
 
 # =========== 22nm technology constants (all citable) ===========
-# ENERGY (pJ per event)
-E_INT8_MAC = 0.4          # Horowitz 2014 (ISSCC), scaled 45nm->22nm
-E_SRAM_READ_8b = 0.05     # Chen 2016 (Eyeriss ISSCC), Table VII scaled
-E_SRAM_WRITE_8b = 0.10    # Roughly 2x read (typical SRAM ratio)
+# ENERGY (pJ per event) -- Sze 2020 "Efficient Processing of DNNs" breakdown:
+#   Per INT8 MAC operation, the FULL cost includes:
+#     - compute (mul + accumulate): 0.2 pJ  [Horowitz 2014 scaled]
+#     - weight fetch from L1 SRAM:  0.5 pJ  [Chen 2016 Eyeriss]
+#     - activation fetch from L1:   0.5 pJ  [Chen 2016]
+#     - accumulate to register:     0.1 pJ  [Horowitz 2014]
+#   Total per-MAC with memory access: ~1.3 pJ
+#
+# We track compute and memory access SEPARATELY (Accelergy methodology).
+E_INT8_MAC_COMPUTE = 0.2  # compute only (mul + acc), Horowitz 2014 scaled 45nm->22nm
+E_SRAM_READ_8b = 0.5      # per 8-bit L1 read, Chen 2016 Eyeriss (32KB L1)
+E_SRAM_WRITE_8b = 1.0     # per 8-bit L1 write (typically 2x read)
+E_REG_ACCUM = 0.1         # accumulator register access, Horowitz 2014
 E_ANALOG_MAC = 0.010      # Marinella 2018 (JETC), gain-cell middle estimate
 FoM_ADC = 0.005           # Murmann survey, 5 fJ/conv-step for best SAR
 FoM_DAC = 0.002           # DAC typically 2-3x more efficient than ADC
@@ -240,14 +249,40 @@ def ppac_digital(cfg: Config, adc_bits: int = 8):
     """PPAC for pure-digital INT8 chip at 22nm using Accelergy
     energy-per-action model:
       E = SUM over components (N_actions * E_per_action)
+
+    Per MAC accounting (Sze 2020 breakdown):
+      - 1 weight fetch from L1: E_SRAM_READ_8b
+      - 1 activation fetch from L1: E_SRAM_READ_8b (unless broadcast-shared)
+      - 1 compute MAC: E_INT8_MAC_COMPUTE
+      - 1 register accumulate: E_REG_ACCUM
+    Plus per-output writeback:
+      - 1 SRAM write per output element: E_SRAM_WRITE_8b
     """
     ops = count_ops(cfg)
     total_MACs = ops["analog_MACs"] + ops["digital_MACs"]
 
-    # Accelergy energy accounting
-    E_mac_pJ = total_MACs * E_INT8_MAC
-    E_sram_pJ = ops["sram_bytes"] * (E_SRAM_READ_8b + E_SRAM_WRITE_8b)
-    E_total_pJ = E_mac_pJ + E_sram_pJ
+    # Per-MAC energy breakdown (Sze 2020):
+    E_compute_pJ = total_MACs * E_INT8_MAC_COMPUTE
+    E_weight_reads_pJ = total_MACs * E_SRAM_READ_8b     # 1 weight fetch per MAC
+    E_act_reads_pJ = total_MACs * E_SRAM_READ_8b        # 1 activation fetch per MAC
+    E_reg_pJ = total_MACs * E_REG_ACCUM
+    # Output writes: 1 per output element, not per MAC
+    output_elements = ops["sram_bytes"]  # rough proxy: activation bytes
+    E_out_writes_pJ = output_elements * E_SRAM_WRITE_8b
+
+    E_total_pJ = (
+        E_compute_pJ + E_weight_reads_pJ + E_act_reads_pJ
+        + E_reg_pJ + E_out_writes_pJ
+    )
+
+    # Component breakdown for reporting
+    E_breakdown = {
+        "compute_nJ": E_compute_pJ / 1000,
+        "weight_read_nJ": E_weight_reads_pJ / 1000,
+        "activation_read_nJ": E_act_reads_pJ / 1000,
+        "register_nJ": E_reg_pJ / 1000,
+        "output_write_nJ": E_out_writes_pJ / 1000,
+    }
 
     # Timeloop-simplified latency
     latency_us = total_MACs / (MAC_ARRAY_WIDTH * CLOCK_GHZ * 1000)
@@ -277,6 +312,7 @@ def ppac_digital(cfg: Config, adc_bits: int = 8):
         "area_mm2": area_mm2,
         "cost_usd_per_chip": cost_usd,
         "sram_KB": ops["sram_bytes"] / 1024,
+        "energy_breakdown": E_breakdown,
     }
 
 
@@ -291,9 +327,10 @@ def ppac_mixed_signal(cfg: Config, adc_bits: int = 8):
     """
     ops = count_ops(cfg)
 
-    # NeuroSim energy accounting
+    # NeuroSim energy accounting -- ANALOG side (weight-stationary crossbar):
+    # Weights sit on crossbar cells physically, NO per-MAC weight fetch cost.
+    # Only compute (analog current summing) is charged per MAC.
     E_analog_pJ = ops["analog_MACs"] * E_ANALOG_MAC
-    E_digital_MAC_pJ = ops["digital_MACs"] * E_INT8_MAC
 
     # ADC energy per sample from Murmann FoM
     E_per_ADC_sample_pJ = FoM_ADC * (2 ** adc_bits)
@@ -301,11 +338,33 @@ def ppac_mixed_signal(cfg: Config, adc_bits: int = 8):
     E_ADC_pJ = ops["adc_samples"] * E_per_ADC_sample_pJ
     E_DAC_pJ = ops["dac_samples"] * E_per_DAC_sample_pJ
 
-    # Digital-side SRAM (gate weights + activations at ADC boundaries)
-    sram_bytes_dig = ops["digital_side_params"] + 2 * H * L_SEQ * N_LAYERS
-    E_SRAM_pJ = sram_bytes_dig * (E_SRAM_READ_8b + E_SRAM_WRITE_8b)
+    # DIGITAL side (gate/BN/act) uses full Sze 2020 per-MAC breakdown:
+    E_digital_compute_pJ = ops["digital_MACs"] * E_INT8_MAC_COMPUTE
+    E_digital_weight_reads_pJ = ops["digital_MACs"] * E_SRAM_READ_8b
+    E_digital_act_reads_pJ = ops["digital_MACs"] * E_SRAM_READ_8b
+    E_digital_reg_pJ = ops["digital_MACs"] * E_REG_ACCUM
 
-    E_total_pJ = E_analog_pJ + E_digital_MAC_pJ + E_ADC_pJ + E_DAC_pJ + E_SRAM_pJ
+    # Digital-side SRAM: gate weights + activations at ADC boundaries
+    sram_bytes_dig = ops["digital_side_params"] + 2 * H * L_SEQ * N_LAYERS
+    E_SRAM_writeback_pJ = sram_bytes_dig * E_SRAM_WRITE_8b
+
+    E_total_pJ = (
+        E_analog_pJ + E_ADC_pJ + E_DAC_pJ
+        + E_digital_compute_pJ + E_digital_weight_reads_pJ
+        + E_digital_act_reads_pJ + E_digital_reg_pJ
+        + E_SRAM_writeback_pJ
+    )
+
+    E_breakdown = {
+        "analog_compute_nJ": E_analog_pJ / 1000,
+        "adc_nJ": E_ADC_pJ / 1000,
+        "dac_nJ": E_DAC_pJ / 1000,
+        "digital_compute_nJ": E_digital_compute_pJ / 1000,
+        "digital_memory_nJ": (E_digital_weight_reads_pJ +
+                              E_digital_act_reads_pJ +
+                              E_digital_reg_pJ +
+                              E_SRAM_writeback_pJ) / 1000,
+    }
 
     # NeuroSim latency: analog + digital pipeline; ADC settle time
     # per-layer analog time approximated by analog MACs / (parallel width)
@@ -345,16 +404,22 @@ def ppac_mixed_signal(cfg: Config, adc_bits: int = 8):
         "area_mm2": area_mm2,
         "cost_usd_per_chip": cost_usd,
         "sram_KB": sram_bytes_dig / 1024,
+        "energy_breakdown": E_breakdown,
     }
 
 
 # =========== Report ===========
 def fmt(p):
-    return (
-        f"  Latency: {p['latency_us']:8.1f} us | Throughput: {p['throughput_inf_per_s']:7.0f} inf/s\n"
-        f"  Energy:  {p['energy_per_inf_nJ']:8.1f} nJ | Power:      {p['power_mW']:7.2f} mW\n"
-        f"  Area:    {p['area_mm2']:8.3f} mm2| Cost/chip:  ${p['cost_usd_per_chip']:6.2f}"
-    )
+    lines = [
+        f"  Latency: {p['latency_us']:8.1f} us | Throughput: {p['throughput_inf_per_s']:7.0f} inf/s",
+        f"  Energy:  {p['energy_per_inf_nJ']:8.1f} nJ | Power:      {p['power_mW']:7.2f} mW",
+        f"  Area:    {p['area_mm2']:8.3f} mm2| Cost/chip:  ${p['cost_usd_per_chip']:6.2f}",
+    ]
+    if "energy_breakdown" in p:
+        lines.append(f"  Energy breakdown (nJ):")
+        for k, v in p["energy_breakdown"].items():
+            lines.append(f"    {k:<28s}: {v:8.2f}")
+    return "\n".join(lines)
 
 
 def main():
