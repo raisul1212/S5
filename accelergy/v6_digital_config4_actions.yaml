@@ -1,35 +1,34 @@
 # Digital action counts -- Config 4 Mambino gelu 106K
-# JAXPR-verified totals:
-#   Total FLOPs: 682,095,196
-#   dot_general: 614,468,096 (MACs = 341,047,598)
+# JAXPR-verified: Total FLOPs 682,095,196, dot_general 614,468,096
+# UNIFIED BASIS: MACs = dot_general / 2 = 307,234,048
 action_counts:
   version: 0.4
   local:
     - name: chip.weight_sram
       action_counts:
         - name: read
-          counts: 341047598      # 1 weight fetch per MAC
+          counts: 307234048       # 1 weight fetch per MAC
         - name: write
-          counts: 105738         # weight load
+          counts: 105738          # weight load
     - name: chip.activation_sram
       action_counts:
         - name: read
-          counts: 341047598      # activation fetch per MAC
+          counts: 307234048
         - name: write
-          counts: 4194304        # activation buffer writes
+          counts: 4194304
     - name: chip.state_sram
       action_counts:
         - name: read
-          counts: 3145728        # main + predictor state traffic
+          counts: 3145728         # main + predictor state traffic
         - name: write
           counts: 1572864
     - name: chip.mac_array
       action_counts:
         - name: mac_random
-          counts: 341047598      # NeuroSim intadder canonical MAC action
+          counts: 307234048
     - name: chip.reg_accum
       action_counts:
         - name: read
-          counts: 341047598
+          counts: 307234048
         - name: write
-          counts: 341047598
+          counts: 307234048

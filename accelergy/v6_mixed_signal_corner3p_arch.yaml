@@ -65,8 +65,8 @@ architecture:
           attributes:
             technology: 22
             global_cycle_seconds: 1.0e-9
-            width: 512           # Mambino: main + predictor state
-            depth: 32768
+            width: 128           # local_P=16 bytes
+            depth: 49152         # 768 KB (Mambino: 3 trajectories)
         - name: acc_adder
           class: intadder
           attributes:

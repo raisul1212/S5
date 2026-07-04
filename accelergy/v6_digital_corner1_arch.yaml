@@ -28,8 +28,8 @@ architecture:
           attributes:
             technology: 22
             global_cycle_seconds: 1.0e-9
-            width: 256           # ssm_size_base=16 complex = 32 bytes = 256 bits
-            depth: 32768         # 1.05MB / 32
+            width: 128           # local_P=16 bytes = 128 bits per state entry
+            depth: 32768         # 512 KB / 16 (Pure S5: 2 trajectories x L x n_layers)
         - name: mac_array
           class: intadder
           attributes:

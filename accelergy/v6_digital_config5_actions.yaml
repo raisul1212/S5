@@ -1,20 +1,19 @@
-# Digital action counts -- Config 5 Pure S5 gelu P=16, 106K
-# JAXPR-verified totals:
-#   Total FLOPs: 745,208,540
-#   dot_general: 681,576,960 (MACs = 372,604,270)
+# Digital action counts -- Config 5 Pure S5 gelu 106K
+# JAXPR-verified: Total FLOPs 745,208,540, dot_general 681,576,960
+# UNIFIED BASIS: MACs = dot_general / 2 = 340,788,480
 action_counts:
   version: 0.4
   local:
     - name: chip.weight_sram
       action_counts:
         - name: read
-          counts: 372604270
+          counts: 340788480
         - name: write
           counts: 105738
     - name: chip.activation_sram
       action_counts:
         - name: read
-          counts: 372604270
+          counts: 340788480
         - name: write
           counts: 4194304
     - name: chip.state_sram
@@ -26,10 +25,10 @@ action_counts:
     - name: chip.mac_array
       action_counts:
         - name: mac_random
-          counts: 372604270      # NeuroSim intadder canonical MAC action
+          counts: 340788480
     - name: chip.reg_accum
       action_counts:
         - name: read
-          counts: 372604270
+          counts: 340788480
         - name: write
-          counts: 372604270
+          counts: 340788480

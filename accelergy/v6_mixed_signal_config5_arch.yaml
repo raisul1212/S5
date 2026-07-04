@@ -67,8 +67,8 @@ architecture:
           attributes:
             technology: 22
             global_cycle_seconds: 1.0e-9
-            width: 512           # local_P=32 (Pure S5 has larger state)
-            depth: 32768
+            width: 256           # local_P=32 bytes
+            depth: 32768         # 1024 KB (Pure S5: 2 trajectories)
         - name: acc_adder
           class: intadder
           attributes:
