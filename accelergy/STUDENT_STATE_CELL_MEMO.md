@@ -114,6 +114,13 @@ routing, not the cell. Ask for both single-cell and array-total.
 
 ### 2f. Two-topology array rollups (feeds §7 of master PPAC doc directly)
 
+**Convention: cell = one real scalar. Complex state = 2 cells (real part + imag part).**
+This matters because the counts below assume single-real-value RC cells. If
+you build a complex-native cell (holding real+imag as a pair), halve the
+cell counts and roughly double per-cell energy — same total, but the `.cell`
+file must state which convention it uses so downstream Accelergy numbers
+stay coherent.
+
 The chip PPAC is reported at two topologies (see main paper §5). For each,
 give the total cells, total leakage power, and refresh energy per full scan
 so both columns land cleanly. Compute from your single-cell data — no new
