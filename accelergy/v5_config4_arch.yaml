@@ -1,0 +1,55 @@
+# Digital chip architecture for Config 4 Mambino gelu 106K
+# 22nm INT8 pipeline, all primitives resolved via Aladdin plugin
+# Actions: SRAM/regfile/intmac all use "access" + "leak"
+architecture:
+  version: 0.4
+  nodes:
+    - !Container
+      name: chip
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+
+    - !Component
+      name: weight_sram
+      class: SRAM
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+        width: 1024        # 128 bytes * 8 bits
+        depth: 826         # 105,738 params / 128
+
+    - !Component
+      name: activation_sram
+      class: SRAM
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+        width: 1024        # 128 bytes * 8 bits
+        depth: 32784       # 4.2 MB / 128
+
+    - !Component
+      name: state_sram
+      class: SRAM
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+        width: 256         # local_P=16 complex = 32 bytes * 8 bits
+        depth: 49152       # 1.6 MB / 32
+
+    - !Component
+      name: mac_array
+      class: intmac
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+        width: 8
+
+    - !Component
+      name: reg_accum
+      class: regfile
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+        width: 32
+        depth: 128

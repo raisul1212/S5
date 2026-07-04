@@ -1,0 +1,17 @@
+action_counts:
+  version: 0.4
+  local:
+    - name: chip.weight_sram
+      action_counts:
+        - name: read
+          counts: 100
+        - name: write
+          counts: 10
+    - name: chip.mac_array
+      action_counts:
+        - name: access
+          counts: 100
+    - name: chip.reg_accum
+      action_counts:
+        - name: access
+          counts: 100
