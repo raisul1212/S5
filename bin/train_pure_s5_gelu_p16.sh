@@ -19,13 +19,17 @@
 #SBATCH --error=results/slurm/config5_%j.err
 
 source /etc/profile.d/modules.sh 2>/dev/null || true
+source /etc/profile.d/lmod.sh 2>/dev/null || true
 source ~/.bashrc 2>/dev/null || true
 module purge
-module load external anaconda/2024.10-py312 cuda/13.1.0
-source "$(conda info --base 2>/dev/null)/etc/profile.d/conda.sh"
+module load external
+module load anaconda/2024.10-py312
+module load cuda/13.1.0
+CONDA_BASE=$(conda info --base 2>/dev/null)
+source "$CONDA_BASE/etc/profile.d/conda.sh"
 conda activate /scratch/gilbreth/raisul/envs/s5m
 
-export PYTHONUNBUFFERED=1 PYTHONIOENCODING=utf-8
+export PYTHONUNBUFFERED=1 PYTHONIOENCODING=utf-8 PYTHONUTF8=1
 cd $SLURM_SUBMIT_DIR
 mkdir -p results/slurm
 
