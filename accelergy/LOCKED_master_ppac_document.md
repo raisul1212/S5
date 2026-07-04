@@ -38,10 +38,12 @@ Shared base (all 4): `--n_layers=8 --d_model=128 --blocks=8 --bidirectional=True
 
 | Config | use_mambino_ssm | activation_fn | ssm_size_base | glu_rank | Extras |
 |---|---|---|---:|---:|---|
-| Config 4 | True | gelu | 16 | 0 | — |
+| Config 4 | True | gelu | 16 | 0 | `--lambda_pc=0.0` |
 | Config 5 | False | gelu | 32 | 0 | — |
 | Corner 1 | False | half_glu2 | 16 | 0 | — |
 | Corner 3' | True | half_glu2 | 16 | 40 | `--lambda_pc=0.0` |
+
+**Note on `lambda_pc=0.0`:** Both Mambino runs use `lambda_pc=0.0`, meaning the predictive-coding auxiliary loss is turned **off** during training. The predictor sub-network is still instantiated and its state trajectory is still materialized in the forward pass (so the 3-trajectory state SRAM sizing in §3 remains correct), but its outputs don't contribute to the training gradient.
 
 ## 3. Model shapes and state trajectory count
 
