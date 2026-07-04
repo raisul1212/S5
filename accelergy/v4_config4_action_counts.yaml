@@ -1,0 +1,44 @@
+# Action counts for Config 4 Mambino gelu 106K, per single inference (batch=1)
+# JAXPR-verified from flop_counter_jaxpr.py (job 11187683):
+#   Total FLOPs: 682,095,196
+#   dot_general: 614,468,096  (matmuls; represents MAC operations)
+#   Other (mul/add/sub/tanh/etc): 67,627,100
+# MAC count = FLOPs / 2 (real MAC = 2 flops convention)
+# Total MACs equivalent: 341,047,598
+# SRAM: 105,738 weight bytes + 4,194,304 activation bytes + 1,572,864 state bytes
+action_counts:
+  version: 0.2
+  subtree:
+    - name: chip
+      local:
+        - name: weight_sram
+          action_counts:
+            # 1 weight fetch per MAC operation
+            - name: read
+              counts: 341047598
+            - name: write
+              counts: 105738   # initial weight load
+        - name: activation_sram
+          action_counts:
+            # 1 activation fetch per MAC + output writes
+            - name: read
+              counts: 341047598
+            - name: write
+              counts: 4194304   # activation buffer writes
+        - name: state_sram
+          action_counts:
+            # State trajectory: written once, read 2x per byte during scan
+            - name: read
+              counts: 3145728
+            - name: write
+              counts: 1572864
+        - name: mac_array
+          action_counts:
+            - name: mac_random
+              counts: 341047598
+        - name: reg_accum
+          action_counts:
+            - name: read
+              counts: 341047598
+            - name: write
+              counts: 341047598

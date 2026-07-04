@@ -1,0 +1,42 @@
+# Digital chip architecture for Config 5 Pure S5 gelu P=16, 106K
+# Same shape as Config 4 for iso-comparison (only state SRAM depth differs)
+architecture:
+  version: 0.2
+  subtree:
+    - name: chip
+      attributes:
+        technology: 22nm
+      local:
+        - name: weight_sram
+          class: SRAM
+          attributes:
+            word_width: 8
+            n_words: 128
+            width: word_width * n_words
+            depth: 826         # 105.7K params / 128
+            nbanks: 1
+        - name: activation_sram
+          class: SRAM
+          attributes:
+            word_width: 8
+            n_words: 128
+            width: word_width * n_words
+            depth: 32784
+            nbanks: 1
+        - name: state_sram
+          class: SRAM
+          attributes:
+            word_width: 8
+            n_words: 64        # local_P = 32 complex = 64 real bytes (larger than Config 4)
+            width: word_width * n_words
+            depth: 32768       # 2.1MB / 64 = 33K entries
+            nbanks: 1
+        - name: mac_array
+          class: intmac
+          attributes:
+            datawidth: 8
+        - name: reg_accum
+          class: regfile
+          attributes:
+            width: 32
+            depth: 128

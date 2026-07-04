@@ -1,0 +1,40 @@
+# Action counts for Config 5 Pure S5 gelu P=16, 106K, per single inference
+# JAXPR-verified from flop_counter_jaxpr.py (job 11187683):
+#   Total FLOPs: 745,208,540
+#   dot_general: 681,576,960
+#   Other: 63,631,580
+# MAC count = FLOPs / 2 = 372,604,270
+# State bytes = 2.1MB (larger than Mambino's 1.6MB due to local_P=32 vs 16)
+action_counts:
+  version: 0.2
+  subtree:
+    - name: chip
+      local:
+        - name: weight_sram
+          action_counts:
+            - name: read
+              counts: 372604270
+            - name: write
+              counts: 105738
+        - name: activation_sram
+          action_counts:
+            - name: read
+              counts: 372604270
+            - name: write
+              counts: 4194304
+        - name: state_sram
+          action_counts:
+            - name: read
+              counts: 4194304  # 2 reads per byte * 2.1MB
+            - name: write
+              counts: 2097152  # 2.1MB writes
+        - name: mac_array
+          action_counts:
+            - name: mac_random
+              counts: 372604270
+        - name: reg_accum
+          action_counts:
+            - name: read
+              counts: 372604270
+            - name: write
+              counts: 372604270
