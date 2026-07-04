@@ -38,10 +38,12 @@ Shared base (all 4): `--n_layers=8 --d_model=128 --blocks=8 --bidirectional=True
 
 | Config | use_mambino_ssm | activation_fn | ssm_size_base | glu_rank | Extras |
 |---|---|---|---:|---:|---|
-| Config 4 | True | gelu | 16 | 0 | `--lambda_pc=0.0` |
-| Config 5 | False | gelu | 32 | 0 | — |
-| Corner 1 | False | half_glu2 | 16 | 0 | — |
-| Corner 3' | True | half_glu2 | 16 | 40 | `--lambda_pc=0.0` |
+| Config 4 | True | gelu | 16 | N/A (gelu ignores) | `--lambda_pc=0.0` |
+| Config 5 | False | gelu | 32 | N/A (gelu ignores) | — |
+| Corner 1 | False | half_glu2 | 16 | 0 (full-rank) | — |
+| Corner 3' | True | half_glu2 | 16 | 40 (low-rank) | `--lambda_pc=0.0` |
+
+**Note on `glu_rank`:** The `glu_rank` argument only takes effect when `activation_fn` is `half_glu1` or `half_glu2` (see [`s5/layers.py:61-73`](https://github.com/raisul1212/S5/blob/mambino-ssm/s5/layers.py#L61-L73)). For gelu configs (Config 4, Config 5), the gate branch is not instantiated and the argument is a no-op. For half_glu2 configs: `glu_rank=0` means **full-rank** (standard `Dense(H, H)` gate); `glu_rank=40` means **rank-40 factorization** (`Dense(H, 40) @ Dense(40, H)`, ~68% fewer gate params). The low-rank factorization in Corner 3' is what allows Mambino (predictor + `W_ε` on top) to be iso-params with Corner 1.
 
 **Note on `lambda_pc=0.0`:** Both Mambino runs use `lambda_pc=0.0`, meaning the predictive-coding auxiliary loss is turned **off** during training. The predictor sub-network is still instantiated and its state trajectory is still materialized in the forward pass (so the 3-trajectory state SRAM sizing in §3 remains correct), but its outputs don't contribute to the training gradient.
 
