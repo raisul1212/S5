@@ -348,10 +348,13 @@ def main():
         ssm_lr=args.ssm_lr_base, lr=args.ssm_lr_base * args.lr_factor,
         dt_global=args.dt_global,
     )
-    state, meta = load_checkpoint_msgpack(args.ckpt_prefix, state)
-
-    n_params = sum(x.size for x in jax.tree_util.tree_leaves(state.params))
-    print(f"[flop-jaxpr] loaded {args.ckpt_prefix}: {n_params} params")
+    try:
+        state, meta = load_checkpoint_msgpack(args.ckpt_prefix, state)
+        n_params = sum(x.size for x in jax.tree_util.tree_leaves(state.params))
+        print(f"[flop-jaxpr] loaded {args.ckpt_prefix}: {n_params} params")
+    except (ValueError, FileNotFoundError, OSError) as e:
+        n_params = sum(x.size for x in jax.tree_util.tree_leaves(state.params))
+        print(f"[flop-jaxpr] ckpt load failed ({type(e).__name__}: {e}); using random init with {n_params} params")
 
     if padded:
         dummy_input = (jnp.ones((args.bsz, seq_len, in_dim)),
