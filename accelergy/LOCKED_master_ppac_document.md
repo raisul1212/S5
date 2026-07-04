@@ -153,6 +153,8 @@ Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(
 | Corner 1 | **0.57** | **1.40** |
 | Corner 3' | **0.63** | **1.65** |
 
+**Note on Config 5 in the sequential PIM row:** Config 5's energy (0.74 mJ) exceeds Corner 1 (0.57) and Corner 3' (0.63) despite having ~30% fewer MACs. Reason: in sequential PIM, analog crossbar compute is nearly free (< 0.5% of total energy), so SRAM traffic dominates. Pure S5 P=16's state SRAM is 1024 KB (vs Mambino's 768 KB and Corner 1's 512 KB) AND generates 33% more state accesses per inference (local_P=32 × 2 trajectories vs 16 × 3). Combined effect: Config 5's state_sram energy (387 μJ) is 2.8× Config 4's (137 μJ) and dominates the total. This is a real physical result — analog crossbar shifts the chip bottleneck from compute to memory traffic, so smaller SSM state per layer (Mambino's design) helps more in mixed-signal than in digital.
+
 ## 8. Accuracy-per-mJ (digital) — chip efficiency metric
 
 ### 8a. Pipelined chip (4.2 MB activation SRAM)
