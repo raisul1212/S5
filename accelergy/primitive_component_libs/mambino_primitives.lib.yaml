@@ -47,6 +47,8 @@ classes:
       cols: must_specify
       cols_active_at_once: 1
       cell_config: must_specify
+      average_input_value: 0.5
+      average_cell_value: 0.5
     actions:
       - name: read
       - name: write
@@ -60,6 +62,8 @@ classes:
       cols: must_specify
       cols_active_at_once: 1
       cell_config: must_specify
+      average_input_value: 0.5
+      average_cell_value: 0.5
     actions:
       - name: read
       - name: write
@@ -73,6 +77,8 @@ classes:
       cols: must_specify
       cols_active_at_once: 1
       cell_config: must_specify
+      average_input_value: 0.5
+      average_cell_value: 0.5
       adc_resolution: 8
     actions:
       - name: read
@@ -87,6 +93,8 @@ classes:
       cols: must_specify
       cols_active_at_once: 1
       cell_config: must_specify
+      average_input_value: 0.5
+      average_cell_value: 0.5
     actions:
       - name: read
       - name: write
