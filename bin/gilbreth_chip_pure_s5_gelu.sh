@@ -40,7 +40,7 @@ python -u run_train.py \
     \
     --C_init=lecun_normal --activation_fn=gelu --batchnorm=True \
     --bidirectional=True --blocks=8 --bsz=50 --d_model=128 \
-    --dataset=listops-classification \
+    --dataset=listops-classification --dt_min=0.001 --dt_max=0.1 \
     --epochs=40 --jax_seed=${SEED} --lr_factor=3 --n_layers=8 \
     --opt_config=BfastandCdecay \
     --p_dropout=0 --ssm_lr_base=0.001 --ssm_size_base=16 \
