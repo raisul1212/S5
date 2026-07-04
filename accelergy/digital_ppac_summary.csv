@@ -1,0 +1,5 @@
+config,methodology,total_energy_pJ,total_area_um2,weight_sram_E_pJ,activation_sram_E_pJ,state_sram_E_pJ,mac_array_E_pJ,reg_accum_E_pJ,weight_sram_A_um2,activation_sram_A_um2,state_sram_A_um2,mac_array_A_um2,reg_accum_A_um2
+config4_mambino,accelergy_v6_cacti_neurosim,167261943696.30,5723471.27,12310613852.95,154581460805.41,339090604.03,2925656.36,27852777.55,89020.6,4353200.0,1281930.0,11.1235,39.5502
+config5_pures5,accelergy_v6_cacti_neurosim,183144672989.95,6380470.67,13448919813.99,168705880069.22,956246786.05,3196363.37,30429957.30,89020.6,4353200.0,1938200.0,11.1235,39.5502
+config4_mambino,chip_ppac_v4_horowitz_chen,450700.0,4810000.0,,,,,,,,,,
+config5_pures5,chip_ppac_v4_horowitz_chen,492800.0,5220000.0,,,,,,,,,,
