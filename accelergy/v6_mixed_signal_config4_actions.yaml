@@ -1,0 +1,68 @@
+# Action counts -- Mixed-signal PIM reference for Config 4 Mambino
+#
+# Workload mapping to 128x128 crossbar tiles:
+#   Total MACs = 341,047,598 (JAXPR-verified)
+#   Per-tile capacity = 128 rows * 128 cols = 16,384 MACs per column-parallel cycle
+#   Tile activations = ceil(341,047,598 / 16,384) = 20,816
+#
+# For each tile activation:
+#   - Row driver: 128 rows activated
+#   - Col driver / ADC: 128 columns read (one ADC conversion per column per cycle)
+#   - Cells: 128*128 = 16,384 read
+#
+# Weights are STATIC on crossbar (write-once during model load).
+#
+# Peripheral SRAM (activations, state):
+#   - Activation SRAM: 341M reads / 128-lane batched = 2.66M reads + 32k writes
+#   - State SRAM: 3.14M reads + 1.57M writes (same as digital)
+#
+# Digital accumulator adder: 1 per column output per tile = 20816 * 128 = 2.66M
+# Register file: same as digital = 341M each way
+
+action_counts:
+  version: 0.4
+  local:
+    - name: chip.pim_row_drivers
+      action_counts:
+        - name: read
+          counts: 2664448      # 20,816 tiles * 128 rows
+        - name: write
+          counts: 105738       # weight load (once per model)
+    - name: chip.pim_col_drivers
+      action_counts:
+        - name: read
+          counts: 2664448      # 20,816 tiles * 128 cols
+        - name: write
+          counts: 105738
+    - name: chip.pim_cells
+      action_counts:
+        - name: read
+          counts: 341047598    # 1 cell read per MAC
+        - name: write
+          counts: 105738
+    - name: chip.pim_adc
+      action_counts:
+        - name: read
+          counts: 2664448      # 1 ADC conversion per column per tile activation
+    - name: chip.activation_sram
+      action_counts:
+        - name: read
+          counts: 2664448      # batched line reads
+        - name: write
+          counts: 32784        # 4.2MB / 128
+    - name: chip.state_sram
+      action_counts:
+        - name: read
+          counts: 3145728
+        - name: write
+          counts: 1572864
+    - name: chip.acc_adder
+      action_counts:
+        - name: mac_random
+          counts: 2664448      # accumulator adds
+    - name: chip.reg_accum
+      action_counts:
+        - name: read
+          counts: 341047598
+        - name: write
+          counts: 341047598

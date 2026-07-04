@@ -1,0 +1,101 @@
+# NEUROSIM-PIM CROSSBAR REFERENCE POINT -- Config 4 Mambino gelu 106K, 22nm
+#
+# !! CRITICAL FRAMING !!
+# ======================
+# This YAML models a GENERIC ANALOG CROSSBAR chip using NeuroSim PIM primitives
+# (RRAM crossbar with current-summing columns). This is a WELL-ESTABLISHED
+# reference topology in the analog-PIM literature.
+#
+# THIS IS NOT THE PAPER'S ACTUAL SUBSTRATE.
+# The paper's substrate is a TRUE ANALOG RC STATE CELL -- a fundamentally
+# different circuit topology (capacitor-based analog integrator with on-chip
+# temporal dynamics, NOT a crossbar VMM). The paper's state-cell PPAC requires
+# a separate SPICE / measured characterization workflow -- see
+# STUDENT_STATE_CELL_MEMO.md.
+#
+# Purpose of THIS analysis: give reviewers a peer-reviewed reference point of
+# "what a mainstream analog crossbar chip would look like on the same workload,"
+# so the paper can position its analog RC state-cell claims against it later.
+#
+# Crossbar topology (generic reference):
+#   - 128x128 tiles (matches H=128)
+#   - All columns active in parallel
+#   - Weights stored on-array (no per-MAC weight SRAM fetch)
+#   - Peripheral SRAM for activations only
+#   - Cell reference: NeuroSim nvmexplorer_RRAM.cell (published NVMExplorer reference)
+architecture:
+  version: 0.4
+  subtree:
+    - name: chip
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+      local:
+        # ---- Analog crossbar (weight-stationary) ----
+        - name: pim_row_drivers
+          class: array_row_drivers
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            rows: 128
+            cols: 128
+            cols_active_at_once: 128
+            cell_config: nvmexplorer_RRAM  # REFERENCE ONLY -- see caveat above
+        - name: pim_col_drivers
+          class: array_col_drivers
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            rows: 128
+            cols: 128
+            cols_active_at_once: 128
+            cell_config: nvmexplorer_RRAM
+        - name: pim_cells
+          class: memory_cell
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            rows: 128
+            cols: 128
+            cols_active_at_once: 128
+            cell_config: nvmexplorer_RRAM
+        - name: pim_adc
+          class: array_adc
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            rows: 128
+            cols: 128
+            cols_active_at_once: 128
+            cell_config: nvmexplorer_RRAM
+            adc_resolution: 8
+
+        # ---- Peripheral SRAM (activations only; weights on-array) ----
+        - name: activation_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 32784
+        - name: state_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 256
+            depth: 49152
+
+        # ---- Digital periphery ----
+        - name: acc_adder
+          class: intadder
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 16
+        - name: reg_accum
+          class: flip_flop
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 32
