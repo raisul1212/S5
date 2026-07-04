@@ -21,6 +21,22 @@ https://ieeexplore.ieee.org/document/8695666) simplified as:
 
 MIXED-SIGNAL implementation methodology
 =======================================
+!! IMPORTANT CAVEAT (2026-07-03) !!
+
+The mixed-signal PPAC below uses GENERIC analog crossbar constants
+(Marinella 2018 gain-cell, Ni 2019 22nm gain-cell area, Murmann SAR
+ADC survey).  This represents a HYPOTHETICAL crossbar chip -- NOT
+the specific state-cell design targeted by this paper.
+
+Any actual state-cell mixed-signal PPAC MUST use characterization
+data from the specific circuit design (SPICE-verified energy per
+read/write, actual cell area, retention time, drift, etc.).
+
+Interpret mixed-signal numbers as a REFERENCE POINT for "what a
+generic 22nm analog crossbar chip would look like," not as claims
+about the paper's specific state-cell architecture.
+
+Methodology (for the generic reference):
 Uses the NeuroSim framework methodology (Chen, Peng, Yu -- NeuroSim:
 A Circuit-Level Macro Model for Benchmarking Neuro-Inspired
 Architectures in Online Learning, IEDM 2018,
@@ -380,8 +396,19 @@ def ppac_digital(cfg: Config, adc_bits: int = 8):
 
 # =========== Mixed-signal PPAC (NeuroSim methodology) ===========
 def ppac_mixed_signal(cfg: Config, adc_bits: int = 8):
-    """PPAC for analog crossbar + INT8 digital periphery using
-    NeuroSim methodology:
+    """PPAC for GENERIC analog crossbar chip -- REFERENCE ONLY.
+
+    !! NOT this paper's state-cell design !! Uses Marinella 2018 /
+    Ni 2019 gain-cell references for a hypothetical crossbar chip.
+    Interpret as "what a generic 22nm analog crossbar chip would look
+    like on this workload" -- not as a claim about the specific
+    state-cell architecture.
+
+    For state-cell-specific PPAC, characterize the actual circuit
+    (SPICE, measured energy per read/write, area) and feed into a
+    custom estimator plugin or NeuroSim with device parameters.
+
+    Methodology (NeuroSim):
       E_analog   = N_analog_MACs * E_analog_MAC_per_op
       E_ADC      = N_samples * (FoM_ADC * 2^bits)
       E_DAC      = N_samples * (FoM_DAC * 2^bits)
@@ -504,9 +531,9 @@ def main():
               f"{cfg.params/1000:.1f}K params, test_acc={cfg.train_acc:.4f}) {source_tag} ----")
         d = ppac_digital(cfg, args.adc_bits)
         m = ppac_mixed_signal(cfg, args.adc_bits)
-        print(f"\nDIGITAL (Accelergy):")
+        print(f"\nDIGITAL (Accelergy methodology, 22nm INT8 -- DEFENSIBLE):")
         print(fmt(d))
-        print(f"\nMIXED-SIGNAL (NeuroSim):")
+        print(f"\nMIXED-SIGNAL REFERENCE (generic 22nm gain-cell -- NOT this paper's state cell):")
         print(fmt(m))
         print(f"\nMixed-signal vs Digital ratios (<1 = mixed-signal wins):")
         for k in ("latency_us", "energy_per_inf_nJ", "power_mW", "area_mm2"):
