@@ -26,6 +26,7 @@ source "$CONDA_BASE/etc/profile.d/conda.sh"
 conda activate /scratch/gilbreth/raisul/envs/s5m
 
 export PYTHONUNBUFFERED=1 PYTHONIOENCODING=utf-8 PYTHONUTF8=1
+export WANDB_MODE=disabled  # bypass wandb service startup (see run.log for reason)
 cd $SLURM_SUBMIT_DIR
 mkdir -p results/slurm
 
