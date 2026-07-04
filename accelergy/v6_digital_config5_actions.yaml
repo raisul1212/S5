@@ -25,8 +25,8 @@ action_counts:
           counts: 2097152
     - name: chip.mac_array
       action_counts:
-        - name: access
-          counts: 372604270
+        - name: mac_random
+          counts: 372604270      # NeuroSim intadder canonical MAC action
     - name: chip.reg_accum
       action_counts:
         - name: read

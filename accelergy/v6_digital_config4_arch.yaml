@@ -33,15 +33,13 @@ architecture:
             width: 256          # local_P=16 complex = 32 bytes * 8 bits
             depth: 49152        # 1.6MB / 32
         - name: mac_array
-          class: intmac
+          class: intadder            # NeuroSim intadder as INT8 MAC approximation
           attributes:
             technology: 22
             global_cycle_seconds: 1.0e-9
-            width: 8
+            n_bits: 8
         - name: reg_accum
-          class: regfile
+          class: flip_flop           # NeuroSim flip_flop for register file (per-cell)
           attributes:
             technology: 22
             global_cycle_seconds: 1.0e-9
-            width: 32
-            depth: 128

@@ -1,39 +1,43 @@
 # Primitive component library for Mambino chip PPAC.
-# Declares SRAM, intmac, regfile as primitive classes so Accelergy will
-# dispatch (class_name, action_name) queries to CACTI/Aladdin/NeuroSim plugins.
+# Declares primitive classes so Accelergy dispatches to CACTI/NeuroSim/ADC plugins.
 classes:
+  # ----- CACTI-backed SRAM -----
   - name: SRAM
     attributes:
       technology: must_specify
       global_cycle_seconds: 1.0e-9
       width: must_specify
       depth: must_specify
+      n_rw_ports: 1
+      n_banks: 1
     actions:
       - name: read
       - name: write
       - name: leak
 
-  - name: intmac
+  # ----- NeuroSim-backed intadder used as MAC approximation (n_bits=8) -----
+  - name: intadder
     attributes:
       technology: must_specify
       global_cycle_seconds: 1.0e-9
-      width: must_specify
+      n_bits: 8
     actions:
-      - name: access
+      - name: mac_random
+      - name: add
+      - name: read
       - name: leak
 
-  - name: regfile
+  # ----- NeuroSim-backed flip_flop for register file -----
+  - name: flip_flop
     attributes:
       technology: must_specify
       global_cycle_seconds: 1.0e-9
-      width: must_specify
-      depth: must_specify
     actions:
       - name: read
       - name: write
       - name: leak
 
-  # For NeuroSim mixed-signal PIM PPAC
+  # ----- NeuroSim mixed-signal PIM cell blocks -----
   - name: array_row_drivers
     attributes:
       technology: must_specify
@@ -71,6 +75,7 @@ classes:
       adc_resolution: 8
     actions:
       - name: read
+      - name: convert
       - name: leak
 
   - name: memory_cell

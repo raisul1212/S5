@@ -25,8 +25,8 @@ action_counts:
           counts: 1572864
     - name: chip.mac_array
       action_counts:
-        - name: access
-          counts: 341047598      # Aladdin uses 'access' for intmac
+        - name: mac_random
+          counts: 341047598      # NeuroSim intadder canonical MAC action
     - name: chip.reg_accum
       action_counts:
         - name: read
