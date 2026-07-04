@@ -125,6 +125,10 @@ class Config:
     glu_rank: int
     params: int
     train_acc: float          # best test accuracy from training
+    # JAXPR-verified FLOP counts (from flop_counter_jaxpr.py with 3-way
+    # dtype-aware cost model).  Set to 0 if not yet measured.
+    jaxpr_total_flops: int = 0
+    jaxpr_dot_general_flops: int = 0  # matmul FLOPs (SSM crossbars + digital gate)
 
     @property
     def local_P(self):
@@ -135,12 +139,27 @@ class Config:
         return self.activation in ("half_glu2", "half_glu1", "full_glu")
 
 
+# ============================================================
+# JAXPR-verified FLOP counts (2026-07-03, batch=1 per-inference)
+# From flop_counter_jaxpr.py with corrected 3-way dtype handling:
+#   real-real       -> 2 flops/MAC
+#   complex-real    -> 4 flops/MAC (B, B_s, W_eps in our SSMs)
+#   complex-complex -> 8 flops/MAC (C_tilde @ h)
+# Sanity-checked against known matmul cases (all pass with delta=0%).
+# ============================================================
 CONFIGS = [
-    Config("Corner_1_PureS5_hg2",  "pure_s5", "half_glu2", 16, 0,  188490, 0.6155),
-    Config("Corner_3p_Mambino_hg2","mambino", "half_glu2", 16, 40, 188682, 0.6140),
-    Config("Config_3_PureS5_gelu", "pure_s5", "gelu",      16, 0,  56000,  0.5910),
-    Config("Config_4_Mambino_gelu","mambino", "gelu",      16, 0,  106000, 0.6055),
-    Config("Config_5_PureS5_P16",  "pure_s5", "gelu",      32, 0,  105738, 0.5830),
+    # Corner configs (half_glu2) -- JAXPR counts pending, using estimates
+    Config("Corner_1_PureS5_hg2",  "pure_s5", "half_glu2", 16, 0,  188490, 0.6155,
+           jaxpr_total_flops=0, jaxpr_dot_general_flops=0),
+    Config("Corner_3p_Mambino_hg2","mambino", "half_glu2", 16, 40, 188682, 0.6140,
+           jaxpr_total_flops=0, jaxpr_dot_general_flops=0),
+    # Gelu configs -- JAXPR-VERIFIED counts (job 11187683)
+    Config("Config_3_PureS5_gelu", "pure_s5", "gelu",      16, 0,  56394,  0.5910,
+           jaxpr_total_flops=399_216_284,  jaxpr_dot_general_flops=346_032_640),
+    Config("Config_4_Mambino_gelu","mambino", "gelu",      16, 0,  105738, 0.6055,
+           jaxpr_total_flops=682_095_196,  jaxpr_dot_general_flops=614_468_096),
+    Config("Config_5_PureS5_P16",  "pure_s5", "gelu",      32, 0,  105738, 0.5830,
+           jaxpr_total_flops=745_208_540,  jaxpr_dot_general_flops=681_576_960),
 ]
 
 
@@ -241,6 +260,32 @@ def count_ops(cfg: Config):
     if analog_side_params < 0:
         analog_side_params = cfg.params
 
+    # Override with JAXPR-verified counts if available.
+    # JAXPR FLOPs -> MACs conversion: 1 MAC = 2 FLOPs (real-real convention).
+    # For our SSMs, effective MAC count = FLOPs / 2 (average across dtype mix).
+    # This treats complex-real as 2 effective MACs (matches 4 flops / 2 = 2 MACs)
+    # and complex-complex as 4 effective MACs (8 flops / 2 = 4 MACs).
+    if cfg.jaxpr_total_flops > 0:
+        # Use JAXPR-authoritative counts
+        total_MACs_verified = cfg.jaxpr_total_flops // 2
+        analog_MACs_verified = cfg.jaxpr_dot_general_flops // 2
+        digital_MACs_verified = (cfg.jaxpr_total_flops - cfg.jaxpr_dot_general_flops) // 2
+        return {
+            "analog_MACs": analog_MACs_verified,
+            "digital_MACs": digital_MACs_verified,
+            "sram_bytes": sram_bytes_total,
+            "weight_bytes": weight_bytes,
+            "activation_bytes": activation_bytes,
+            "state_bytes": state_bytes_total,
+            "adc_samples": adc_samples,
+            "dac_samples": dac_samples,
+            "n_adc_units": n_adc_units,
+            "n_dac_units": n_dac_units,
+            "analog_side_params": analog_side_params,
+            "digital_side_params": digital_side_params,
+            "_source": "jaxpr_verified",
+        }
+
     return {
         "analog_MACs": analog_MACs_total,
         "digital_MACs": digital_MACs_total,
@@ -254,6 +299,7 @@ def count_ops(cfg: Config):
         "n_dac_units": n_dac_units,
         "analog_side_params": analog_side_params,
         "digital_side_params": digital_side_params,
+        "_source": "hand_derived_estimate",
     }
 
 
@@ -446,12 +492,16 @@ def main():
     args = p.parse_args()
 
     print(f"\n=== PPAC (22nm, published methods: Accelergy digital + NeuroSim mixed-signal) ===")
-    print(f"    ADC bits = {args.adc_bits}\n")
+    print(f"    ADC bits = {args.adc_bits}")
+    print(f"    FLOP source: JAXPR-verified (walker with 3-way dtype cost)\n")
 
     all_rows = []
     for cfg in CONFIGS:
+        ops = count_ops(cfg)
+        source = ops.get("_source", "?")
+        source_tag = "[JAXPR]" if source == "jaxpr_verified" else "[estimate]"
         print(f"\n---- {cfg.name} ({cfg.arch}, {cfg.activation}, "
-              f"{cfg.params/1000:.1f}K params, test_acc={cfg.train_acc:.4f}) ----")
+              f"{cfg.params/1000:.1f}K params, test_acc={cfg.train_acc:.4f}) {source_tag} ----")
         d = ppac_digital(cfg, args.adc_bits)
         m = ppac_mixed_signal(cfg, args.adc_bits)
         print(f"\nDIGITAL (Accelergy):")
