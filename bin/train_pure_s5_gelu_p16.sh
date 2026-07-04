@@ -29,11 +29,12 @@ export PYTHONUNBUFFERED=1 PYTHONIOENCODING=utf-8
 cd $SLURM_SUBMIT_DIR
 mkdir -p results/slurm
 
+SEED=${1:-6554595}
 JOB=$SLURM_JOB_ID
-CKPT_DIR="./checkpoints/train_pure_s5_gelu_p16_${JOB}"
+CKPT_DIR="./checkpoints/config5_seed${SEED}_${JOB}"
 mkdir -p "$CKPT_DIR"
 
-echo "Pure S5 gelu P=16 (~106K) -- JOB=$JOB SHA=$(git rev-parse HEAD)"
+echo "Config 5 Pure S5 gelu P=16 (~106K) seed=$SEED JOB=$JOB SHA=$(git rev-parse HEAD)"
 
 python -u run_train.py \
     --ckpt_dir="$CKPT_DIR" \
@@ -41,7 +42,7 @@ python -u run_train.py \
     --C_init=lecun_normal --activation_fn=gelu --batchnorm=True \
     --bidirectional=True --blocks=8 --bsz=50 --d_model=128 \
     --dataset=listops-classification \
-    --epochs=40 --jax_seed=6554595 --lr_factor=3 --n_layers=8 \
+    --epochs=40 --jax_seed=${SEED} --lr_factor=3 --n_layers=8 \
     --opt_config=BfastandCdecay \
     --p_dropout=0 --ssm_lr_base=0.001 --ssm_size_base=32 \
     --warmup_end=1 --weight_decay=0.04 \
