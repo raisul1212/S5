@@ -40,7 +40,7 @@ architecture:
             rows: 128
             cols: 128
             cols_active_at_once: 128
-            cell_config: nvmexplorer_RRAM  # REFERENCE ONLY -- see caveat above
+            cell_config: 'nvmexplorer_RRAM'  # REFERENCE ONLY -- see caveat above
         - name: pim_col_drivers
           class: array_col_drivers
           attributes:
@@ -49,7 +49,7 @@ architecture:
             rows: 128
             cols: 128
             cols_active_at_once: 128
-            cell_config: nvmexplorer_RRAM
+            cell_config: 'nvmexplorer_RRAM'
         - name: pim_cells
           class: memory_cell
           attributes:
@@ -58,7 +58,7 @@ architecture:
             rows: 128
             cols: 128
             cols_active_at_once: 128
-            cell_config: nvmexplorer_RRAM
+            cell_config: 'nvmexplorer_RRAM'
         - name: pim_adc
           class: array_adc
           attributes:
@@ -67,7 +67,7 @@ architecture:
             rows: 128
             cols: 128
             cols_active_at_once: 128
-            cell_config: nvmexplorer_RRAM
+            cell_config: 'nvmexplorer_RRAM'
             adc_resolution: 8
 
         # ---- Peripheral SRAM (activations only; weights on-array) ----
