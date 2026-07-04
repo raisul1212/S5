@@ -43,3 +43,4 @@ architecture:
           attributes:
             technology: 22
             global_cycle_seconds: 1.0e-9
+            n_bits: 32

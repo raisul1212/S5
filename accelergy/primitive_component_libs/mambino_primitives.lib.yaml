@@ -32,6 +32,7 @@ classes:
     attributes:
       technology: must_specify
       global_cycle_seconds: 1.0e-9
+      n_bits: 32
     actions:
       - name: read
       - name: write
