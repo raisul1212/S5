@@ -64,6 +64,14 @@ def _dot_general_flops(params, invars):
 
     params['dimension_numbers'] = ((lhs_contract, rhs_contract),
                                     (lhs_batch, rhs_batch))
+
+    Per-MAC FLOP cost by dtype combination:
+      - both real       -> 2 flops per MAC (1 mul + 1 add)
+      - complex + real  -> 4 flops per MAC (2 real muls + 2 real adds:
+                            W = A + Bi times real x = A*x + (B*x)i;
+                            each output is 2 real muls; accumulate = 2 real adds)
+      - both complex    -> 8 flops per MAC (4 real muls + 4 real adds:
+                            (a+bi)(c+di) fused mul-add = 4 mul + 4 add)
     """
     dim_nums = params["dimension_numbers"]
     (lhs_contract, rhs_contract), (lhs_batch, rhs_batch) = dim_nums
@@ -73,7 +81,8 @@ def _dot_general_flops(params, invars):
     lhs_shape = lhs_aval.shape
     rhs_shape = rhs_aval.shape
 
-    is_complex = _is_complex_dtype(lhs_aval.dtype) or _is_complex_dtype(rhs_aval.dtype)
+    lhs_complex = _is_complex_dtype(lhs_aval.dtype)
+    rhs_complex = _is_complex_dtype(rhs_aval.dtype)
 
     # Batch size (product of batch dims -- shared between LHS and RHS)
     batch_dims_lhs = [lhs_shape[i] for i in lhs_batch]
@@ -89,19 +98,45 @@ def _dot_general_flops(params, invars):
     # Contracting dim
     contract_size = _prod([lhs_shape[i] for i in lhs_contract])
 
-    # 2 flops per MAC (real), 8 flops per MAC (complex)
-    per_mac = 8 if is_complex else 2
+    # 3-way dtype cost
+    if lhs_complex and rhs_complex:
+        per_mac = 8      # complex-complex
+    elif lhs_complex ^ rhs_complex:
+        per_mac = 4      # complex-real (exactly one operand complex)
+    else:
+        per_mac = 2      # real-real
+
     return int(batch_size * out_size * per_mac * contract_size)
 
 
-def _elementwise_flops(eqn, cost_real: int, cost_complex: int):
-    """FLOPs for element-wise primitive."""
+def _elementwise_flops(eqn, cost_real: int, cost_complex: int,
+                       cost_complex_real: int = None):
+    """FLOPs for element-wise primitive.
+
+    Three-way cost based on input dtypes:
+      - both real       -> cost_real per output element
+      - both complex    -> cost_complex per output element
+      - complex + real  -> cost_complex_real per output element (defaults to
+                            average if not specified)
+    """
     if not eqn.outvars:
         return 0
-    aval = eqn.outvars[0].aval
-    n = _prod(aval.shape)
-    is_complex = _is_complex_dtype(aval.dtype)
-    return int(n * (cost_complex if is_complex else cost_real))
+    out_aval = eqn.outvars[0].aval
+    n = _prod(out_aval.shape)
+    out_complex = _is_complex_dtype(out_aval.dtype)
+
+    # Check input dtypes
+    in_complex = [_is_complex_dtype(v.aval.dtype)
+                  if hasattr(v, "aval") else False for v in eqn.invars]
+    all_complex = all(in_complex) if in_complex else False
+    any_complex = any(in_complex) if in_complex else False
+    mixed_complex_real = any_complex and not all_complex
+
+    if mixed_complex_real and cost_complex_real is not None:
+        return int(n * cost_complex_real)
+    if all_complex or (any_complex and out_complex):
+        return int(n * cost_complex)
+    return int(n * cost_real)
 
 
 def _get_inner_jaxpr(params, key: str):
@@ -158,11 +193,21 @@ def walk_jaxpr(jaxpr, multiplier=1, depth=0):
         if prim_name == "dot_general":
             f = _dot_general_flops(eqn.params, eqn.invars)
         elif prim_name in ("add", "sub"):
-            f = _elementwise_flops(eqn, cost_real=1, cost_complex=2)
+            # complex + real = 1 real add (imag part unchanged, no work)
+            # complex + complex = 2 real adds
+            f = _elementwise_flops(eqn, cost_real=1, cost_complex=2,
+                                   cost_complex_real=1)
         elif prim_name in ("mul",):
-            f = _elementwise_flops(eqn, cost_real=1, cost_complex=6)
+            # complex * complex = 4 muls + 2 adds = 6 flops
+            # complex * real    = 2 real muls (a+bi)*x = ax + (bx)i = 2 muls
+            # real * real       = 1 mul
+            f = _elementwise_flops(eqn, cost_real=1, cost_complex=6,
+                                   cost_complex_real=2)
         elif prim_name in ("div",):
-            f = _elementwise_flops(eqn, cost_real=1, cost_complex=6)
+            # complex / complex = ~10 flops (numerator*conj(denom) / |denom|^2)
+            # complex / real    = 2 real divs
+            f = _elementwise_flops(eqn, cost_real=1, cost_complex=10,
+                                   cost_complex_real=2)
         elif prim_name in ("exp", "log", "log1p", "expm1", "sqrt",
                            "rsqrt", "sin", "cos", "tan", "tanh",
                            "sinh", "cosh", "asin", "acos", "atan",

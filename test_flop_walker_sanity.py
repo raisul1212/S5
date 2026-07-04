@@ -84,10 +84,10 @@ def fn5(B, x):
     return B @ x
 B5 = jnp.ones((32, 128), dtype=jnp.complex64)
 x5 = jnp.ones((128,))
-# Note: my walker will report 8 * 32 * 128 = 32,768 (overcount)
-# Physical minimum: 4 * 32 * 128 = 16,384
+# After walker fix: complex-real uses 4x (not 8x)
+# Physical: 2 real muls per output (real part + imag part) = 4 * M * N
 test("Complex-real matvec (32, 128) complex @ (128,) real",
-     fn5, (B5, x5), 8 * 32 * 128)  # expecting walker's 8x behavior
+     fn5, (B5, x5), 4 * 32 * 128)
 
 # ---- Case 6: (C @ h).real -- does XLA drop imag? ----
 # We'll trace and inspect the primitives
