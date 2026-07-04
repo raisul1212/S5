@@ -92,23 +92,38 @@ All single-seed. Multi-seed reruns (jobs 11187522-11187541) currently held.
 Primitives: SRAM → CACTI. MAC (intadder) + register file (flip_flop) → NeuroSim.
 Action counts: 1 SRAM read per MAC (worst-case, no line buffering). Ratios between configs are invariant to this assumption.
 
-### Energy per inference (per-component + total)
+Reported under **two chip topologies** that differ only in activation SRAM buffering:
+- **Pipelined** — 4.2 MB activation SRAM (holds all 8 layers' fwd + bwd streams concurrently, throughput-optimized).
+- **Sequential** — 512 KB activation SRAM (processes layers one at a time, latency-optimized single-inference chip).
 
-| Config | weight_sram | activation_sram | state_sram | mac_array | reg_accum | **Total (mJ)** |
+### 6a. Pipelined chip (4.2 MB activation SRAM) — total energy + area
+
+| Config | weight_sram | activation_sram | state_sram | mac+reg | **Total energy (mJ)** | **Total area (mm²)** |
 |---|---:|---:|---:|---:|---:|---:|
-| Config 4 | 11.09 mJ | 139.45 mJ | 0.14 mJ | 2.64 μJ | 25.09 μJ | **150.70** |
-| Config 5 | 12.30 mJ | 154.47 mJ | 0.39 mJ | 2.92 μJ | 27.83 μJ | **167.18** |
-| Corner 1 | 30.33 mJ | 199.52 mJ | 0.11 mJ | 3.79 μJ | 36.05 μJ | **230.00** |
-| Corner 3' | 32.64 mJ | 214.54 mJ | 0.14 mJ | 4.07 μJ | 38.79 μJ | **247.36** |
+| Config 4 | 11.09 mJ | 139.45 mJ | 0.14 mJ | 27.7 μJ | **150.70** | **5.12** |
+| Config 5 | 12.30 mJ | 154.47 mJ | 0.39 mJ | 30.8 μJ | **167.18** | **5.32** |
+| Corner 1 | 30.33 mJ | 199.52 mJ | 0.11 mJ | 39.8 μJ | **230.00** | **4.94** |
+| Corner 3' | 32.64 mJ | 214.54 mJ | 0.14 mJ | 42.9 μJ | **247.36** | **5.19** |
 
-### Area (per-component + total)
+### 6b. Sequential chip (512 KB activation SRAM) — total energy + area
 
-| Config | weight_sram (μm²) | activation_sram (μm²) | state_sram (μm²) | mac+reg (μm²) | **Total (mm²)** |
-|---|---:|---:|---:|---:|---:|
-| Config 4 | 89,020.6 | 4,353,200 | 680,455 | 50.7 | **5.12** |
-| Config 5 | 89,020.6 | 4,353,200 | 878,057 | 50.7 | **5.32** |
-| Corner 1 | 160,889 | 4,353,200 | 428,971 | 50.7 | **4.94** |
-| Corner 3' | 160,889 | 4,353,200 | 680,455 | 50.7 | **5.19** |
+| Config | **Total energy (mJ)** | **Total area (mm²)** |
+|---|---:|---:|
+| Config 4 | **48.60** | **1.34** |
+| Config 5 | **54.07** | **1.53** |
+| Corner 1 | **83.85** | **1.16** |
+| Corner 3' | **90.19** | **1.41** |
+
+### Pipelined-to-Sequential ratio (design choice)
+
+| Config | Energy ratio (pipe/seq) | Area ratio (pipe/seq) |
+|---|---:|---:|
+| Config 4 | 3.10× | 3.84× |
+| Config 5 | 3.09× | 3.47× |
+| Corner 1 | 2.74× | 4.28× |
+| Corner 3' | 2.74× | 3.69× |
+
+Rankings within each topology are preserved: **Config 4 < Config 5 < Corner 1 < Corner 3'** for energy in both scenarios.
 
 ## 7. Mixed-signal PIM PPAC (Accelergy 0.4 + NeuroSim PIM + CACTI, 22nm)
 
@@ -116,25 +131,27 @@ Action counts: 1 SRAM read per MAC (worst-case, no line buffering). Ratios betwe
 
 Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(MACs / 16384)`.
 
-### Energy per inference
+### 7a. Pipelined chip (4.2 MB activation SRAM)
 
-| Config | Total (mJ) | Notes |
-|---|---:|---|
-| Config 4 | **1.25** | Tile activations = 18,752 |
-| Config 5 | **1.62** | Tile activations = 20,800 |
-| Corner 1 | **1.71** | Tile activations = 26,946 |
-| Corner 3' | **1.85** | Tile activations = 28,993 |
+| Config | Total energy (mJ) | Total area (mm²) | Tile activations |
+|---|---:|---:|---:|
+| Config 4 | **1.25** | **5.44** | 18,752 |
+| Config 5 | **1.62** | **5.63** | 20,800 |
+| Corner 1 | **1.71** | **5.18** | 26,946 |
+| Corner 3' | **1.85** | **5.44** | 28,993 |
 
-### Area
+### 7b. Sequential chip (512 KB activation SRAM)
 
-| Config | Total (mm²) |
-|---|---:|
-| Config 4 | **5.44** |
-| Config 5 | **5.63** |
-| Corner 1 | **5.18** |
-| Corner 3' | **5.44** |
+| Config | Total energy (mJ) | Total area (mm²) |
+|---|---:|---:|
+| Config 4 | **0.46** | **1.65** |
+| Config 5 | **0.74** | **1.85** |
+| Corner 1 | **0.57** | **1.40** |
+| Corner 3' | **0.63** | **1.65** |
 
 ## 8. Accuracy-per-mJ (digital) — chip efficiency metric
+
+### 8a. Pipelined chip (4.2 MB activation SRAM)
 
 | Config | test@peakval | test@peakval / mJ (×10⁻³) | test_max | test_max / mJ (×10⁻³) |
 |---|---:|---:|---:|---:|
@@ -142,6 +159,17 @@ Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(
 | Config 5 Pure S5 gelu | 0.5830 | 3.49 | 0.6000 | 3.59 |
 | Corner 1 Pure S5 half_glu2 | 0.6155 | 2.68 | 0.6250 | 2.72 |
 | Corner 3' Mambino half_glu2 | 0.6140 | 2.48 | 0.6205 | 2.51 |
+
+### 8b. Sequential chip (512 KB activation SRAM)
+
+| Config | test@peakval | test@peakval / mJ (×10⁻³) | test_max | test_max / mJ (×10⁻³) |
+|---|---:|---:|---:|---:|
+| **Config 4** Mambino gelu | 0.6055 | **12.46** | 0.6095 | **12.54** |
+| Config 5 Pure S5 gelu | 0.5830 | 10.78 | 0.6000 | 11.10 |
+| Corner 1 Pure S5 half_glu2 | 0.6155 | 7.34 | 0.6250 | 7.45 |
+| Corner 3' Mambino half_glu2 | 0.6140 | 6.81 | 0.6205 | 6.88 |
+
+**Config 4 wins acc/mJ under both accuracy definitions and both chip topologies.**
 
 ## 9. Methodology citations
 
@@ -168,7 +196,10 @@ Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(
 ## 11. Modeling assumptions used in Accelergy YAMLs
 
 - All INT8 quantization, 22nm, 1 GHz clock.
-- Activation SRAM sized to 4.2 MB (holds forward + backward pass activations at H=128 for L=2048 × n_layers=8, buffered inference-time). TODO: audit whether this can be reduced under aggressive activation-reuse.
+- **Activation SRAM sizing** is a chip-topology choice, reported at TWO scenarios:
+  - **Pipelined** (`4.2 MB`, width=1024, depth=32784): holds all 8 layers' fwd + bwd activation streams concurrently. Throughput-optimized — the chip can pipeline multiple layers in flight. Reference sizing: `2 × L × H × n_layers = 2 × 2048 × 128 × 8 = 4 MB` (fwd+bwd × sequence × hidden × layers).
+  - **Sequential** (`512 KB`, width=1024, depth=4096): holds only one layer's fwd+bwd activations at a time; process layer N, discard, move to N+1. Latency-optimized single-inference chip. Reference sizing: `2 × L × H = 2 × 2048 × 128 = 512 KB`.
+  Choice between the two is a system-level tradeoff — the pipelined design supports higher throughput and pipelined bidir compute; the sequential design cuts activation SRAM 8× at the cost of serialized layer execution. Both are defensible; §6/§7/§8 report both.
 - Weight SRAM depth = ceil(params / 128) — assumes 128-byte-wide lines.
 - **State SRAM sizing formula:**
   ```

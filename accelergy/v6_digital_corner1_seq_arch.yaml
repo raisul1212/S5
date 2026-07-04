@@ -1,0 +1,44 @@
+# Digital chip architecture -- Corner 1 (Pure S5, half_glu2, ssm_size_base=16, bidir, batchnorm)
+# JAXPR: 948,670,108 FLOPs, dot_general 882,903,552 -> MACs = 441,451,776
+# Params: 188,490 (SLURM job 11187391, JobName corner1)
+architecture:
+  version: 0.4
+  subtree:
+    - name: chip
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+      local:
+        - name: weight_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 1473          # 188,490 params / 128
+        - name: activation_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 4096          # 512 KB (sequential single-layer chip)
+        - name: state_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 128           # local_P=16 bytes = 128 bits per state entry
+            depth: 32768         # 512 KB / 16 (Pure S5: 2 trajectories x L x n_layers)
+        - name: mac_array
+          class: intadder
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 8
+        - name: reg_accum
+          class: flip_flop
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 32

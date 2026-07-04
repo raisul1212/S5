@@ -1,0 +1,46 @@
+# Digital chip architecture -- Config 4 Mambino gelu 106K, 22nm INT8
+# Primitives resolved via:
+#   SRAM -> CACTI plugin (actions read/write)
+#   intmac -> Aladdin plugin (action access + leak)
+#   regfile -> Aladdin plugin (actions read/write)
+architecture:
+  version: 0.4
+  subtree:
+    - name: chip
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+      local:
+        - name: weight_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024        # 128 bytes * 8 bits per line
+            depth: 826         # 105,738 params / 128
+        - name: activation_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 4096          # 512 KB (sequential single-layer chip)
+        - name: state_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 128          # local_P=16 bytes = 128 bits per state entry
+            depth: 49152        # 768 KB / 16 (Mambino: 3 trajectories x L x n_layers)
+        - name: mac_array
+          class: intadder            # NeuroSim intadder as INT8 MAC approximation
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 8
+        - name: reg_accum
+          class: flip_flop           # NeuroSim flip_flop for register file (per-cell)
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 32

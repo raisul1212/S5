@@ -1,0 +1,43 @@
+# Digital chip architecture -- Config 5 Pure S5 gelu P=16, 106K, 22nm INT8
+# Same shape as Config 4 (iso-params) except state SRAM is larger (P=32 vs 16)
+architecture:
+  version: 0.4
+  subtree:
+    - name: chip
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+      local:
+        - name: weight_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 826
+        - name: activation_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 4096          # 512 KB (sequential single-layer chip)
+        - name: state_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 256          # local_P=32 bytes = 256 bits per state entry
+            depth: 32768        # 1024 KB / 32 (Pure S5: 2 trajectories x L x n_layers)
+        - name: mac_array
+          class: intadder            # NeuroSim intadder as INT8 MAC approximation
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 8
+        - name: reg_accum
+          class: flip_flop           # NeuroSim flip_flop for register file
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 32
