@@ -1,0 +1,81 @@
+# NeuroSim-PIM crossbar reference -- Corner 3' (Mambino half_glu2 iso-param, 188K)
+# !! Generic RRAM crossbar -- NOT paper's analog RC state cell !!
+architecture:
+  version: 0.4
+  subtree:
+    - name: chip
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+      local:
+        - name: pim_row_drivers
+          class: array_row_drivers
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            rows: 128
+            cols: 128
+            cols_active_at_once: 128
+            cell_config: 'nvmexplorer_RRAM'
+            average_input_value: 0.5
+            average_cell_value: 0.5
+        - name: pim_col_drivers
+          class: array_col_drivers
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            rows: 128
+            cols: 128
+            cols_active_at_once: 128
+            cell_config: 'nvmexplorer_RRAM'
+            average_input_value: 0.5
+            average_cell_value: 0.5
+        - name: pim_cells
+          class: memory_cell
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            rows: 128
+            cols: 128
+            cols_active_at_once: 128
+            cell_config: 'nvmexplorer_RRAM'
+            average_input_value: 0.5
+            average_cell_value: 0.5
+        - name: pim_adc
+          class: array_adc
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            rows: 128
+            cols: 128
+            cols_active_at_once: 128
+            cell_config: 'nvmexplorer_RRAM'
+            average_input_value: 0.5
+            average_cell_value: 0.5
+            adc_resolution: 8
+        - name: activation_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 32784
+        - name: state_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 256
+            depth: 32768
+        - name: acc_adder
+          class: intadder
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 16
+        - name: reg_accum
+          class: flip_flop
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 32

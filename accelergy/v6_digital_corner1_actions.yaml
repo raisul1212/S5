@@ -1,0 +1,32 @@
+# Corner 1 -- JAXPR: 948.67M FLOPs, dot_general 882.90M -> MACs = 441,451,776
+action_counts:
+  version: 0.4
+  local:
+    - name: chip.weight_sram
+      action_counts:
+        - name: read
+          counts: 441451776
+        - name: write
+          counts: 188490
+    - name: chip.activation_sram
+      action_counts:
+        - name: read
+          counts: 441451776
+        - name: write
+          counts: 4194304
+    - name: chip.state_sram
+      action_counts:
+        - name: read
+          counts: 3145728
+        - name: write
+          counts: 1572864
+    - name: chip.mac_array
+      action_counts:
+        - name: mac_random
+          counts: 441451776
+    - name: chip.reg_accum
+      action_counts:
+        - name: read
+          counts: 441451776
+        - name: write
+          counts: 441451776
