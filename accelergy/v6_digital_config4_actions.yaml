@@ -1,0 +1,35 @@
+# Digital action counts -- Config 4 Mambino gelu 106K
+# JAXPR-verified totals:
+#   Total FLOPs: 682,095,196
+#   dot_general: 614,468,096 (MACs = 341,047,598)
+action_counts:
+  version: 0.4
+  local:
+    - name: chip.weight_sram
+      action_counts:
+        - name: read
+          counts: 341047598      # 1 weight fetch per MAC
+        - name: write
+          counts: 105738         # weight load
+    - name: chip.activation_sram
+      action_counts:
+        - name: read
+          counts: 341047598      # activation fetch per MAC
+        - name: write
+          counts: 4194304        # activation buffer writes
+    - name: chip.state_sram
+      action_counts:
+        - name: read
+          counts: 3145728        # 2 reads per byte scan
+        - name: write
+          counts: 1572864
+    - name: chip.mac_array
+      action_counts:
+        - name: access
+          counts: 341047598      # Aladdin uses 'access' for intmac
+    - name: chip.reg_accum
+      action_counts:
+        - name: read
+          counts: 341047598
+        - name: write
+          counts: 341047598

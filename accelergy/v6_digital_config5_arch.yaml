@@ -1,0 +1,44 @@
+# Digital chip architecture -- Config 5 Pure S5 gelu P=16, 106K, 22nm INT8
+# Same shape as Config 4 (iso-params) except state SRAM is larger (P=32 vs 16)
+architecture:
+  version: 0.4
+  subtree:
+    - name: chip
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+      local:
+        - name: weight_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 826
+        - name: activation_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 32784
+        - name: state_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 512          # local_P=32 complex = 64 bytes * 8 bits
+            depth: 32768        # 2.1MB / 64
+        - name: mac_array
+          class: intmac
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 8
+        - name: reg_accum
+          class: regfile
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 32
+            depth: 128
