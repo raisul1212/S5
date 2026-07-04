@@ -1,0 +1,87 @@
+# Primitive component library for Mambino chip PPAC.
+# Declares SRAM, intmac, regfile as primitive classes so Accelergy will
+# dispatch (class_name, action_name) queries to CACTI/Aladdin/NeuroSim plugins.
+classes:
+  - name: SRAM
+    attributes:
+      technology: must_specify
+      global_cycle_seconds: 1.0e-9
+      width: must_specify
+      depth: must_specify
+    actions:
+      - name: read
+      - name: write
+      - name: leak
+
+  - name: intmac
+    attributes:
+      technology: must_specify
+      global_cycle_seconds: 1.0e-9
+      width: must_specify
+    actions:
+      - name: access
+      - name: leak
+
+  - name: regfile
+    attributes:
+      technology: must_specify
+      global_cycle_seconds: 1.0e-9
+      width: must_specify
+      depth: must_specify
+    actions:
+      - name: read
+      - name: write
+      - name: leak
+
+  # For NeuroSim mixed-signal PIM PPAC
+  - name: array_row_drivers
+    attributes:
+      technology: must_specify
+      global_cycle_seconds: 1.0e-9
+      rows: must_specify
+      cols: must_specify
+      cols_active_at_once: 1
+      cell_config: must_specify
+    actions:
+      - name: read
+      - name: write
+      - name: leak
+
+  - name: array_col_drivers
+    attributes:
+      technology: must_specify
+      global_cycle_seconds: 1.0e-9
+      rows: must_specify
+      cols: must_specify
+      cols_active_at_once: 1
+      cell_config: must_specify
+    actions:
+      - name: read
+      - name: write
+      - name: leak
+
+  - name: array_adc
+    attributes:
+      technology: must_specify
+      global_cycle_seconds: 1.0e-9
+      rows: must_specify
+      cols: must_specify
+      cols_active_at_once: 1
+      cell_config: must_specify
+      adc_resolution: 8
+    actions:
+      - name: read
+      - name: leak
+
+  - name: memory_cell
+    attributes:
+      technology: must_specify
+      global_cycle_seconds: 1.0e-9
+      rows: must_specify
+      cols: must_specify
+      cols_active_at_once: 1
+      cell_config: must_specify
+    actions:
+      - name: read
+      - name: write
+      - name: leak
