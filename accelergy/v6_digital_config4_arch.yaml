@@ -30,8 +30,8 @@ architecture:
           attributes:
             technology: 22
             global_cycle_seconds: 1.0e-9
-            width: 256          # local_P=16 complex = 32 bytes * 8 bits
-            depth: 49152        # 1.6MB / 32
+            width: 512          # Mambino: main + predictor state, both local_P=16
+            depth: 32768        # 2.0 MB / 64
         - name: mac_array
           class: intadder            # NeuroSim intadder as INT8 MAC approximation
           attributes:

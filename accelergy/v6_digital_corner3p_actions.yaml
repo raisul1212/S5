@@ -17,7 +17,7 @@ action_counts:
     - name: chip.state_sram
       action_counts:
         - name: read
-          counts: 3145728
+          counts: 3145728        # main + predictor state traffic
         - name: write
           counts: 1572864
     - name: chip.mac_array

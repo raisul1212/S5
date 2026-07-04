@@ -91,8 +91,8 @@ architecture:
           attributes:
             technology: 22
             global_cycle_seconds: 1.0e-9
-            width: 256
-            depth: 49152
+            width: 512           # Mambino: main + predictor state
+            depth: 32768
 
         # ---- Digital periphery ----
         - name: acc_adder
