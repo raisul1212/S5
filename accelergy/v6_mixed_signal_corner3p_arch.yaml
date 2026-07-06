@@ -65,8 +65,8 @@ architecture:
           attributes:
             technology: 22
             global_cycle_seconds: 1.0e-9
-            width: 128           # local_P=16 bytes
-            depth: 49152         # 768 KB (Mambino: 3 trajectories)
+            width: 128           # streaming: local_P=16 bytes = 128 bits
+            depth: 16384         # pipelined: 256 KB (L=2048 * n_layers=8, one direction buffered)
         - name: acc_adder
           class: intadder
           attributes:

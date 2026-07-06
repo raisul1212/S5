@@ -1,7 +1,12 @@
 # Master Document: Training Runs + JAXPR FLOPs + Accelergy PPAC
 
-Locked 2026-07-03 (v2 — corrections applied per independent review).
+Locked 2026-07-06 (v4 — streaming inference model + 5-seed multi-seed sweep).
 All numbers from executed code + published methodologies.
+
+**v4 changes from v3:** (1) State SRAM sizing corrected from parallel-scan trajectory to
+streaming inference (§11); (2) All PPAC tables re-run (§6/§7); (3) §5 replaced with 5-seed
+multi-seed statistics from unified current-code SHA `46517fe`; (4) §8 acc/mJ uses the
+5-seed means.
 
 ## 0. Code + raw data locations
 
@@ -76,20 +81,40 @@ Computed by [`flop_counter_jaxpr.py`](https://github.com/raisul1212/S5/blob/mamb
 **Canonical MAC basis for all downstream PPAC: `Real-MAC equivalent = dot_general FLOPs / 2`.**
 Rationale: complex arithmetic is already correctly weighted in dot_general; total FLOPs includes elementwise ops (norms, GELU, gates) that don't hit the MAC unit and would inflate per-MAC SRAM traffic.
 
-## 5. Test accuracies (single-seed, from best.pkl and full run.log)
+## 5. Test accuracies — 5-seed multi-seed sweep at current code SHA `46517fe`
 
 Two definitions per Fable convention:
 - **`test@peakval`**: test_acc at the epoch that had the highest validation accuracy. This is the standard leakage-free metric.
 - **`test_max`**: overall highest test_acc seen across all 40 epochs. This is an upper bound; useful for showing what the model can do.
 
-| Config | peak_val | **test@peakval** | **test_max** | Source |
-|---|---:|---:|---:|---|
-| Config 4 Mambino gelu | 0.6025 | **0.6055** | **0.6095** | `chip_mamb_gelu_11181833/run.log` |
-| Config 5 Pure S5 gelu | 0.5845 | **0.5830** | **0.6000** | `train_pure_s5_gelu_p16_11187128/run.log` |
-| Corner 1 Pure S5 half_glu2 | 0.6085 | **0.6155** | **0.6250** | `chip_pure_s5_11181830/run.log` |
-| Corner 3' Mambino half_glu2 | 0.6005 | **0.6140** | **0.6205** | `chip_mamb_iso_11181831/run.log` |
+Seeds: {6554595, 42, 12345, 271828, 314159}. All 20 runs COMPLETED at 40 epochs.
 
-All single-seed. Multi-seed reruns (jobs 11187522-11187541) currently held.
+| Config | test@peakval mean±std | test_max mean±std |
+|---|---:|---:|
+| Config 4 Mambino gelu | **0.5999 ± 0.0081** | 0.6033 ± 0.0069 |
+| Config 5 Pure S5 gelu | 0.5924 ± 0.0067 | 0.6033 ± 0.0058 |
+| Corner 1 Pure S5 half_glu2 | 0.6107 ± 0.0047 | 0.6153 ± 0.0047 |
+| Corner 3' Mambino half_glu2 | **0.6143 ± 0.0030** | **0.6186 ± 0.0050** |
+
+### Iso-params deltas
+
+**106K (Config 4 vs Config 5):** Mambino wins test@peakval by +0.75 pp; ties on test_max.
+
+**188K (Corner 3' vs Corner 1):** Mambino wins test@peakval by +0.36 pp AND test_max by +0.33 pp AND has **36% lower seed variance** (0.30% vs 0.47%).
+
+### Ranking is stable across both metrics
+Corner 3' > Corner 1 > Config 4 > Config 5 (test@peakval).
+
+### Per-seed table (raw)
+
+| Config | seed 6554595 | seed 42 | seed 12345 | seed 271828 | seed 314159 |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Config 4 test@peakval | 0.5940 | 0.6035 | 0.6100 | 0.5875 | 0.6045 |
+| Config 5 test@peakval | 0.5830 | 0.6010 | 0.5930 | 0.5980 | 0.5870 |
+| Corner 1 test@peakval | 0.6080 | 0.6200 | 0.6090 | 0.6070 | 0.6095 |
+| Corner 3' test@peakval | 0.6180 | 0.6165 | 0.6150 | 0.6125 | 0.6095 |
+
+Note: seed=6554595 originals (SHA `a32cb6bb`/`7fe1aa43`/`7343b68b`) were rerun at current SHA `46517fe` and appear here; original single-seed accuracies from those older SHAs differed slightly due to code drift in `s5/ssm.py`, `s5/mambino_ssm.py`, `s5/layers.py` between then and now. All numbers reported in this doc are from the unified current-code sweep.
 
 ## 6. Digital PPAC (Accelergy 0.4 + CACTI + NeuroSim, 22nm INT8, 1 GHz clock)
 
@@ -102,21 +127,21 @@ Reported under **two chip topologies** that differ only in activation SRAM buffe
 
 ### 6a. Pipelined chip (4.2 MB activation SRAM) — total energy + area
 
-| Config | weight_sram | activation_sram | state_sram | mac+reg | **Total energy (mJ)** | **Total area (mm²)** |
-|---|---:|---:|---:|---:|---:|---:|
-| Config 4 | 11.09 mJ | 139.45 mJ | 0.14 mJ | 27.7 μJ | **150.70** | **5.12** |
-| Config 5 | 12.30 mJ | 154.47 mJ | 0.39 mJ | 30.8 μJ | **167.18** | **5.32** |
-| Corner 1 | 30.33 mJ | 199.52 mJ | 0.11 mJ | 39.8 μJ | **230.00** | **4.94** |
-| Corner 3' | 32.64 mJ | 214.54 mJ | 0.14 mJ | 42.9 μJ | **247.36** | **5.19** |
+| Config | **Total energy (mJ)** | **Total area (mm²)** |
+|---|---:|---:|
+| Config 4 | **150.57** | **4.70** |
+| Config 5 | 166.80 | 4.95 |
+| Corner 1 | 229.89 | **4.77** |
+| Corner 3' | 247.22 | **4.77** ← equal to Corner 1 |
 
 ### 6b. Sequential chip (512 KB activation SRAM) — total energy + area
 
 | Config | **Total energy (mJ)** | **Total area (mm²)** |
 |---|---:|---:|
-| Config 4 | **48.60** | **1.34** |
-| Config 5 | **54.07** | **1.53** |
-| Corner 1 | **83.85** | **1.16** |
-| Corner 3' | **90.19** | **1.41** |
+| Config 4 | **48.47** | **0.68** |
+| Config 5 | 53.69 | 0.72 |
+| Corner 1 | 83.74 | **0.76** |
+| Corner 3' | 90.06 | **0.76** ← equal to Corner 1 |
 
 ### Pipelined-to-Sequential ratio (design choice)
 
@@ -139,41 +164,43 @@ Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(
 
 | Config | Total energy (mJ) | Total area (mm²) | Tile activations |
 |---|---:|---:|---:|
-| Config 4 | **1.25** | **5.44** | 18,752 |
-| Config 5 | **1.62** | **5.63** | 20,800 |
-| Corner 1 | **1.71** | **5.18** | 26,946 |
-| Corner 3' | **1.85** | **5.44** | 28,993 |
+| Config 4 | **1.12** | **5.01** | 18,752 |
+| Config 5 | 1.24 | 5.26 | 20,800 |
+| Corner 1 | 1.60 | **5.01** ← equal | 26,946 |
+| Corner 3' | 1.72 | **5.01** ← equal | 28,993 |
 
 ### 7b. Sequential chip (512 KB activation SRAM)
 
 | Config | Total energy (mJ) | Total area (mm²) |
 |---|---:|---:|
-| Config 4 | **0.46** | **1.65** |
-| Config 5 | **0.74** | **1.85** |
-| Corner 1 | **0.57** | **1.40** |
-| Corner 3' | **0.63** | **1.65** |
+| Config 4 | **0.32** | **1.00** |
+| Config 5 | 0.35 | 1.03 |
+| Corner 1 | 0.46 | **1.00** ← equal |
+| Corner 3' | 0.49 | **1.00** ← equal |
 
-**Note on Config 5 in the sequential PIM row:** Config 5's energy (0.74 mJ) exceeds Corner 1 (0.57) and Corner 3' (0.63) despite having ~30% fewer MACs. Reason: in sequential PIM, analog crossbar compute is nearly free (< 0.5% of total energy), so SRAM traffic dominates. Pure S5 P=16's state SRAM is 1024 KB (vs Mambino's 768 KB and Corner 1's 512 KB) AND generates 33% more state accesses per inference (local_P=32 × 2 trajectories vs 16 × 3). Combined effect: Config 5's state_sram energy (387 μJ) is 2.8× Config 4's (137 μJ) and dominates the total. This is a real physical result — analog crossbar shifts the chip bottleneck from compute to memory traffic, so smaller SSM state per layer (Mambino's design) helps more in mixed-signal than in digital.
+**Note on the same-area cluster (Config 4 = Corner 1 = Corner 3' at 5.01 mm² pipelined, 1.00 mm² sequential):** All three share P=8 (so identical 256 KB streaming state SRAM), identical activation SRAM (4.2 MB pipelined / 512 KB sequential), and no weight SRAM in the mixed-signal chip (weights are on-array in the PIM crossbar). Config 5 stands slightly larger because P=16 doubles its streaming state SRAM to 512 KB. The energy ranking is still Config 4 < Config 5 < Corner 1 < Corner 3' — driven by MAC count, not state footprint.
 
 ## 8. Accuracy-per-mJ (digital) — chip efficiency metric
 
-### 8a. Pipelined chip (4.2 MB activation SRAM)
+### 8a. Pipelined chip
 
-| Config | test@peakval | test@peakval / mJ (×10⁻³) | test_max | test_max / mJ (×10⁻³) |
+Using 5-seed mean test@peakval and test_max from §5.
+
+| Config | test@peakval mean | test@peakval / mJ (×10⁻³) | test_max mean | test_max / mJ (×10⁻³) |
 |---|---:|---:|---:|---:|
-| **Config 4** Mambino gelu | 0.6055 | **4.02** | 0.6095 | **4.04** |
-| Config 5 Pure S5 gelu | 0.5830 | 3.49 | 0.6000 | 3.59 |
-| Corner 1 Pure S5 half_glu2 | 0.6155 | 2.68 | 0.6250 | 2.72 |
-| Corner 3' Mambino half_glu2 | 0.6140 | 2.48 | 0.6205 | 2.51 |
+| **Config 4** Mambino gelu | 0.5999 | **3.98** | 0.6033 | **4.01** |
+| Config 5 Pure S5 gelu | 0.5924 | 3.55 | 0.6033 | 3.62 |
+| Corner 1 Pure S5 half_glu2 | 0.6107 | 2.66 | 0.6153 | 2.68 |
+| Corner 3' Mambino half_glu2 | 0.6143 | 2.48 | 0.6186 | 2.50 |
 
-### 8b. Sequential chip (512 KB activation SRAM)
+### 8b. Sequential chip
 
-| Config | test@peakval | test@peakval / mJ (×10⁻³) | test_max | test_max / mJ (×10⁻³) |
+| Config | test@peakval mean | test@peakval / mJ (×10⁻³) | test_max mean | test_max / mJ (×10⁻³) |
 |---|---:|---:|---:|---:|
-| **Config 4** Mambino gelu | 0.6055 | **12.46** | 0.6095 | **12.54** |
-| Config 5 Pure S5 gelu | 0.5830 | 10.78 | 0.6000 | 11.10 |
-| Corner 1 Pure S5 half_glu2 | 0.6155 | 7.34 | 0.6250 | 7.45 |
-| Corner 3' Mambino half_glu2 | 0.6140 | 6.81 | 0.6205 | 6.88 |
+| **Config 4** Mambino gelu | 0.5999 | **12.38** | 0.6033 | **12.44** |
+| Config 5 Pure S5 gelu | 0.5924 | 11.03 | 0.6033 | 11.24 |
+| Corner 1 Pure S5 half_glu2 | 0.6107 | 7.29 | 0.6153 | 7.35 |
+| Corner 3' Mambino half_glu2 | 0.6143 | 6.82 | 0.6186 | 6.87 |
 
 **Config 4 wins acc/mJ under both accuracy definitions and both chip topologies.**
 
@@ -207,18 +234,28 @@ Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(
   - **Sequential** (`512 KB`, width=1024, depth=4096): holds only one layer's fwd+bwd activations at a time; process layer N, discard, move to N+1. Latency-optimized single-inference chip. Reference sizing: `2 × L × H = 2 × 2048 × 128 = 512 KB`.
   Choice between the two is a system-level tradeoff — the pipelined design supports higher throughput and pipelined bidir compute; the sequential design cuts activation SRAM 8× at the cost of serialized layer execution. Both are defensible; §6/§7/§8 report both.
 - Weight SRAM depth = ceil(params / 128) — assumes 128-byte-wide lines.
-- **State SRAM sizing formula:**
+- **State SRAM sizing formula (streaming inference chip, corrected v4):**
   ```
-  state_bytes = local_P * L * n_layers * n_traj
-      local_P    = 2*P (real INT8 bytes per state per timestep)
-      n_traj     = 2 for Pure S5 (main fwd + main bwd)
-                   3 for Mambino (main fwd + main bwd + predictor fwd)
+  state_bytes = L * local_P * n_layers * 1  (one buffered direction for bidir concat)
+      local_P = 2*P (real INT8 bytes per state per timestep)
   ```
+  The chip runs the SSM recurrence `x[t] = Lambda_bar * x[t-1] + Bu[t]` sequentially, one
+  timestep at a time. Only the CURRENT state persists in a register per layer per direction.
+  For bidirectional layers, the forward pass's state trajectory (L × local_P bytes) is
+  buffered so the backward pass can produce combined `y[t] = 2Re(C₁·x_fwd[t]) + 2Re(C₂·x_bwd[t])`.
+  Predictor is causal-shift streaming — one register per layer, negligible SRAM. No parallel
+  associative scan is required at inference (that was a training-time GPU optimization).
+
   For L=2048, n_layers=8:
-  - Config 4 (P=8, Mambino): 16 × 2048 × 8 × 3 = **786,432 bytes = 768 KB**
-  - Config 5 (P=16, Pure S5): 32 × 2048 × 8 × 2 = **1,048,576 bytes = 1024 KB**
-  - Corner 1 (P=8, Pure S5): 16 × 2048 × 8 × 2 = **524,288 bytes = 512 KB**
-  - Corner 3' (P=8, Mambino): 16 × 2048 × 8 × 3 = **786,432 bytes = 768 KB**
+  - Config 4 (P=8): 16 × 2048 × 8 × 1 = **262,144 bytes = 256 KB**
+  - Config 5 (P=16): 32 × 2048 × 8 × 1 = **524,288 bytes = 512 KB**
+  - Corner 1 (P=8): 16 × 2048 × 8 × 1 = **262,144 bytes = 256 KB**
+  - Corner 3' (P=8): 16 × 2048 × 8 × 1 = **262,144 bytes = 256 KB**
+
+  Corner 1 = Corner 3' = Config 4 = 256 KB — no Mambino predictor penalty because the
+  predictor's state is streamed (single register per layer).
+  Config 5 stands out at 512 KB because its P=16 doubles local_P.
+  Sequential chip (one layer at a time): divide by 8 → 32 KB (or 64 KB for Config 5).
 - **Canonical MAC count** for every action-count entry that scales with MACs: `dot_general FLOPs / 2` (see §4). All 4 configs use the same accounting basis.
 - Worst-case action count: 1 SRAM read per MAC (no line buffering). Line-buffered version would drop absolute energy by ~100× but ratios between configs are invariant.
 

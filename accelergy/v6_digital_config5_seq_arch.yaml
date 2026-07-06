@@ -27,8 +27,8 @@ architecture:
           attributes:
             technology: 22
             global_cycle_seconds: 1.0e-9
-            width: 256          # local_P=32 bytes = 256 bits per state entry
-            depth: 32768        # 1024 KB / 32 (Pure S5: 2 trajectories x L x n_layers)
+            width: 256           # streaming: local_P=32 bytes = 256 bits
+            depth: 2048          # sequential: 64 KB (L=2048 * 1 layer at a time)
         - name: mac_array
           class: intadder            # NeuroSim intadder as INT8 MAC approximation
           attributes:

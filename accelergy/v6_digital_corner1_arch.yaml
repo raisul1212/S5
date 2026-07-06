@@ -28,8 +28,8 @@ architecture:
           attributes:
             technology: 22
             global_cycle_seconds: 1.0e-9
-            width: 128           # local_P=16 bytes = 128 bits per state entry
-            depth: 32768         # 512 KB / 16 (Pure S5: 2 trajectories x L x n_layers)
+            width: 128           # streaming: local_P=16 bytes = 128 bits
+            depth: 16384         # pipelined: 256 KB (L=2048 * n_layers=8, one direction buffered)
         - name: mac_array
           class: intadder
           attributes:
