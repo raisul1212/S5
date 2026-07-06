@@ -24,24 +24,45 @@ PPAC. Rationale:
 - Write energy at Point A (`98.9 fJ`) sits right at the edge of the memo's
   original `1–100 fJ` target.
 
-## Two closing questions on your Round-1 data (before we ship Point A)
+## Q1 — Tech node CONFIRMED: TSMC 180 nm
 
-Before we commit to Point A in the Accelergy pipeline, two things about
-Round 1 need clarification. These aren't new measurements — just questions:
+Confirmed on 2026-07-06: Round-1 characterization was done on the TSMC 180 nm
+PDK. That is a fine choice for early cell characterization — 180 nm analog
+models are mature and results are trustworthy — but the paper's chip target
+is 22 nm, so we will need to scale.
 
-**Q1. Tech node.** The voltage rails (WBL 1.0 V, WWL 1.8 V) and M_W L=180 nm
-suggest a 40 nm or 65 nm PDK, not the 22 nm the memo requested. Please
-confirm which PDK you used. If it's 40/65 nm, that's fine — we'll scale to
-22 nm via published methodology in the paper — but we need to know for
-sure so the paper doesn't misrepresent it.
+**Our scaling plan (nothing for you to do here, just so you know):**
 
-**Q2. Refresh methodology.** Your reported refresh energy of `1.23 fJ` at
-`Cstore = 50 fF` is 40× smaller than the write energy at the same
-capacitance (`50.23 fJ`). That's suspicious. Please clarify: does the
-1.23 fJ measurement account only for the ΔV_leaked top-up charge, or does
-it include the full write-driver + WWL overhead? For paper defensibility
-we need refresh to be measured on the same basis as write (full switch
-+ driver cycle), even if that means it comes out closer to write energy.
+- **Write / refresh energy**: `E_22nm ≈ E_180nm × (Vdd_22 / Vdd_180)² = E_180nm × (0.8/1.0)² ≈ 0.64×`
+  → Point A write energy at 22 nm ≈ **98.9 fJ × 0.64 ≈ 63.3 fJ**
+- **Cell area**: cannot use a simple `(node_ratio)²` because the 100 fF cap
+  dominates cell area, and MOM/MIM cap density at 22 nm is only ~1.5-2×
+  denser than at 180 nm. We'll cite Wong et al. Sci Rep 2015 for the cap
+  density scaling and explicitly note the transistor area gain as a lower
+  bound.
+- **Retention T_ret**: leakage at 22 nm is HIGHER than 180 nm (worse
+  sub-threshold leakage) — so 72 μs at 180 nm may be closer to **10-30 μs
+  at 22 nm**. This is a concern. It's one reason Priority-0b (`I_leak(V)
+  curve`) matters even more now — we need to model this leakage scaling
+  properly.
+
+**One question for you as a follow-up to this:** if you have a 22 nm PTM
+(Predictive Technology Model) available in Cadence, can you re-run the
+Cstore=100 fF nominal write + retention SPICE at 22 nm PTM as a sanity
+check? Even a single point (nominal Vdd, room temp, single retention
+number) would let us validate the scaling factor above. Ballpark estimate
+of effort welcome. If it's more than a few days of work, don't — we'll
+proceed with the scaling model.
+
+## Q2 — Refresh methodology (still needs clarification)
+
+Your reported refresh energy of `1.23 fJ` at `Cstore = 50 fF` is 40× smaller
+than the write energy at the same capacitance (`50.23 fJ`). That's
+suspicious. Please clarify: does the 1.23 fJ measurement account only for
+the ΔV_leaked top-up charge, or does it include the full write-driver + WWL
+overhead? For paper defensibility we need refresh to be measured on the
+same basis as write (full switch + driver cycle), even if that means it
+comes out closer to write energy.
 
 ## Five new SPICE measurements needed (prioritized)
 
