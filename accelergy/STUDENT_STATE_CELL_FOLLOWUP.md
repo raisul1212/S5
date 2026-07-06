@@ -24,35 +24,55 @@ PPAC. Rationale:
 - Write energy at Point A (`98.9 fJ`) sits right at the edge of the memo's
   original `1–100 fJ` target.
 
-## Q1 — Tech node CONFIRMED: TSMC 180 nm
+## Q1 — Tech node: switch to open-source PDKs for Round 2
 
-Confirmed on 2026-07-06: Round-1 characterization was done on the TSMC 180 nm
-PDK. That is a fine choice for early cell characterization — 180 nm analog
-models are mature and results are trustworthy — but the paper's chip target
-is 22 nm, so we will need to scale.
+Round 1 was done on TSMC 180 nm PDK — that data is fine for internal design
+guidance (Point A is our locked design point) but the specific numbers
+cannot be published due to foundry NDA. For a defensible paper we need
+characterization at an OPEN-SOURCE PDK whose results we can publish
+directly.
 
-**Our scaling plan (nothing for you to do here, just so you know):**
+**Round-2 measurements must be at BOTH of the following nodes:**
 
-- **Write / refresh energy**: `E_22nm ≈ E_180nm × (Vdd_22 / Vdd_180)² = E_180nm × (0.8/1.0)² ≈ 0.64×`
-  → Point A write energy at 22 nm ≈ **98.9 fJ × 0.64 ≈ 63.3 fJ**
-- **Cell area**: cannot use a simple `(node_ratio)²` because the 100 fF cap
-  dominates cell area, and MOM/MIM cap density at 22 nm is only ~1.5-2×
-  denser than at 180 nm. We'll cite Wong et al. Sci Rep 2015 for the cap
-  density scaling and explicitly note the transistor area gain as a lower
-  bound.
-- **Retention T_ret**: leakage at 22 nm is HIGHER than 180 nm (worse
-  sub-threshold leakage) — so 72 μs at 180 nm may be closer to **10-30 μs
-  at 22 nm**. This is a concern. It's one reason Priority-0b (`I_leak(V)
-  curve`) matters even more now — we need to model this leakage scaling
-  properly.
+### FreePDK45 (NCSU, 45 nm bulk CMOS, Apache 2.0)
 
-**One question for you as a follow-up to this:** if you have a 22 nm PTM
-(Predictive Technology Model) available in Cadence, can you re-run the
-Cstore=100 fF nominal write + retention SPICE at 22 nm PTM as a sanity
-check? Even a single point (nominal Vdd, room temp, single retention
-number) would let us validate the scaling factor above. Ballpark estimate
-of effort welcome. If it's more than a few days of work, don't — we'll
-proceed with the scaling model.
+- URL: https://eda.ncsu.edu/freepdk/freepdk45/
+- BSIM4 bulk-MOSFET models — direct analog to your existing 180 nm design
+- Voltage rails at 45 nm: Vdd ≈ 1.0 V core, 1.8 V I/O — matches what you
+  already used in Round 1, so the 3T + 1C topology transfers directly
+- Same tool flow as your existing setup (Cadence Virtuoso + Spectre)
+- Zero redesign required — just re-simulate at 45 nm
+
+### FreePDK15 (NCSU, 15 nm FinFET, Apache 2.0)
+
+- URL: https://eda.ncsu.edu/freepdk15/
+- FinFET devices — 15 nm PTM-MG HP model
+- **Requires topology re-sizing:** W/L → fin count. Preserve the 3T +
+  MOM-cap architecture but expect device sizing to change. Also:
+  - Vdd at 15 nm FinFET ≈ 0.7-0.8 V — lower rails, potentially better
+    retention headroom
+  - Sub-threshold leakage at FinFET is lower per equivalent-W device than
+    bulk, so retention should IMPROVE at 15 nm (opposite of the 180 nm →
+    22 nm bulk scaling concern)
+  - MOM cap density is higher at 15 nm — cell area should shrink
+- Timeline: FinFET analog sizing may take an extra week; if it's a burden
+  and #0 / #0b results at FreePDK45 already show good numbers, you can
+  reduce FreePDK15 to a subset of the priority items (see below).
+
+### Why both nodes
+
+Two open-source data points bracket the 22 nm chip target (45 nm above,
+15 nm below). This lets the paper's mixed-signal PPAC section:
+
+- Cite ACTUAL measured numbers at TWO nodes rather than a single-node
+  measurement plus a hand-wavy scaling justification
+- Show the scaling trend with real data → reviewers can verify our 22 nm
+  interpolation instead of trusting a theoretical scaling factor
+- Validate the cell topology as portable across bulk and FinFET
+  device families
+
+**Nothing from Round 1 (TSMC 180 nm) will appear in the paper. It remains
+an internal-only design-space exploration result.**
 
 ## Q2 — Refresh methodology (still needs clarification)
 
@@ -187,14 +207,33 @@ To keep the ask focused, defer these to a future round:
 
 We'll pick these up in Round 3 once the Round-2 items above are in.
 
-## Timeline ask
+## Timeline ask (revised for dual-node characterization)
 
-**Priority #0 and #0b are gating items** for our paper's mixed-signal PPAC
-section. If possible, please send those two back within one week — even
-back-of-envelope SPICE numbers with clear caveats are more useful than a
-polished report that arrives too late.
+### Week 1 — FreePDK45 sanity check + gating measurements
 
-**Priority #1 – #3** can follow within a second week.
+Start with FreePDK45 because it's a direct port of your existing 180 nm
+Cadence flow. Get **Priority #0 (read noise floor) and #0b (I_leak(V)
+curve) at FreePDK45** back within one week. Even back-of-envelope SPICE
+numbers with clear caveats are more useful than polished reports that
+arrive too late.
+
+### Week 2 — FreePDK45 remaining items + FreePDK15 setup
+
+Complete Priority #1 – #3 at FreePDK45. In parallel, begin FreePDK15
+device sizing (fin count) and re-simulate the write-energy vs Cstore
+sweep at FreePDK15 to establish the two-node design point.
+
+### Week 3 — FreePDK15 full Round-2 measurements
+
+Repeat the 5 priority items at FreePDK15. If time is tight, prioritize
+**Priority #0, #0b, and #1** at FreePDK15 — the aggregate energy numbers
+that let us bracket 22 nm interpolation. #2 (A_cell) and #3 (P_leak) at
+FreePDK15 are useful but the FreePDK45 numbers already cover the paper's
+core PPAC claims.
+
+**If FreePDK15 turns out to be more than 2-3 weeks of additional work,
+tell us right away** and we'll fall back to FreePDK45 only + scaling
+methodology for 22 nm (still publishable, just weaker story).
 
 ## What we'll do with your Round-2 data
 
