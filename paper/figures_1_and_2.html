@@ -309,8 +309,8 @@
 
         <!-- Config-mapping inset (right side, below predictor) -->
         <g>
-          <rect x="710" y="420" width="220" height="176" rx="5" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
-          <text x="820" y="442" text-anchor="middle" class="tag">configuration map</text>
+          <rect x="710" y="420" width="240" height="196" rx="5" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <text x="830" y="442" text-anchor="middle" class="tag">configuration map</text>
 
           <text x="726" y="470" class="var-sm" fill="var(--ink)">C4 · Mambino</text>
           <text x="726" y="486" class="sublabel">predictor+W_ε · gelu · P=8</text>
@@ -321,8 +321,8 @@
           <text x="726" y="550" class="var-sm" fill="var(--ink)">C1 · Pure S5</text>
           <text x="726" y="566" class="sublabel">no predictor · half_glu2 r=H</text>
 
-          <text x="726" y="586" class="var-sm" fill="var(--ink)">C3′ · Mambino</text>
-          <text x="924" y="586" text-anchor="end" class="sublabel">predictor+W_ε · half_glu2 r=40</text>
+          <text x="726" y="590" class="var-sm" fill="var(--ink)">C3′ · Mambino</text>
+          <text x="726" y="606" class="sublabel">predictor+W_ε · half_glu2 r=40</text>
         </g>
 
         <!-- Pure S5 note (bottom-left) -->
@@ -568,27 +568,36 @@
           <text x="584" y="584" class="tag">energy · area per inference</text>
         </g>
 
-        <!-- Bottom comparison strip (full width) -->
+        <!-- Bottom row: two independent panels side by side -->
+        <!-- LEFT: pipelined → sequential deltas table -->
         <g>
-          <rect x="30" y="618" width="1018" height="138" rx="5" fill="var(--surface)" stroke="var(--rule)"/>
-          <text x="46" y="642" class="tag">Pipelined → Sequential deltas · same accuracy, different chip trade-off</text>
+          <rect x="30" y="618" width="530" height="138" rx="5" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="46" y="642" class="tag">Pipelined → Sequential · chip-topology deltas</text>
 
-          <text x="46" y="672" class="mono">Activation SRAM</text>
-          <text x="380" y="672" text-anchor="end" class="mono">4.2 MB → 512 KB · 8× smaller</text>
+          <text x="46" y="672" class="sublabel">Activation SRAM</text>
+          <text x="544" y="672" text-anchor="end" class="mono">4.2 MB → 512 KB · 8× smaller</text>
 
-          <text x="46" y="698" class="mono">Digital energy per inference</text>
-          <text x="380" y="698" text-anchor="end" class="mono">3.10× lower @106K · 2.74× @188K</text>
+          <text x="46" y="698" class="sublabel">Digital energy / inference</text>
+          <text x="544" y="698" text-anchor="end" class="mono">3.10× lower @106K · 2.74× @188K</text>
 
-          <text x="46" y="724" class="mono">Total die area</text>
-          <text x="380" y="724" text-anchor="end" class="mono">3.8–4.3× lower per config</text>
+          <text x="46" y="724" class="sublabel">Total die area</text>
+          <text x="544" y="724" text-anchor="end" class="mono">3.8–4.3× lower per config</text>
 
-          <text x="46" y="750" class="mono">Latency per inference</text>
-          <text x="380" y="750" text-anchor="end" class="mono">~8× higher (serialised layers)</text>
+          <text x="46" y="750" class="sublabel">Latency / inference</text>
+          <text x="544" y="750" text-anchor="end" class="mono">~8× higher (serialised layers)</text>
+        </g>
 
-          <text x="560" y="672" class="tag" fill="var(--ink-soft)">reading the trade-off</text>
-          <text x="560" y="696" class="sublabel">This is a chip-topology choice, not a Mambino/S5 distinction.</text>
-          <text x="560" y="716" class="sublabel">Both variants preserve accuracy ranking · Config 4 wins acc/mJ in every</text>
-          <text x="560" y="734" class="sublabel">quadrant of {pipelined, sequential} × {test@peakval, test_max}.</text>
+        <!-- RIGHT: reading the trade-off note -->
+        <g>
+          <rect x="578" y="618" width="470" height="138" rx="5" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="594" y="642" class="tag">Reading the trade-off</text>
+
+          <text x="594" y="672" class="sublabel">This is a chip-topology choice —</text>
+          <text x="594" y="690" class="sublabel">not a Mambino / S5 distinction.</text>
+
+          <text x="594" y="720" class="sublabel">Both variants preserve accuracy ranking.</text>
+          <text x="594" y="738" class="sublabel">Config 4 wins acc/mJ in every quadrant of</text>
+          <text x="594" y="754" class="var-sm">{pipelined, sequential} × {test@peakval, test_max}</text>
         </g>
       </svg>
     </div>
