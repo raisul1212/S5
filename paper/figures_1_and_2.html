@@ -1,4 +1,4 @@
-<title>Mambino paper — Figures 1 & 2</title>
+<title>Mambino paper — Figures 1 &amp; 2</title>
 <style>
   :root {
     --ink: #0f1216;
@@ -27,50 +27,26 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --ink: #e9e5df;
-      --ink-soft: #b8b2a9;
-      --muted: #8a8f97;
-      --ground: #17191c;
-      --surface: #1e2027;
-      --rule: #33363c;
-      --rule-soft: #262930;
-      --c-main-bg:  #1c3a41;
-      --c-pred-bg:  #3d3520;
-      --c-surp-bg:  #3a2620;
-      --c-gate-bg:  #2b2740;
-      --c-mem-bg:   #2b3138;
-      --c-mac-bg:   #22322a;
+      --ink: #e9e5df; --ink-soft: #b8b2a9; --muted: #8a8f97;
+      --ground: #17191c; --surface: #1e2027;
+      --rule: #33363c; --rule-soft: #262930;
+      --c-main-bg:  #1c3a41; --c-pred-bg:  #3d3520; --c-surp-bg:  #3a2620;
+      --c-gate-bg:  #2b2740; --c-mem-bg:   #2b3138; --c-mac-bg:   #22322a;
     }
   }
   :root[data-theme="light"] {
-    --ink: #0f1216;
-    --ink-soft: #3a3f47;
-    --muted: #5d6570;
-    --ground: #f7f5f0;
-    --surface: #ffffff;
-    --rule: #d7d3ca;
-    --rule-soft: #e8e3d8;
-    --c-main-bg:  #d4e6ec;
-    --c-pred-bg:  #f2e6c9;
-    --c-surp-bg:  #f0d9cf;
-    --c-gate-bg:  #e2dcf1;
-    --c-mem-bg:   #dee2e7;
-    --c-mac-bg:   #d5e6dc;
+    --ink: #0f1216; --ink-soft: #3a3f47; --muted: #5d6570;
+    --ground: #f7f5f0; --surface: #ffffff;
+    --rule: #d7d3ca; --rule-soft: #e8e3d8;
+    --c-main-bg:  #d4e6ec; --c-pred-bg:  #f2e6c9; --c-surp-bg:  #f0d9cf;
+    --c-gate-bg:  #e2dcf1; --c-mem-bg:   #dee2e7; --c-mac-bg:   #d5e6dc;
   }
   :root[data-theme="dark"] {
-    --ink: #e9e5df;
-    --ink-soft: #b8b2a9;
-    --muted: #8a8f97;
-    --ground: #17191c;
-    --surface: #1e2027;
-    --rule: #33363c;
-    --rule-soft: #262930;
-    --c-main-bg:  #1c3a41;
-    --c-pred-bg:  #3d3520;
-    --c-surp-bg:  #3a2620;
-    --c-gate-bg:  #2b2740;
-    --c-mem-bg:   #2b3138;
-    --c-mac-bg:   #22322a;
+    --ink: #e9e5df; --ink-soft: #b8b2a9; --muted: #8a8f97;
+    --ground: #17191c; --surface: #1e2027;
+    --rule: #33363c; --rule-soft: #262930;
+    --c-main-bg:  #1c3a41; --c-pred-bg:  #3d3520; --c-surp-bg:  #3a2620;
+    --c-gate-bg:  #2b2740; --c-mem-bg:   #2b3138; --c-mac-bg:   #22322a;
   }
 
   html, body { background: var(--ground); color: var(--ink); }
@@ -81,13 +57,7 @@
     margin: 0;
     padding: 48px 24px 96px;
   }
-  main {
-    max-width: 1040px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 48px;
-  }
+  main { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; }
 
   header.pageheader {
     border-bottom: 1px solid var(--rule);
@@ -98,27 +68,18 @@
     gap: 16px;
   }
   header.pageheader h1 {
-    font-size: 20px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    margin: 0;
-    text-wrap: balance;
+    font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin: 0; text-wrap: balance;
   }
   header.pageheader .sub {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
-    letter-spacing: 0.02em;
+    font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: 0.02em;
   }
 
   section.fig {
     background: var(--surface);
     border: 1px solid var(--rule);
     border-radius: 4px;
-    padding: 32px 32px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    padding: 32px 32px 28px;
+    display: flex; flex-direction: column; gap: 20px;
   }
   section.fig header {
     display: grid;
@@ -137,11 +98,7 @@
     padding-top: 2px;
   }
   section.fig header h2 {
-    font-size: 17px;
-    font-weight: 600;
-    margin: 0;
-    line-height: 1.35;
-    text-wrap: balance;
+    font-size: 17px; font-weight: 600; margin: 0; line-height: 1.35; text-wrap: balance;
   }
 
   .svgwrap {
@@ -152,18 +109,12 @@
   .svgwrap svg { display: block; max-width: 100%; height: auto; }
 
   .caption {
-    font-size: 13.5px;
-    color: var(--ink-soft);
-    max-width: 68ch;
-    line-height: 1.6;
+    font-size: 13.5px; color: var(--ink-soft); max-width: 68ch; line-height: 1.6;
   }
   .caption b { color: var(--ink); font-weight: 600; }
   .caption code {
-    font-family: var(--mono);
-    font-size: 12px;
-    background: var(--rule-soft);
-    padding: 1px 5px;
-    border-radius: 3px;
+    font-family: var(--mono); font-size: 12px;
+    background: var(--rule-soft); padding: 1px 5px; border-radius: 3px;
   }
 
   .provenance {
@@ -180,30 +131,21 @@
   .provenance dd { margin: 0; color: var(--ink-soft); word-break: break-all; }
 
   .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 20px;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--ink-soft);
-    padding: 12px 0 4px;
+    display: flex; flex-wrap: wrap; gap: 8px 20px;
+    font-family: var(--mono); font-size: 11.5px;
+    color: var(--ink-soft); padding: 12px 0 4px;
   }
   .legend .item { display: inline-flex; align-items: center; gap: 6px; }
   .legend .sw {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
-    display: inline-block;
+    width: 12px; height: 12px; border-radius: 2px; display: inline-block;
     border: 1px solid var(--rule);
   }
 
   .exportnote {
-    margin-top: 8px;
-    padding: 14px 18px;
+    margin-top: 8px; padding: 14px 18px;
     background: var(--rule-soft);
     border-left: 3px solid var(--c-main);
-    font-size: 12.5px;
-    color: var(--ink-soft);
+    font-size: 12.5px; color: var(--ink-soft);
     max-width: 68ch;
   }
   .exportnote strong { color: var(--ink); }
@@ -212,23 +154,23 @@
   /* SVG typography */
   svg text { font-family: var(--sans); fill: var(--ink); }
   svg .mono { font-family: var(--mono); }
-  svg .label { font-size: 13px; font-weight: 500; }
-  svg .sublabel { font-size: 11px; fill: var(--muted); }
-  svg .tag { font-size: 10px; font-family: var(--mono); letter-spacing: 0.04em; fill: var(--muted); text-transform: uppercase; }
-  svg .var { font-family: var(--mono); font-size: 12px; }
-  svg .block { stroke-width: 1.25; }
-  svg .arrow { stroke: var(--ink-soft); stroke-width: 1.4; fill: none; }
-  svg .arrow-thick { stroke: var(--ink); stroke-width: 1.8; fill: none; }
-  svg .dashed { stroke-dasharray: 5 4; }
-  svg .plus { fill: var(--surface); stroke: var(--ink); stroke-width: 1.4; }
-  svg .plus-text { font-family: var(--mono); font-size: 15px; font-weight: 700; fill: var(--ink); }
-  svg .flowlabel { font-size: 10.5px; fill: var(--muted); font-family: var(--mono); }
+  svg .label { font-size: 14px; font-weight: 500; }
+  svg .sublabel { font-size: 12px; fill: var(--muted); }
+  svg .tag { font-size: 11px; font-family: var(--mono); letter-spacing: 0.06em; fill: var(--muted); text-transform: uppercase; }
+  svg .var { font-family: var(--mono); font-size: 13px; }
+  svg .var-sm { font-family: var(--mono); font-size: 12px; }
+  svg .flowlabel { font-size: 12px; fill: var(--muted); font-family: var(--mono); }
+  svg .block { stroke-width: 1.4; }
+  svg .arrow { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+  svg .arrow-thick { stroke: var(--ink); stroke-width: 2; fill: none; }
+  svg .plus { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+  svg .plus-text { font-family: var(--mono); font-size: 17px; font-weight: 700; fill: var(--ink); }
 </style>
 
 <main>
 
   <header class="pageheader">
-    <h1>Mambino — Figures 1 &amp; 2 (paper draft)</h1>
+    <h1>Mambino — Figures 1 &amp; 2 (paper draft v3)</h1>
     <span class="sub">grounded in s5/mambino_ssm.py + LOCKED_master_ppac_document.md v5</span>
   </header>
 
@@ -236,11 +178,11 @@
   <section class="fig">
     <header>
       <span class="figno">Figure 1</span>
-      <h2>Mambino layer architecture: main state-space model with a forward-only predictor branch and additive predictive-coding feedback</h2>
+      <h2>Mambino layer architecture: main state-space model, forward-only predictor branch, additive predictive-coding feedback, and two output-activation variants</h2>
     </header>
 
     <div class="svgwrap">
-      <svg viewBox="0 0 940 760" role="img" aria-label="Mambino architecture diagram">
+      <svg viewBox="0 0 1000 940" role="img" aria-label="Mambino architecture diagram">
         <defs>
           <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-soft)"/>
@@ -250,152 +192,149 @@
           </marker>
         </defs>
 
-        <!-- Input node -->
+        <!-- ROW 1: Input node -->
         <g>
-          <rect x="420" y="14" width="100" height="34" rx="17" fill="var(--surface)" stroke="var(--ink)" class="block"/>
-          <text x="470" y="35" text-anchor="middle" class="label var">x[t]</text>
-          <text x="470" y="65" text-anchor="middle" class="tag">input, dim H = 128</text>
+          <rect x="440" y="20" width="120" height="44" rx="22" fill="var(--surface)" stroke="var(--ink)" class="block"/>
+          <text x="500" y="47" text-anchor="middle" class="label var">x[t]</text>
+          <text x="500" y="80" text-anchor="middle" class="tag">input · dim H = 128</text>
         </g>
 
-        <!-- 3-way fan-out from input: shared horizontal bus at y=90 -->
-        <path d="M 470 80 L 470 90" class="arrow-thick"/>
-        <!-- Horizontal bus -->
-        <path d="M 220 90 L 720 90" class="arrow-thick"/>
-        <!-- Junction dot at branching point -->
-        <circle cx="470" cy="90" r="4" fill="var(--ink)"/>
-        <!-- Three drop-down arrows: left (main B̄·x), center (surprise), right (predictor) -->
-        <path d="M 220 90 L 220 130" class="arrow" marker-end="url(#arr)"/>
-        <path d="M 470 90 L 470 300" class="arrow" marker-end="url(#arr)"/>
-        <path d="M 720 90 L 720 130" class="arrow" marker-end="url(#arr)"/>
-        <text x="235" y="108" class="flowlabel">x[t]</text>
-        <text x="485" y="108" class="flowlabel">x[t]</text>
-        <text x="735" y="108" class="flowlabel">x[t]</text>
+        <!-- ROW 2: horizontal fanout bus -->
+        <path d="M 500 96 L 500 116" class="arrow-thick"/>
+        <path d="M 180 116 L 820 116" class="arrow-thick"/>
+        <circle cx="500" cy="116" r="4.5" fill="var(--ink)"/>
+        <!-- Three drop arrows -->
+        <path d="M 180 116 L 180 160" class="arrow" marker-end="url(#arr)"/>
+        <path d="M 500 116 L 500 340" class="arrow" marker-end="url(#arr)"/>
+        <path d="M 820 116 L 820 160" class="arrow" marker-end="url(#arr)"/>
+        <text x="195" y="140" class="flowlabel">x[t]</text>
+        <text x="515" y="140" class="flowlabel">x[t]</text>
+        <text x="835" y="140" class="flowlabel">x[t]</text>
 
-        <!-- MAIN PATH (left column): B̄·x -->
+        <!-- ROW 3: parallel B̄·x (left) and Predictor SSM (right) -->
         <g>
-          <rect x="130" y="132" width="180" height="70" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-          <text x="220" y="158" text-anchor="middle" class="label">Input projection</text>
-          <text x="220" y="180" text-anchor="middle" class="var">B̄ · x[t]</text>
-          <text x="220" y="196" text-anchor="middle" class="sublabel">→ (L, local_P)</text>
+          <rect x="70" y="162" width="220" height="88" rx="5" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <text x="180" y="188" text-anchor="middle" class="label">Input projection</text>
+          <text x="180" y="212" text-anchor="middle" class="var">B̄ · x[t]</text>
+          <text x="180" y="234" text-anchor="middle" class="sublabel">→ (L, local_P)</text>
         </g>
 
-        <!-- PREDICTOR PATH (right column): Predictor SSM -->
         <g>
-          <rect x="610" y="132" width="220" height="90" rx="4" fill="var(--c-pred-bg)" stroke="var(--c-pred)" class="block"/>
-          <text x="720" y="158" text-anchor="middle" class="label">Predictor SSM</text>
-          <text x="720" y="178" text-anchor="middle" class="sublabel">forward-only causal scan</text>
-          <text x="720" y="200" text-anchor="middle" class="var">Λ_s , B_s , C_s</text>
-          <text x="720" y="214" text-anchor="middle" class="tag">predicts x[t] from past x[0..t-1]</text>
+          <rect x="710" y="162" width="220" height="108" rx="5" fill="var(--c-pred-bg)" stroke="var(--c-pred)" class="block"/>
+          <text x="820" y="188" text-anchor="middle" class="label">Predictor SSM</text>
+          <text x="820" y="210" text-anchor="middle" class="sublabel">forward-only causal scan</text>
+          <text x="820" y="234" text-anchor="middle" class="var">Λ_s , B_s , C_s</text>
+          <text x="820" y="258" text-anchor="middle" class="sublabel">predicts x[t] from past x[0..t−1]</text>
         </g>
 
-        <!-- Arrow from predictor down to surprise -->
-        <path d="M 720 222 L 720 296" class="arrow" marker-end="url(#arr)"/>
-        <text x="735" y="260" class="flowlabel">pred[t]</text>
+        <!-- Predictor → surprise -->
+        <path d="M 820 272 L 820 340" class="arrow" marker-end="url(#arr)"/>
+        <text x="835" y="308" class="flowlabel">pred[t]</text>
 
-        <!-- Surprise block (center-middle) -->
+        <!-- ROW 4: Surprise block (center, takes x[t] from row-2 arrow AND pred[t]) -->
         <g>
-          <rect x="360" y="300" width="360" height="60" rx="4" fill="var(--c-surp-bg)" stroke="var(--c-surp)" class="block"/>
-          <text x="540" y="322" text-anchor="middle" class="label">Predictive-coding error (surprise)</text>
-          <text x="540" y="346" text-anchor="middle" class="var">ε[t] = x[t] − pred[t]</text>
+          <rect x="380" y="344" width="440" height="72" rx="5" fill="var(--c-surp-bg)" stroke="var(--c-surp)" class="block"/>
+          <text x="600" y="370" text-anchor="middle" class="label">Predictive-coding error (surprise)</text>
+          <text x="600" y="398" text-anchor="middle" class="var">ε[t] = x[t] − pred[t]</text>
         </g>
 
-        <!-- Arrow from surprise down to W_eps -->
-        <path d="M 540 360 L 540 398" class="arrow" marker-end="url(#arr)"/>
-
-        <!-- W_eps block -->
+        <!-- ROW 5: W_ε feedback (below surprise) -->
+        <path d="M 600 418 L 600 452" class="arrow" marker-end="url(#arr)"/>
         <g>
-          <rect x="420" y="400" width="240" height="68" rx="4" fill="var(--c-surp-bg)" stroke="var(--c-surp)" class="block"/>
-          <text x="540" y="426" text-anchor="middle" class="label">W_ε feedback projection</text>
-          <text x="540" y="448" text-anchor="middle" class="var">W̄_ε · ε[t]</text>
-          <text x="540" y="462" text-anchor="middle" class="sublabel">→ (L, local_P)</text>
+          <rect x="460" y="454" width="280" height="80" rx="5" fill="var(--c-surp-bg)" stroke="var(--c-surp)" class="block"/>
+          <text x="600" y="482" text-anchor="middle" class="label">W_ε feedback projection</text>
+          <text x="600" y="504" text-anchor="middle" class="var">W̄_ε · ε[t]</text>
+          <text x="600" y="524" text-anchor="middle" class="sublabel">→ (L, local_P)</text>
         </g>
 
-        <!-- Arrow from B_bar @ x down to sum -->
-        <path d="M 220 204 L 220 500 L 334 500" class="arrow" marker-end="url(#arr)"/>
-        <!-- Arrow from W_eps @ eps down-left to sum -->
-        <path d="M 540 468 L 540 500 L 386 500" class="arrow" marker-end="url(#arr)"/>
+        <!-- Routes to sum node -->
+        <!-- B̄·x drops down along left column -->
+        <path d="M 180 252 L 180 574 L 384 574" class="arrow" marker-end="url(#arr)"/>
+        <!-- W_ε feeds down and right to sum -->
+        <path d="M 600 536 L 600 574 L 416 574" class="arrow" marker-end="url(#arr)"/>
 
-        <!-- Sum node -->
+        <!-- ROW 6: Sum node -->
         <g>
-          <circle cx="360" cy="500" r="16" class="plus"/>
-          <text x="360" y="505" text-anchor="middle" class="plus-text">+</text>
+          <circle cx="400" cy="574" r="18" class="plus"/>
+          <text x="400" y="580" text-anchor="middle" class="plus-text">+</text>
+        </g>
+        <path d="M 400 592 L 400 618" class="arrow-thick" marker-end="url(#arr-thick)"/>
+
+        <!-- ROW 7: Main SSM scan -->
+        <g>
+          <rect x="130" y="620" width="540" height="102" rx="5" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <text x="400" y="650" text-anchor="middle" class="label">Main SSM · bidirectional associative scan</text>
+          <text x="400" y="674" text-anchor="middle" class="var">x[t+1] = Λ̄ · x[t] + Bu[t] ,  Bu = B̄·x + W̄_ε·ε</text>
+          <text x="400" y="696" text-anchor="middle" class="sublabel">forward + backward passes → concat along local_P axis</text>
+          <text x="400" y="714" text-anchor="middle" class="tag">chip: sequential streaming, one state register per direction</text>
         </g>
 
-        <!-- Down to main SSM -->
-        <path d="M 360 516 L 360 540" class="arrow-thick" marker-end="url(#arr-thick)"/>
-
-        <!-- Main SSM scan block (bidirectional) -->
+        <!-- ROW 8: Output projection -->
+        <path d="M 400 726 L 400 748" class="arrow-thick" marker-end="url(#arr-thick)"/>
         <g>
-          <rect x="120" y="542" width="480" height="90" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-          <text x="360" y="568" text-anchor="middle" class="label">Main SSM · bidirectional scan</text>
-          <text x="360" y="588" text-anchor="middle" class="var">x[t+1] = Λ̄ · x[t] + Bu[t] ,  Bu = B̄·x + W̄_ε·ε</text>
-          <text x="360" y="606" text-anchor="middle" class="sublabel">forward + backward passes → concat along local_P axis</text>
-          <text x="360" y="622" text-anchor="middle" class="tag">chip: sequential streaming, one state register per direction</text>
+          <rect x="230" y="750" width="340" height="60" rx="5" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <text x="400" y="774" text-anchor="middle" class="label">Output projection</text>
+          <text x="400" y="796" text-anchor="middle" class="var">y = C̃ · [xs_fwd | xs_bwd]</text>
         </g>
 
-        <!-- Down to C_tilde output projection -->
-        <path d="M 360 636 L 360 656" class="arrow-thick" marker-end="url(#arr-thick)"/>
+        <!-- Split for activation variants -->
+        <path d="M 400 812 L 400 830 L 210 830 L 210 848" class="arrow-thick" marker-end="url(#arr-thick)"/>
+        <path d="M 400 830 L 590 830 L 590 848" class="arrow-thick" marker-end="url(#arr-thick)"/>
+        <circle cx="400" cy="830" r="4.5" fill="var(--ink)"/>
 
-        <!-- C_tilde output projection -->
+        <!-- Variant A: gelu -->
         <g>
-          <rect x="230" y="660" width="260" height="50" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-          <text x="360" y="682" text-anchor="middle" class="label">Output projection</text>
-          <text x="360" y="700" text-anchor="middle" class="var">y = C̃ · [xs_fwd | xs_bwd]</text>
+          <rect x="40" y="850" width="340" height="68" rx="5" fill="var(--c-mac-bg)" stroke="var(--c-mac)" class="block"/>
+          <text x="210" y="864" text-anchor="middle" class="tag">variant A · activation_fn=gelu</text>
+          <text x="210" y="884" text-anchor="middle" class="label">Pointwise GELU</text>
+          <text x="210" y="904" text-anchor="middle" class="sublabel">y ← GELU(y) · no gate matrices · Configs 4 &amp; 5</text>
         </g>
 
-        <!-- SPLIT to two activation variants -->
-        <path d="M 360 712 L 360 726 L 200 726 L 200 738" class="arrow-thick" marker-end="url(#arr-thick)"/>
-        <path d="M 360 726 L 570 726 L 570 738" class="arrow-thick" marker-end="url(#arr-thick)"/>
-        <circle cx="360" cy="726" r="4" fill="var(--ink)"/>
-
-        <!-- Variant A: gelu (Config 4, Config 5) -->
+        <!-- Variant B: half_glu2 -->
         <g>
-          <rect x="60" y="740" width="280" height="60" rx="4" fill="var(--c-mac-bg)" stroke="var(--c-mac)" class="block"/>
-          <text x="200" y="750" text-anchor="middle" class="tag">variant A · activation_fn=gelu</text>
-          <text x="200" y="770" text-anchor="middle" class="label">Pointwise GELU</text>
-          <text x="200" y="788" text-anchor="middle" class="var">y ← GELU(y)</text>
-          <text x="200" y="800" text-anchor="middle" class="sublabel">no gate matrices instantiated · Configs 4 &amp; 5</text>
+          <rect x="420" y="850" width="340" height="68" rx="5" fill="var(--c-gate-bg)" stroke="var(--c-gate)" class="block"/>
+          <text x="590" y="864" text-anchor="middle" class="tag">variant B · activation_fn=half_glu2</text>
+          <text x="590" y="884" text-anchor="middle" class="label">Gated output · rank r</text>
+          <text x="590" y="904" text-anchor="middle" class="sublabel">y · σ(W_r,up · W_r,dn · y) · Corner 1 r=H · Corner 3′ r=40</text>
         </g>
 
-        <!-- Variant B: half_glu2 (Corner 1, Corner 3') -->
+        <!-- Merge to y[t] -->
+        <path d="M 380 884 L 400 884" class="arrow-thick"/>
+        <path d="M 760 884 L 810 884" class="arrow-thick"/>
+        <path d="M 810 884 L 830 884" class="arrow-thick" marker-end="url(#arr-thick)"/>
         <g>
-          <rect x="440" y="740" width="290" height="60" rx="4" fill="var(--c-gate-bg)" stroke="var(--c-gate)" class="block"/>
-          <text x="585" y="750" text-anchor="middle" class="tag">variant B · activation_fn=half_glu2</text>
-          <text x="585" y="770" text-anchor="middle" class="label">Gated output · rank r</text>
-          <text x="585" y="788" text-anchor="middle" class="var">y · σ(W_r,up · W_r,dn · y)</text>
-          <text x="585" y="800" text-anchor="middle" class="sublabel">Corner 1: r = H (full) · Corner 3′: r = 40 (low-rank)</text>
+          <rect x="830" y="862" width="120" height="44" rx="22" fill="var(--surface)" stroke="var(--ink)" class="block"/>
+          <text x="890" y="890" text-anchor="middle" class="label var">y[t]</text>
         </g>
 
-        <!-- Merge arrows to output -->
-        <path d="M 200 800 L 200 820 L 800 820 L 800 740" class="arrow"/>
-        <path d="M 585 800 L 585 820" class="arrow"/>
-        <path d="M 800 720 L 830 720" class="arrow-thick" marker-end="url(#arr-thick)"/>
+        <!-- Config-mapping inset (right side, below predictor) -->
         <g>
-          <rect x="830" y="700" width="90" height="46" rx="23" fill="var(--surface)" stroke="var(--ink)" class="block"/>
-          <text x="875" y="727" text-anchor="middle" class="label var">y[t]</text>
+          <rect x="710" y="420" width="220" height="176" rx="5" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <text x="820" y="442" text-anchor="middle" class="tag">configuration map</text>
+
+          <text x="726" y="470" class="var-sm" fill="var(--ink)">C4 · Mambino</text>
+          <text x="726" y="486" class="sublabel">predictor+W_ε · gelu · P=8</text>
+
+          <text x="726" y="510" class="var-sm" fill="var(--ink)">C5 · Pure S5</text>
+          <text x="726" y="526" class="sublabel">no predictor · gelu · P=16</text>
+
+          <text x="726" y="550" class="var-sm" fill="var(--ink)">C1 · Pure S5</text>
+          <text x="726" y="566" class="sublabel">no predictor · half_glu2 r=H</text>
+
+          <text x="726" y="586" class="var-sm" fill="var(--ink)">C3′ · Mambino</text>
+          <text x="924" y="586" text-anchor="end" class="sublabel">predictor+W_ε · half_glu2 r=40</text>
         </g>
 
-        <!-- Config annotation inset -->
+        <!-- Pure S5 note (bottom-left) -->
         <g>
-          <rect x="30" y="470" width="70" height="140" rx="4" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
-          <text x="65" y="488" text-anchor="middle" class="tag">config</text>
-          <text x="65" y="510" text-anchor="middle" class="sublabel" font-size="10">C4 · Mambino</text>
-          <text x="65" y="524" text-anchor="middle" class="sublabel" font-size="10">gelu · P=8</text>
-          <text x="65" y="546" text-anchor="middle" class="sublabel" font-size="10">C5 · Pure S5</text>
-          <text x="65" y="560" text-anchor="middle" class="sublabel" font-size="10">gelu · P=16</text>
-          <text x="65" y="582" text-anchor="middle" class="sublabel" font-size="10">C1 · Pure S5</text>
-          <text x="65" y="596" text-anchor="middle" class="sublabel" font-size="10">half_glu2 · r=H</text>
-        </g>
-
-        <!-- Pure S5 marker: dropped branches -->
-        <g>
-          <rect x="740" y="460" width="180" height="128" rx="4" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
-          <text x="830" y="478" text-anchor="middle" class="tag">Pure S5 (no Mambino)</text>
-          <text x="830" y="500" text-anchor="middle" class="sublabel" font-size="10">predictor branch</text>
-          <text x="830" y="514" text-anchor="middle" class="sublabel" font-size="10">and W_ε feedback</text>
-          <text x="830" y="528" text-anchor="middle" class="sublabel" font-size="10">are removed</text>
-          <text x="830" y="552" text-anchor="middle" class="sublabel" font-size="10">Bu[t] = B̄ · x[t]</text>
-          <text x="830" y="572" text-anchor="middle" class="sublabel" font-size="10">only, no ε feedback</text>
+          <rect x="30" y="620" width="90" height="164" rx="5" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <text x="75" y="642" text-anchor="middle" class="tag">Pure S5</text>
+          <text x="75" y="666" text-anchor="middle" class="sublabel">predictor</text>
+          <text x="75" y="682" text-anchor="middle" class="sublabel">and W_ε</text>
+          <text x="75" y="698" text-anchor="middle" class="sublabel">branches</text>
+          <text x="75" y="714" text-anchor="middle" class="sublabel">are removed</text>
+          <text x="75" y="746" text-anchor="middle" class="var-sm">Bu = B̄·x</text>
+          <text x="75" y="768" text-anchor="middle" class="sublabel">only</text>
         </g>
 
       </svg>
@@ -405,17 +344,18 @@
       <span class="item"><span class="sw" style="background: var(--c-main-bg); border-color: var(--c-main);"></span>main SSM path</span>
       <span class="item"><span class="sw" style="background: var(--c-pred-bg); border-color: var(--c-pred);"></span>predictor branch</span>
       <span class="item"><span class="sw" style="background: var(--c-surp-bg); border-color: var(--c-surp);"></span>PC surprise + W_ε feedback</span>
-      <span class="item"><span class="sw" style="background: var(--c-gate-bg); border-color: var(--c-gate);"></span>output gate</span>
+      <span class="item"><span class="sw" style="background: var(--c-mac-bg); border-color: var(--c-mac);"></span>GELU (variant A)</span>
+      <span class="item"><span class="sw" style="background: var(--c-gate-bg); border-color: var(--c-gate);"></span>gated output (variant B)</span>
     </div>
 
     <p class="caption">
-      <b>Figure 1.</b> One Mambino layer. Input <code>x[t]</code> feeds two parallel scans: the <b>main SSM</b> with parameters <code>Λ̄, B̄, C̃</code>, and a forward-only <b>predictor SSM</b> with independent parameters <code>Λ_s, B_s, C_s</code>. The predictor's output <code>pred[t]</code> subtracts from the input to form a <b>predictive-coding surprise</b> <code>ε[t] = x[t] − pred[t]</code>, which is projected through the additive feedback matrix <code>W̄_ε</code> and summed with the main SSM's input projection. The main scan is <b>bidirectional</b> — its forward and backward pass state trajectories are concatenated along <code>local_P</code> before the output projection <code>C̃</code>. The final <code>half_glu2</code> gate can be full-rank (<code>Dense(H, H)</code>, Corner 1 setting) or rank-<code>r</code> low-rank factorised (<code>Dense(H, r)∘Dense(r, H)</code>, Corner 3′ uses <code>r = 40</code>). Mambino Configs 4 and 5 use <code>activation_fn=gelu</code>, which bypasses the gate entirely.
+      <b>Figure 1.</b> One Mambino layer. Input <code>x[t]</code> fans out to three destinations: the main SSM's input projection <code>B̄·x</code>, the surprise subtraction <code>ε = x − pred</code>, and a forward-only <b>predictor SSM</b> with independent parameters <code>Λ_s, B_s, C_s</code>. The surprise <code>ε[t]</code> is projected through the additive feedback matrix <code>W̄_ε</code> and summed with <code>B̄·x</code> to form the main scan's input <code>Bu[t]</code>. The main SSM runs a <b>bidirectional</b> associative scan; forward and backward state trajectories are concatenated along <code>local_P</code> before the output projection <code>C̃</code>. The output activation splits into two variants: <b>variant A</b> is a pointwise <code>GELU</code> (no gate matrices — used by Configs 4 &amp; 5); <b>variant B</b> is a <code>half_glu2</code> gate with rank <code>r</code> — full-rank in Corner 1 (<code>r = H</code>) and low-rank in Corner 3′ (<code>r = 40</code>). Under the Pure S5 baseline (Configs 5 and Corner 1), the entire predictor branch and <code>W̄_ε</code> feedback are removed and <code>Bu = B̄·x</code> only. Mambino's isolated architectural contribution is exactly the predictor branch and the <code>W̄_ε</code> feedback loop; the activation choice is orthogonal.
     </p>
 
     <dl class="provenance">
-      <dt>Code source</dt><dd>s5/mambino_ssm.py — MambinoSSM.__call__, _apply_main_scan_with_additive_pc, layers.py:61–73</dd>
+      <dt>Code source</dt><dd>s5/mambino_ssm.py — MambinoSSM.__call__, _apply_main_scan_with_additive_pc, s5/layers.py:61–73</dd>
       <dt>Args used</dt><dd>H = d_model = 128, blocks = 8, ssm_size_base = 16 (P = 8 after conj_sym), bidirectional = True, bidir_predictor = False, lambda_pc = 0.0</dd>
-      <dt>Master doc §</dt><dd>§2 Training args, §3 model shapes, §5e ablation implication</dd>
+      <dt>Master doc §</dt><dd>§2 training args · §3 model shapes · §5e ablation implication</dd>
     </dl>
   </section>
 
@@ -428,7 +368,7 @@
     </header>
 
     <div class="svgwrap">
-      <svg viewBox="0 0 1000 640" role="img" aria-label="Chip topology block diagram">
+      <svg viewBox="0 0 1080 780" role="img" aria-label="Chip topology block diagram">
         <defs>
           <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-soft)"/>
@@ -438,234 +378,235 @@
           </marker>
         </defs>
 
-        <!-- Panel dividers -->
-        <line x1="500" y1="18" x2="500" y2="620" stroke="var(--rule)" stroke-dasharray="6 4"/>
+        <!-- Panel divider -->
+        <line x1="540" y1="16" x2="540" y2="756" stroke="var(--rule)" stroke-dasharray="6 4"/>
 
         <!-- Panel titles -->
-        <text x="250" y="32" text-anchor="middle" class="label">Pipelined chip · all 8 layers concurrent</text>
-        <text x="250" y="50" text-anchor="middle" class="tag">throughput-optimised</text>
-        <text x="750" y="32" text-anchor="middle" class="label">Sequential chip · one layer at a time</text>
-        <text x="750" y="50" text-anchor="middle" class="tag">latency- and area-optimised</text>
+        <text x="270" y="38" text-anchor="middle" class="label">Pipelined chip · 8 layers concurrent</text>
+        <text x="270" y="58" text-anchor="middle" class="tag">throughput-optimised</text>
+        <text x="810" y="38" text-anchor="middle" class="label">Sequential chip · one layer at a time</text>
+        <text x="810" y="58" text-anchor="middle" class="tag">latency- and area-optimised</text>
 
         <!-- ================ LEFT: PIPELINED ================ -->
 
         <!-- Weight SRAM -->
         <g>
-          <rect x="30" y="80" width="140" height="60" rx="3" fill="var(--c-mem-bg)" stroke="var(--c-mem)" class="block"/>
-          <text x="100" y="102" text-anchor="middle" class="label">Weight SRAM</text>
-          <text x="100" y="120" text-anchor="middle" class="var">89 KB | 161 KB</text>
-          <text x="100" y="134" text-anchor="middle" class="tag">106K / 188K params</text>
+          <rect x="30" y="86" width="180" height="80" rx="4" fill="var(--c-mem-bg)" stroke="var(--c-mem)" class="block"/>
+          <text x="120" y="112" text-anchor="middle" class="label">Weight SRAM</text>
+          <text x="120" y="132" text-anchor="middle" class="var">89 KB | 161 KB</text>
+          <text x="120" y="152" text-anchor="middle" class="sublabel">106K / 188K params</text>
         </g>
 
         <!-- Activation SRAM (big) -->
         <g>
-          <rect x="200" y="80" width="270" height="60" rx="3" fill="var(--c-mem-bg)" stroke="var(--c-mem)" class="block"/>
-          <text x="335" y="102" text-anchor="middle" class="label">Activation SRAM · 4.2 MB</text>
-          <text x="335" y="122" text-anchor="middle" class="sublabel">holds 8-layer fwd+bwd activation streams concurrently</text>
-          <text x="335" y="135" text-anchor="middle" class="tag">width 1024 · depth 32784</text>
+          <rect x="230" y="86" width="280" height="80" rx="4" fill="var(--c-mem-bg)" stroke="var(--c-mem)" class="block"/>
+          <text x="370" y="112" text-anchor="middle" class="label">Activation SRAM · 4.2 MB</text>
+          <text x="370" y="134" text-anchor="middle" class="sublabel">holds 8-layer fwd+bwd streams concurrently</text>
+          <text x="370" y="154" text-anchor="middle" class="tag">width 1024 · depth 32784</text>
         </g>
 
         <!-- 8-layer pipeline strip -->
-        <g>
-          <text x="30" y="175" class="tag">8-layer pipeline · one Mambino layer per stage</text>
-          <g>
-            <!-- 8 stages -->
-            <g transform="translate(30,182)">
-              <rect x="0"   y="0" width="52" height="80" rx="3" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-              <rect x="60"  y="0" width="52" height="80" rx="3" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-              <rect x="120" y="0" width="52" height="80" rx="3" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-              <rect x="180" y="0" width="52" height="80" rx="3" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-              <rect x="240" y="0" width="52" height="80" rx="3" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-              <rect x="300" y="0" width="52" height="80" rx="3" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-              <rect x="360" y="0" width="52" height="80" rx="3" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-              <rect x="420" y="0" width="52" height="80" rx="3" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-              <text x="26"  y="26" text-anchor="middle" class="tag">L 1</text>
-              <text x="86"  y="26" text-anchor="middle" class="tag">L 2</text>
-              <text x="146" y="26" text-anchor="middle" class="tag">L 3</text>
-              <text x="206" y="26" text-anchor="middle" class="tag">L 4</text>
-              <text x="266" y="26" text-anchor="middle" class="tag">L 5</text>
-              <text x="326" y="26" text-anchor="middle" class="tag">L 6</text>
-              <text x="386" y="26" text-anchor="middle" class="tag">L 7</text>
-              <text x="446" y="26" text-anchor="middle" class="tag">L 8</text>
+        <text x="30" y="200" class="tag">8-layer pipeline · one Mambino layer per stage</text>
+        <g transform="translate(30,210)">
+          <rect x="0"   y="0" width="58" height="88" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <rect x="66"  y="0" width="58" height="88" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <rect x="132" y="0" width="58" height="88" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <rect x="198" y="0" width="58" height="88" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <rect x="264" y="0" width="58" height="88" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <rect x="330" y="0" width="58" height="88" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <rect x="396" y="0" width="58" height="88" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <rect x="462" y="0" width="58" height="88" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <text x="29"  y="30" text-anchor="middle" class="tag">L 1</text>
+          <text x="95"  y="30" text-anchor="middle" class="tag">L 2</text>
+          <text x="161" y="30" text-anchor="middle" class="tag">L 3</text>
+          <text x="227" y="30" text-anchor="middle" class="tag">L 4</text>
+          <text x="293" y="30" text-anchor="middle" class="tag">L 5</text>
+          <text x="359" y="30" text-anchor="middle" class="tag">L 6</text>
+          <text x="425" y="30" text-anchor="middle" class="tag">L 7</text>
+          <text x="491" y="30" text-anchor="middle" class="tag">L 8</text>
 
-              <text x="236" y="55" text-anchor="middle" class="sublabel">Λ̄, B̄, C̃  ·  x[t] → x[t+1]</text>
-              <text x="236" y="70" text-anchor="middle" class="sublabel">streaming, 1 timestep in / 1 timestep out</text>
-            </g>
-          </g>
-          <!-- Inter-stage arrows -->
-          <g>
-            <path d="M 82  222 L 90  222" class="arrow" marker-end="url(#arr2)"/>
-            <path d="M 142 222 L 150 222" class="arrow" marker-end="url(#arr2)"/>
-            <path d="M 202 222 L 210 222" class="arrow" marker-end="url(#arr2)"/>
-            <path d="M 262 222 L 270 222" class="arrow" marker-end="url(#arr2)"/>
-            <path d="M 322 222 L 330 222" class="arrow" marker-end="url(#arr2)"/>
-            <path d="M 382 222 L 390 222" class="arrow" marker-end="url(#arr2)"/>
-            <path d="M 442 222 L 450 222" class="arrow" marker-end="url(#arr2)"/>
-          </g>
+          <text x="260" y="58" text-anchor="middle" class="sublabel">Λ̄, B̄, C̃  ·  x[t] → x[t+1]</text>
+          <text x="260" y="76" text-anchor="middle" class="sublabel">streaming · 1 timestep in / 1 timestep out</text>
+        </g>
+        <!-- Inter-stage arrows -->
+        <g>
+          <path d="M 90  254 L 96  254" class="arrow" marker-end="url(#arr2)"/>
+          <path d="M 156 254 L 162 254" class="arrow" marker-end="url(#arr2)"/>
+          <path d="M 222 254 L 228 254" class="arrow" marker-end="url(#arr2)"/>
+          <path d="M 288 254 L 294 254" class="arrow" marker-end="url(#arr2)"/>
+          <path d="M 354 254 L 360 254" class="arrow" marker-end="url(#arr2)"/>
+          <path d="M 420 254 L 426 254" class="arrow" marker-end="url(#arr2)"/>
+          <path d="M 486 254 L 492 254" class="arrow" marker-end="url(#arr2)"/>
         </g>
 
-        <!-- State SRAM -->
+        <!-- State SRAM (pipelined) -->
         <g>
-          <rect x="30" y="288" width="200" height="60" rx="3" fill="var(--c-mem-bg)" stroke="var(--c-mem)" class="block"/>
-          <text x="130" y="310" text-anchor="middle" class="label">State SRAM</text>
-          <text x="130" y="328" text-anchor="middle" class="var">256 KB | 512 KB</text>
-          <text x="130" y="342" text-anchor="middle" class="tag">P=8 → 256 KB · P=16 → 512 KB</text>
+          <rect x="30" y="326" width="230" height="80" rx="4" fill="var(--c-mem-bg)" stroke="var(--c-mem)" class="block"/>
+          <text x="145" y="352" text-anchor="middle" class="label">State SRAM</text>
+          <text x="145" y="372" text-anchor="middle" class="var">256 KB | 512 KB</text>
+          <text x="145" y="392" text-anchor="middle" class="sublabel">P=8 → 256 KB · P=16 → 512 KB</text>
         </g>
-        <!-- MAC / regfile -->
-        <g>
-          <rect x="240" y="288" width="110" height="60" rx="3" fill="var(--c-mac-bg)" stroke="var(--c-mac)" class="block"/>
-          <text x="295" y="308" text-anchor="middle" class="label">MAC array</text>
-          <text x="295" y="326" text-anchor="middle" class="sublabel">NeuroSim intadder</text>
-          <text x="295" y="342" text-anchor="middle" class="tag">INT8 · 22 nm</text>
 
-          <rect x="360" y="288" width="110" height="60" rx="3" fill="var(--c-mac-bg)" stroke="var(--c-mac)" class="block"/>
-          <text x="415" y="308" text-anchor="middle" class="label">Reg file</text>
-          <text x="415" y="326" text-anchor="middle" class="sublabel">32-bit flip-flop</text>
-          <text x="415" y="342" text-anchor="middle" class="tag">accumulator</text>
+        <!-- MAC / regfile (pipelined) -->
+        <g>
+          <rect x="280" y="326" width="115" height="80" rx="4" fill="var(--c-mac-bg)" stroke="var(--c-mac)" class="block"/>
+          <text x="337" y="352" text-anchor="middle" class="label">MAC array</text>
+          <text x="337" y="372" text-anchor="middle" class="sublabel">NeuroSim intadder</text>
+          <text x="337" y="392" text-anchor="middle" class="tag">INT8 · 22 nm</text>
+
+          <rect x="405" y="326" width="115" height="80" rx="4" fill="var(--c-mac-bg)" stroke="var(--c-mac)" class="block"/>
+          <text x="462" y="352" text-anchor="middle" class="label">Reg file</text>
+          <text x="462" y="372" text-anchor="middle" class="sublabel">32-bit flip-flop</text>
+          <text x="462" y="392" text-anchor="middle" class="tag">accumulator</text>
+        </g>
+
+        <!-- Dataflow arrows -->
+        <g>
+          <path d="M 120 166 L 120 176 L 55 176 L 55 210" class="arrow" marker-end="url(#arr2)"/>
+          <path d="M 370 166 L 370 178 L 295 178 L 295 210" class="arrow" marker-end="url(#arr2)"/>
+          <path d="M 145 300 L 145 326" class="arrow" marker-end="url(#arr2)"/>
+          <path d="M 337 300 L 337 326" class="arrow" marker-end="url(#arr2)"/>
         </g>
 
         <!-- PPAC totals for pipelined -->
         <g>
-          <rect x="30" y="378" width="440" height="112" rx="4" fill="var(--surface)" stroke="var(--rule)"/>
-          <text x="42" y="398" class="tag">Digital PPAC · pipelined · v5 numbers</text>
+          <rect x="30" y="430" width="490" height="164" rx="5" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="46" y="454" class="tag">Digital PPAC · pipelined chip · v5 numbers</text>
 
-          <text x="42" y="422" class="mono sublabel">Config 4 (Mambino 106K)</text>
-          <text x="470" y="422" text-anchor="end" class="mono">150.57 mJ  ·  4.70 mm²</text>
+          <text x="46" y="484" class="mono">Config 4  (Mambino 106K)</text>
+          <text x="510" y="484" text-anchor="end" class="mono">150.57 mJ · 4.70 mm²</text>
 
-          <text x="42" y="440" class="mono sublabel">Config 5 (Pure S5 106K)</text>
-          <text x="470" y="440" text-anchor="end" class="mono">166.80 mJ  ·  4.95 mm²</text>
+          <text x="46" y="510" class="mono">Config 5  (Pure S5 106K)</text>
+          <text x="510" y="510" text-anchor="end" class="mono">166.80 mJ · 4.95 mm²</text>
 
-          <text x="42" y="458" class="mono sublabel">Corner 1 (Pure S5 188K)</text>
-          <text x="470" y="458" text-anchor="end" class="mono">229.89 mJ  ·  4.77 mm²</text>
+          <text x="46" y="536" class="mono">Corner 1  (Pure S5 188K)</text>
+          <text x="510" y="536" text-anchor="end" class="mono">229.89 mJ · 4.77 mm²</text>
 
-          <text x="42" y="476" class="mono sublabel">Corner 3′ (Mambino 188K)</text>
-          <text x="470" y="476" text-anchor="end" class="mono">247.22 mJ  ·  4.77 mm²</text>
+          <text x="46" y="562" class="mono">Corner 3′ (Mambino 188K)</text>
+          <text x="510" y="562" text-anchor="end" class="mono">247.22 mJ · 4.77 mm²</text>
+
+          <text x="46" y="584" class="tag">energy · area per inference</text>
         </g>
-
-        <!-- Dataflow arrows for pipelined (schematic) -->
-        <g>
-          <path d="M 100 140 L 100 155 L 60 155 L 60 182" class="arrow" marker-end="url(#arr2)"/>
-          <path d="M 335 140 L 335 160 L 260 160 L 260 182" class="arrow" marker-end="url(#arr2)"/>
-          <path d="M 130 262 L 130 288" class="arrow" marker-end="url(#arr2)"/>
-          <path d="M 295 262 L 295 288" class="arrow" marker-end="url(#arr2)"/>
-        </g>
-
 
         <!-- ================ RIGHT: SEQUENTIAL ================ -->
 
-        <!-- Weight SRAM (right) -->
+        <!-- Weight SRAM -->
         <g>
-          <rect x="530" y="80" width="140" height="60" rx="3" fill="var(--c-mem-bg)" stroke="var(--c-mem)" class="block"/>
-          <text x="600" y="102" text-anchor="middle" class="label">Weight SRAM</text>
-          <text x="600" y="120" text-anchor="middle" class="var">89 KB | 161 KB</text>
-          <text x="600" y="134" text-anchor="middle" class="tag">same as left</text>
+          <rect x="568" y="86" width="180" height="80" rx="4" fill="var(--c-mem-bg)" stroke="var(--c-mem)" class="block"/>
+          <text x="658" y="112" text-anchor="middle" class="label">Weight SRAM</text>
+          <text x="658" y="132" text-anchor="middle" class="var">89 KB | 161 KB</text>
+          <text x="658" y="152" text-anchor="middle" class="sublabel">same as left</text>
         </g>
 
         <!-- Activation SRAM (small) -->
         <g>
-          <rect x="700" y="80" width="220" height="60" rx="3" fill="var(--c-mem-bg)" stroke="var(--c-mem)" class="block"/>
-          <text x="810" y="102" text-anchor="middle" class="label">Activation SRAM · 512 KB</text>
-          <text x="810" y="122" text-anchor="middle" class="sublabel">holds only 1 layer's fwd+bwd trace</text>
-          <text x="810" y="135" text-anchor="middle" class="tag">width 1024 · depth 4096</text>
+          <rect x="768" y="86" width="280" height="80" rx="4" fill="var(--c-mem-bg)" stroke="var(--c-mem)" class="block"/>
+          <text x="908" y="112" text-anchor="middle" class="label">Activation SRAM · 512 KB</text>
+          <text x="908" y="134" text-anchor="middle" class="sublabel">holds only 1 layer's fwd+bwd trace</text>
+          <text x="908" y="154" text-anchor="middle" class="tag">width 1024 · depth 4096</text>
         </g>
 
-        <!-- Single layer stage + iteration arrow -->
+        <!-- Single layer stage with iteration loop -->
+        <text x="568" y="200" class="tag">1 Mambino layer stage · reused for layers 1…8</text>
         <g>
-          <text x="530" y="175" class="tag">1 Mambino layer · reused for layers 1…8</text>
+          <rect x="608" y="212" width="340" height="88" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <text x="778" y="238" text-anchor="middle" class="label">Layer stage</text>
+          <text x="778" y="262" text-anchor="middle" class="sublabel">Λ̄, B̄, C̃  ·  x[t] → x[t+1]</text>
+          <text x="778" y="284" text-anchor="middle" class="sublabel">streams L=2048 timesteps · swap params · repeat</text>
 
-          <rect x="580" y="184" width="270" height="80" rx="3" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-          <text x="715" y="208" text-anchor="middle" class="label">Layer stage</text>
-          <text x="715" y="230" text-anchor="middle" class="sublabel">Λ̄, B̄, C̃  ·  x[t] → x[t+1]</text>
-          <text x="715" y="248" text-anchor="middle" class="sublabel">streams L=2048 timesteps then swaps params</text>
-
-          <!-- Loop arrow -->
-          <path d="M 850 224 C 920 224 940 190 890 170 L 855 170" class="arrow-thick" marker-end="url(#arr2-thick)"/>
-          <text x="920" y="200" text-anchor="middle" class="flowlabel">×8 layers</text>
+          <!-- Iteration loop arrow -->
+          <path d="M 948 256 C 1020 256 1050 220 1000 200 L 955 200" class="arrow-thick" marker-end="url(#arr2-thick)"/>
+          <text x="1030" y="234" text-anchor="middle" class="flowlabel">×8</text>
         </g>
 
-        <!-- State SRAM (small) -->
+        <!-- State SRAM (sequential) -->
         <g>
-          <rect x="530" y="288" width="200" height="60" rx="3" fill="var(--c-mem-bg)" stroke="var(--c-mem)" class="block"/>
-          <text x="630" y="310" text-anchor="middle" class="label">State SRAM</text>
-          <text x="630" y="328" text-anchor="middle" class="var">32 KB | 64 KB</text>
-          <text x="630" y="342" text-anchor="middle" class="tag">one layer's buffered direction</text>
+          <rect x="568" y="326" width="230" height="80" rx="4" fill="var(--c-mem-bg)" stroke="var(--c-mem)" class="block"/>
+          <text x="683" y="352" text-anchor="middle" class="label">State SRAM</text>
+          <text x="683" y="372" text-anchor="middle" class="var">32 KB | 64 KB</text>
+          <text x="683" y="392" text-anchor="middle" class="sublabel">one layer's buffered direction</text>
         </g>
-        <!-- MAC / regfile -->
-        <g>
-          <rect x="740" y="288" width="90" height="60" rx="3" fill="var(--c-mac-bg)" stroke="var(--c-mac)" class="block"/>
-          <text x="785" y="308" text-anchor="middle" class="label">MAC</text>
-          <text x="785" y="326" text-anchor="middle" class="sublabel">intadder</text>
-          <text x="785" y="342" text-anchor="middle" class="tag">INT8</text>
 
-          <rect x="840" y="288" width="80" height="60" rx="3" fill="var(--c-mac-bg)" stroke="var(--c-mac)" class="block"/>
-          <text x="880" y="308" text-anchor="middle" class="label">Reg file</text>
-          <text x="880" y="326" text-anchor="middle" class="sublabel">32-bit</text>
+        <!-- MAC / regfile (sequential) -->
+        <g>
+          <rect x="818" y="326" width="115" height="80" rx="4" fill="var(--c-mac-bg)" stroke="var(--c-mac)" class="block"/>
+          <text x="875" y="352" text-anchor="middle" class="label">MAC array</text>
+          <text x="875" y="372" text-anchor="middle" class="sublabel">NeuroSim intadder</text>
+          <text x="875" y="392" text-anchor="middle" class="tag">INT8 · 22 nm</text>
+
+          <rect x="943" y="326" width="105" height="80" rx="4" fill="var(--c-mac-bg)" stroke="var(--c-mac)" class="block"/>
+          <text x="995" y="352" text-anchor="middle" class="label">Reg file</text>
+          <text x="995" y="372" text-anchor="middle" class="sublabel">32-bit</text>
+          <text x="995" y="392" text-anchor="middle" class="tag">accum</text>
+        </g>
+
+        <!-- Dataflow arrows sequential -->
+        <g>
+          <path d="M 658 166 L 658 180 L 640 180 L 640 212" class="arrow" marker-end="url(#arr2)"/>
+          <path d="M 908 166 L 908 180 L 850 180 L 850 212" class="arrow" marker-end="url(#arr2)"/>
+          <path d="M 683 300 L 683 326" class="arrow" marker-end="url(#arr2)"/>
+          <path d="M 875 300 L 875 326" class="arrow" marker-end="url(#arr2)"/>
         </g>
 
         <!-- PPAC totals for sequential -->
         <g>
-          <rect x="530" y="378" width="390" height="112" rx="4" fill="var(--surface)" stroke="var(--rule)"/>
-          <text x="542" y="398" class="tag">Digital PPAC · sequential · v5 numbers</text>
+          <rect x="568" y="430" width="480" height="164" rx="5" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="584" y="454" class="tag">Digital PPAC · sequential chip · v5 numbers</text>
 
-          <text x="542" y="422" class="mono sublabel">Config 4</text>
-          <text x="920" y="422" text-anchor="end" class="mono">48.47 mJ  ·  0.68 mm²</text>
+          <text x="584" y="484" class="mono">Config 4</text>
+          <text x="1038" y="484" text-anchor="end" class="mono">48.47 mJ · 0.68 mm²</text>
 
-          <text x="542" y="440" class="mono sublabel">Config 5</text>
-          <text x="920" y="440" text-anchor="end" class="mono">53.69 mJ  ·  0.72 mm²</text>
+          <text x="584" y="510" class="mono">Config 5</text>
+          <text x="1038" y="510" text-anchor="end" class="mono">53.69 mJ · 0.72 mm²</text>
 
-          <text x="542" y="458" class="mono sublabel">Corner 1</text>
-          <text x="920" y="458" text-anchor="end" class="mono">83.74 mJ  ·  0.76 mm²</text>
+          <text x="584" y="536" class="mono">Corner 1</text>
+          <text x="1038" y="536" text-anchor="end" class="mono">83.74 mJ · 0.76 mm²</text>
 
-          <text x="542" y="476" class="mono sublabel">Corner 3′</text>
-          <text x="920" y="476" text-anchor="end" class="mono">90.06 mJ  ·  0.76 mm²</text>
+          <text x="584" y="562" class="mono">Corner 3′</text>
+          <text x="1038" y="562" text-anchor="end" class="mono">90.06 mJ · 0.76 mm²</text>
+
+          <text x="584" y="584" class="tag">energy · area per inference</text>
         </g>
 
-        <!-- Dataflow arrows for sequential -->
+        <!-- Bottom comparison strip (full width) -->
         <g>
-          <path d="M 600 140 L 600 155 L 610 155 L 610 184" class="arrow" marker-end="url(#arr2)"/>
-          <path d="M 810 140 L 810 160 L 750 160 L 750 184" class="arrow" marker-end="url(#arr2)"/>
-          <path d="M 630 264 L 630 288" class="arrow" marker-end="url(#arr2)"/>
-          <path d="M 785 264 L 785 288" class="arrow" marker-end="url(#arr2)"/>
-        </g>
+          <rect x="30" y="618" width="1018" height="138" rx="5" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="46" y="642" class="tag">Pipelined → Sequential deltas · same accuracy, different chip trade-off</text>
 
-        <!-- Bottom comparison strip -->
-        <g>
-          <rect x="30" y="510" width="890" height="112" rx="4" fill="var(--surface)" stroke="var(--rule)"/>
-          <text x="42" y="530" class="tag">Pipelined → Sequential deltas · same accuracy, different chip trade-off</text>
+          <text x="46" y="672" class="mono">Activation SRAM</text>
+          <text x="380" y="672" text-anchor="end" class="mono">4.2 MB → 512 KB · 8× smaller</text>
 
-          <text x="42" y="556" class="mono sublabel">Activation SRAM (4.2 MB → 512 KB)</text>
-          <text x="480" y="556" text-anchor="end" class="mono">8× smaller physical buffer</text>
+          <text x="46" y="698" class="mono">Digital energy per inference</text>
+          <text x="380" y="698" text-anchor="end" class="mono">3.10× lower @106K · 2.74× @188K</text>
 
-          <text x="42" y="574" class="mono sublabel">Per-inference digital energy</text>
-          <text x="480" y="574" text-anchor="end" class="mono">3.10× lower (106K) · 2.74× lower (188K)</text>
+          <text x="46" y="724" class="mono">Total die area</text>
+          <text x="380" y="724" text-anchor="end" class="mono">3.8–4.3× lower per config</text>
 
-          <text x="42" y="592" class="mono sublabel">Total die area</text>
-          <text x="480" y="592" text-anchor="end" class="mono">3.8–4.3× lower per config</text>
+          <text x="46" y="750" class="mono">Latency per inference</text>
+          <text x="380" y="750" text-anchor="end" class="mono">~8× higher (serialised layers)</text>
 
-          <text x="42" y="610" class="mono sublabel">Latency per inference (worst case)</text>
-          <text x="480" y="610" text-anchor="end" class="mono">~8× higher (serialised layer execution)</text>
-
-          <text x="510" y="556" class="tag">chip-topology choice, not a Mambino/S5 distinction</text>
-          <text x="510" y="580" class="sublabel">Both variants keep ranking · Config 4 wins acc/mJ in every quadrant</text>
-          <text x="510" y="600" class="sublabel">of {pipelined, sequential} × {test@peakval, test_max}</text>
+          <text x="560" y="672" class="tag" fill="var(--ink-soft)">reading the trade-off</text>
+          <text x="560" y="696" class="sublabel">This is a chip-topology choice, not a Mambino/S5 distinction.</text>
+          <text x="560" y="716" class="sublabel">Both variants preserve accuracy ranking · Config 4 wins acc/mJ in every</text>
+          <text x="560" y="734" class="sublabel">quadrant of {pipelined, sequential} × {test@peakval, test_max}.</text>
         </g>
       </svg>
     </div>
 
     <div class="legend">
-      <span class="item"><span class="sw" style="background: var(--c-mem-bg); border-color: var(--c-mem);"></span>SRAM / on-chip memory</span>
-      <span class="item"><span class="sw" style="background: var(--c-mac-bg); border-color: var(--c-mac);"></span>digital compute (MAC / regfile)</span>
+      <span class="item"><span class="sw" style="background: var(--c-mem-bg); border-color: var(--c-mem);"></span>SRAM · on-chip memory</span>
+      <span class="item"><span class="sw" style="background: var(--c-mac-bg); border-color: var(--c-mac);"></span>digital compute · MAC / regfile</span>
       <span class="item"><span class="sw" style="background: var(--c-main-bg); border-color: var(--c-main);"></span>SSM layer stage</span>
     </div>
 
     <p class="caption">
-      <b>Figure 2.</b> Two chip topologies that differ only in <b>activation SRAM depth</b> and <b>layer-pipeline width</b>. The <b>pipelined chip</b> (left) keeps a 4.2 MB activation SRAM buffering the forward + backward pass streams of all eight Mambino layers concurrently and pipelines them at one timestep per stage per cycle, maximising throughput. The <b>sequential chip</b> (right) collapses to a single reused layer stage with a 512 KB activation SRAM buffering one layer at a time, cutting die area by <b>~4×</b> and per-inference energy by <b>~3×</b> at the cost of an <b>~8× longer latency</b>. State SRAM sizing follows the streaming formula <code>local_P × L × n_layers × 1</code> under the pipelined topology and <code>local_P × L × 1 × 1</code> under the sequential topology (§11 of the master document). Weight SRAM, MAC array, and register file are identical across topologies. All PPAC totals are Accelergy 0.4 + CACTI + NeuroSim at 22 nm INT8, 1 GHz.
+      <b>Figure 2.</b> Two chip topologies that differ only in activation-SRAM depth and layer-pipeline width. The <b>pipelined chip</b> (left) keeps a 4.2 MB activation SRAM buffering the forward + backward pass streams of all eight Mambino layers concurrently and pipelines them at one timestep per stage per cycle, maximising throughput. The <b>sequential chip</b> (right) collapses to a single reused layer stage with a 512 KB activation SRAM buffering one layer at a time, cutting die area by <b>~4×</b> and per-inference energy by <b>~3×</b> at the cost of <b>~8×</b> longer latency. State SRAM sizing follows the streaming formula <code>local_P × L × n_layers × 1</code> under the pipelined topology and <code>local_P × L × 1 × 1</code> under the sequential topology (master doc §11). Weight SRAM, MAC array, and register file are identical across topologies. All PPAC totals are Accelergy 0.4 + CACTI + NeuroSim at 22 nm INT8, 1 GHz.
     </p>
 
     <dl class="provenance">
       <dt>Code source</dt><dd>accelergy/v6_digital_config{4,5}_arch.yaml + v6_digital_corner{1,3p}_arch.yaml (pipelined and _seq variants)</dd>
-      <dt>Primitives</dt><dd>SRAM: CACTI 7 · MAC (intadder n_bits=8) + register (flip_flop n_bits=32): NeuroSim</dd>
-      <dt>Master doc §</dt><dd>§6 digital PPAC, §11 streaming state SRAM formula, §12 modeling assumptions</dd>
+      <dt>Primitives</dt><dd>SRAM · CACTI 7   ·   MAC (intadder n_bits=8) + register (flip_flop n_bits=32) · NeuroSim</dd>
+      <dt>Master doc §</dt><dd>§6 digital PPAC · §11 streaming state SRAM formula · §12 modeling assumptions</dd>
     </dl>
   </section>
 
@@ -678,7 +619,7 @@
     <code>inkscape fig1.svg --export-pdf=fig1.pdf</code> or include directly with
     <code>\includegraphics[width=\linewidth]{fig1.pdf}</code>. Colours are chosen for print
     legibility on both light and dark grounds. Text uses system fonts — replace with your
-    paper's font in the exported file if needed (Inkscape → <em>Text and Font</em>).
+    paper's font (Inkscape → <em>Text and Font</em>) in the exported file if needed.
   </div>
 
 </main>
