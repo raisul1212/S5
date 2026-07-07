@@ -116,6 +116,8 @@
     font-family: var(--mono); font-size: 12px;
     background: var(--rule-soft); padding: 1px 5px; border-radius: 3px;
   }
+  .caption code .bar { text-decoration-line: overline; text-decoration-thickness: 1.4px; }
+  .caption code .til { text-decoration-line: overline; text-decoration-style: wavy; text-decoration-thickness: 1px; }
 
   .provenance {
     border-top: 1px dashed var(--rule);
@@ -165,6 +167,9 @@
   svg .arrow-thick { stroke: var(--ink); stroke-width: 2; fill: none; }
   svg .plus { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
   svg .plus-text { font-family: var(--mono); font-size: 17px; font-weight: 700; fill: var(--ink); }
+  /* SSM-notation diacriticals rendered via text-decoration */
+  svg .bar { text-decoration-line: overline; text-decoration-thickness: 1.4px; text-decoration-color: var(--ink); }
+  svg .til { text-decoration-line: overline; text-decoration-style: wavy; text-decoration-thickness: 1px; text-decoration-color: var(--ink); }
 </style>
 
 <main>
@@ -215,7 +220,7 @@
         <g>
           <rect x="70" y="162" width="220" height="88" rx="5" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
           <text x="180" y="188" text-anchor="middle" class="label">Input projection</text>
-          <text x="180" y="212" text-anchor="middle" class="var">B̄ · x[t]</text>
+          <text x="180" y="212" text-anchor="middle" class="var"><tspan class="bar">B</tspan> · x[t]</text>
           <text x="180" y="234" text-anchor="middle" class="sublabel">→ (L, local_P)</text>
         </g>
 
@@ -243,7 +248,7 @@
         <g>
           <rect x="460" y="454" width="280" height="80" rx="5" fill="var(--c-surp-bg)" stroke="var(--c-surp)" class="block"/>
           <text x="600" y="482" text-anchor="middle" class="label">W_ε feedback projection</text>
-          <text x="600" y="504" text-anchor="middle" class="var">W̄_ε · ε[t]</text>
+          <text x="600" y="504" text-anchor="middle" class="var"><tspan class="bar">W</tspan>_ε · ε[t]</text>
           <text x="600" y="524" text-anchor="middle" class="sublabel">→ (L, local_P)</text>
         </g>
 
@@ -264,7 +269,7 @@
         <g>
           <rect x="130" y="620" width="540" height="102" rx="5" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
           <text x="400" y="650" text-anchor="middle" class="label">Main SSM · bidirectional associative scan</text>
-          <text x="400" y="674" text-anchor="middle" class="var">x[t+1] = Λ̄ · x[t] + Bu[t] ,  Bu = B̄·x + W̄_ε·ε</text>
+          <text x="400" y="674" text-anchor="middle" class="var">x[t+1] = <tspan class="bar">Λ</tspan> · x[t] + Bu[t] ,  Bu = <tspan class="bar">B</tspan>·x + <tspan class="bar">W</tspan>_ε·ε</text>
           <text x="400" y="696" text-anchor="middle" class="sublabel">forward + backward passes → concat along local_P axis</text>
           <text x="400" y="714" text-anchor="middle" class="tag">chip: sequential streaming, one state register per direction</text>
         </g>
@@ -274,7 +279,7 @@
         <g>
           <rect x="230" y="750" width="340" height="60" rx="5" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
           <text x="400" y="774" text-anchor="middle" class="label">Output projection</text>
-          <text x="400" y="796" text-anchor="middle" class="var">y = C̃ · [xs_fwd | xs_bwd]</text>
+          <text x="400" y="796" text-anchor="middle" class="var">y = <tspan class="til">C</tspan> · [xs_fwd | xs_bwd]</text>
         </g>
 
         <!-- Split for activation variants -->
@@ -333,7 +338,7 @@
           <text x="75" y="682" text-anchor="middle" class="sublabel">and W_ε</text>
           <text x="75" y="698" text-anchor="middle" class="sublabel">branches</text>
           <text x="75" y="714" text-anchor="middle" class="sublabel">are removed</text>
-          <text x="75" y="746" text-anchor="middle" class="var-sm">Bu = B̄·x</text>
+          <text x="75" y="746" text-anchor="middle" class="var-sm">Bu = <tspan class="bar">B</tspan>·x</text>
           <text x="75" y="768" text-anchor="middle" class="sublabel">only</text>
         </g>
 
@@ -349,7 +354,7 @@
     </div>
 
     <p class="caption">
-      <b>Figure 1.</b> One Mambino layer. Input <code>x[t]</code> fans out to three destinations: the main SSM's input projection <code>B̄·x</code>, the surprise subtraction <code>ε = x − pred</code>, and a forward-only <b>predictor SSM</b> with independent parameters <code>Λ_s, B_s, C_s</code>. The surprise <code>ε[t]</code> is projected through the additive feedback matrix <code>W̄_ε</code> and summed with <code>B̄·x</code> to form the main scan's input <code>Bu[t]</code>. The main SSM runs a <b>bidirectional</b> associative scan; forward and backward state trajectories are concatenated along <code>local_P</code> before the output projection <code>C̃</code>. The output activation splits into two variants: <b>variant A</b> is a pointwise <code>GELU</code> (no gate matrices — used by Configs 4 &amp; 5); <b>variant B</b> is a <code>half_glu2</code> gate with rank <code>r</code> — full-rank in Corner 1 (<code>r = H</code>) and low-rank in Corner 3′ (<code>r = 40</code>). Under the Pure S5 baseline (Configs 5 and Corner 1), the entire predictor branch and <code>W̄_ε</code> feedback are removed and <code>Bu = B̄·x</code> only. Mambino's isolated architectural contribution is exactly the predictor branch and the <code>W̄_ε</code> feedback loop; the activation choice is orthogonal.
+      <b>Figure 1.</b> One Mambino layer. Input <code>x[t]</code> fans out to three destinations: the main SSM's input projection <code><span class="bar">B</span>·x</code>, the surprise subtraction <code>ε = x − pred</code>, and a forward-only <b>predictor SSM</b> with independent parameters <code>Λ_s, B_s, C_s</code>. The surprise <code>ε[t]</code> is projected through the additive feedback matrix <code><span class="bar">W</span>_ε</code> and summed with <code><span class="bar">B</span>·x</code> to form the main scan's input <code>Bu[t]</code>. The main SSM runs a <b>bidirectional</b> associative scan; forward and backward state trajectories are concatenated along <code>local_P</code> before the output projection <code><span class="til">C</span></code>. The output activation splits into two variants: <b>variant A</b> is a pointwise <code>GELU</code> (no gate matrices — used by Configs 4 &amp; 5); <b>variant B</b> is a <code>half_glu2</code> gate with rank <code>r</code> — full-rank in Corner 1 (<code>r = H</code>) and low-rank in Corner 3′ (<code>r = 40</code>). Under the Pure S5 baseline (Configs 5 and Corner 1), the entire predictor branch and <code><span class="bar">W</span>_ε</code> feedback are removed and <code>Bu = <span class="bar">B</span>·x</code> only. Mambino's isolated architectural contribution is exactly the predictor branch and the <code><span class="bar">W</span>_ε</code> feedback loop; the activation choice is orthogonal.
     </p>
 
     <dl class="provenance">
@@ -425,7 +430,7 @@
           <text x="425" y="30" text-anchor="middle" class="tag">L 7</text>
           <text x="491" y="30" text-anchor="middle" class="tag">L 8</text>
 
-          <text x="260" y="58" text-anchor="middle" class="sublabel">Λ̄, B̄, C̃  ·  x[t] → x[t+1]</text>
+          <text x="260" y="58" text-anchor="middle" class="sublabel"><tspan class="bar">Λ</tspan>, <tspan class="bar">B</tspan>, <tspan class="til">C</tspan>  ·  x[t] → x[t+1]</text>
           <text x="260" y="76" text-anchor="middle" class="sublabel">streaming · 1 timestep in / 1 timestep out</text>
         </g>
         <!-- Inter-stage arrows -->
@@ -511,7 +516,7 @@
         <g>
           <rect x="608" y="212" width="340" height="88" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
           <text x="778" y="238" text-anchor="middle" class="label">Layer stage</text>
-          <text x="778" y="262" text-anchor="middle" class="sublabel">Λ̄, B̄, C̃  ·  x[t] → x[t+1]</text>
+          <text x="778" y="262" text-anchor="middle" class="sublabel"><tspan class="bar">Λ</tspan>, <tspan class="bar">B</tspan>, <tspan class="til">C</tspan>  ·  x[t] → x[t+1]</text>
           <text x="778" y="284" text-anchor="middle" class="sublabel">streams L=2048 timesteps · swap params · repeat</text>
 
           <!-- Iteration loop arrow -->
