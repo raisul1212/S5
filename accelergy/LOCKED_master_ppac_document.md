@@ -1,12 +1,13 @@
 # Master Document: Training Runs + JAXPR FLOPs + Accelergy PPAC
 
-Locked 2026-07-06 (v4 — streaming inference model + 5-seed multi-seed sweep).
+Locked 2026-07-07 (v5 — 8-seed multi-seed sweep + significance tests).
 All numbers from executed code + published methodologies.
 
-**v4 changes from v3:** (1) State SRAM sizing corrected from parallel-scan trajectory to
-streaming inference (§11); (2) All PPAC tables re-run (§6/§7); (3) §5 replaced with 5-seed
-multi-seed statistics from unified current-code SHA `46517fe`; (4) §8 acc/mJ uses the
-5-seed means.
+**v5 changes from v4:** (1) §5 expanded from 5-seed to **8-seed** multi-seed sweep (added
+seeds 1, 2, 3 at unified current-code SHA `46517fe`); (2) Added paired significance tests
+(paired t-tests, matched seeds) for both iso-params comparisons; (3) §8 acc/mJ updated
+to n=8 means; (4) Accuracy framing upgraded from "matches" to significance-tested claims
+at both α=0.05 two-tailed and α=0.05 one-tailed.
 
 ## 0. Code + raw data locations
 
@@ -81,38 +82,71 @@ Computed by [`flop_counter_jaxpr.py`](https://github.com/raisul1212/S5/blob/mamb
 **Canonical MAC basis for all downstream PPAC: `Real-MAC equivalent = dot_general FLOPs / 2`.**
 Rationale: complex arithmetic is already correctly weighted in dot_general; total FLOPs includes elementwise ops (norms, GELU, gates) that don't hit the MAC unit and would inflate per-MAC SRAM traffic.
 
-## 5. Test accuracies — 5-seed multi-seed sweep at current code SHA `46517fe`
+## 5. Test accuracies — 8-seed multi-seed sweep at current code SHA `46517fe`
 
 Two definitions per Fable convention:
 - **`test@peakval`**: test_acc at the epoch that had the highest validation accuracy. This is the standard leakage-free metric.
 - **`test_max`**: overall highest test_acc seen across all 40 epochs. This is an upper bound; useful for showing what the model can do.
 
-Seeds: {6554595, 42, 12345, 271828, 314159}. All 20 runs COMPLETED at 40 epochs.
+Seeds: {6554595, 42, 12345, 271828, 314159, 1, 2, 3}. All 32 runs COMPLETED at 40 epochs.
+
+### 5a. Summary statistics (n=8)
 
 | Config | test@peakval mean±std | test_max mean±std |
 |---|---:|---:|
-| Config 4 Mambino gelu | **0.5999 ± 0.0081** | 0.6033 ± 0.0069 |
-| Config 5 Pure S5 gelu | 0.5924 ± 0.0067 | 0.6033 ± 0.0058 |
-| Corner 1 Pure S5 half_glu2 | 0.6107 ± 0.0047 | 0.6153 ± 0.0047 |
-| Corner 3' Mambino half_glu2 | **0.6143 ± 0.0030** | **0.6186 ± 0.0050** |
+| Config 4 Mambino gelu 106K | **0.5993 ± 0.0072** | 0.6038 ± 0.0061 |
+| Config 5 Pure S5 gelu 106K | 0.5917 ± 0.0081 | 0.6034 ± 0.0052 |
+| Corner 1 Pure S5 half_glu2 188K | 0.6089 ± 0.0053 | 0.6159 ± 0.0046 |
+| Corner 3' Mambino half_glu2 188K | **0.6138 ± 0.0027** | **0.6171 ± 0.0050** |
 
-### Iso-params deltas
+Ranking (test@peakval): Corner 3' > Corner 1 > Config 4 > Config 5. Stable.
 
-**106K (Config 4 vs Config 5):** Mambino wins test@peakval by +0.75 pp; ties on test_max.
+### 5b. Significance tests (paired, matched seeds)
 
-**188K (Corner 3' vs Corner 1):** Mambino wins test@peakval by +0.36 pp AND test_max by +0.33 pp AND has **36% lower seed variance** (0.30% vs 0.47%).
+Because all four configs are trained on the same seed set, matched-pair (paired) t-tests
+apply. Effect sizes and p-values below.
 
-### Ranking is stable across both metrics
-Corner 3' > Corner 1 > Config 4 > Config 5 (test@peakval).
+**106K iso-params (Config 4 vs Config 5), test@peakval:**
+- Mean paired diff = +0.0076 (Mambino better)
+- Paired t = **2.20**, df = 7
+- **Two-tailed p ≈ 0.064** — borderline, does not clear α=0.05
+- **One-tailed p ≈ 0.032** — SIGNIFICANT at α=0.05 under directional hypothesis
+  (H1: Mambino > Pure S5, motivated by the predictor branch's designed intent)
 
-### Per-seed table (raw)
+**106K iso-params (Config 4 vs Config 5), test_max:**
+- Mean paired diff = +0.0004 (tie)
+- Not significant under any framing
 
-| Config | seed 6554595 | seed 42 | seed 12345 | seed 271828 | seed 314159 |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Config 4 test@peakval | 0.5940 | 0.6035 | 0.6100 | 0.5875 | 0.6045 |
-| Config 5 test@peakval | 0.5830 | 0.6010 | 0.5930 | 0.5980 | 0.5870 |
-| Corner 1 test@peakval | 0.6080 | 0.6200 | 0.6090 | 0.6070 | 0.6095 |
-| Corner 3' test@peakval | 0.6180 | 0.6165 | 0.6150 | 0.6125 | 0.6095 |
+**188K iso-params (Corner 3' vs Corner 1), test@peakval:**
+- Mean paired diff = +0.0049 (Mambino better)
+- Paired t = **2.94**, df = 7
+- **Two-tailed p ≈ 0.022** — **SIGNIFICANT at α=0.05** (either direction)
+- One-tailed p ≈ 0.011
+
+**188K iso-params (Corner 3' vs Corner 1), test_max:**
+- Mean paired diff = +0.0013 (Mambino better)
+- Not significant (essentially tied within noise)
+
+### 5c. Paper-defensible framing
+
+**Under standard two-tailed convention (recommended default for ML papers):**
+- 188K iso-params: **Mambino significantly outperforms Pure S5 on test@peakval** (p=0.022)
+- 106K iso-params: Mambino trends toward higher test@peakval (p=0.064) — significant only under directional hypothesis (one-tailed p=0.032)
+
+**Stability win at 188K:** Corner 3' std (0.0027) is **49% lower** than Corner 1 std (0.0053) — Mambino trains more stably at higher param count.
+
+### 5d. Per-seed table (raw)
+
+| Config | 6554595 | 42 | 12345 | 271828 | 314159 | 1 | 2 | 3 |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| C4 test@peakval | 0.5940 | 0.6035 | 0.6100 | 0.5875 | 0.6045 | 0.5950 | 0.6025 | 0.5970 |
+| C5 test@peakval | 0.5830 | 0.6010 | 0.5930 | 0.5980 | 0.5870 | 0.5790 | 0.6005 | 0.5920 |
+| C1 test@peakval | 0.6080 | 0.6200 | 0.6090 | 0.6070 | 0.6095 | 0.6030 | 0.6100 | 0.6045 |
+| C3' test@peakval | 0.6180 | 0.6165 | 0.6150 | 0.6125 | 0.6095 | 0.6130 | 0.6140 | 0.6115 |
+| C4 test_max | 0.6010 | 0.6035 | 0.6100 | 0.5915 | 0.6105 | 0.6025 | 0.6035 | 0.6080 |
+| C5 test_max | 0.6000 | 0.6080 | 0.6115 | 0.6020 | 0.5950 | 0.6060 | 0.6050 | 0.6000 |
+| C1 test_max | 0.6115 | 0.6235 | 0.6120 | 0.6175 | 0.6120 | 0.6170 | 0.6135 | 0.6200 |
+| C3' test_max | 0.6220 | 0.6235 | 0.6150 | 0.6220 | 0.6105 | 0.6150 | 0.6175 | 0.6115 |
 
 Note: seed=6554595 originals (SHA `a32cb6bb`/`7fe1aa43`/`7343b68b`) were rerun at current SHA `46517fe` and appear here; original single-seed accuracies from those older SHAs differed slightly due to code drift in `s5/ssm.py`, `s5/mambino_ssm.py`, `s5/layers.py` between then and now. All numbers reported in this doc are from the unified current-code sweep.
 
@@ -184,25 +218,26 @@ Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(
 
 ### 8a. Pipelined chip
 
-Using 5-seed mean test@peakval and test_max from §5.
+Using 8-seed mean test@peakval and test_max from §5.
 
 | Config | test@peakval mean | test@peakval / mJ (×10⁻³) | test_max mean | test_max / mJ (×10⁻³) |
 |---|---:|---:|---:|---:|
-| **Config 4** Mambino gelu | 0.5999 | **3.98** | 0.6033 | **4.01** |
-| Config 5 Pure S5 gelu | 0.5924 | 3.55 | 0.6033 | 3.62 |
-| Corner 1 Pure S5 half_glu2 | 0.6107 | 2.66 | 0.6153 | 2.68 |
-| Corner 3' Mambino half_glu2 | 0.6143 | 2.48 | 0.6186 | 2.50 |
+| **Config 4** Mambino gelu | 0.5993 | **3.98** | 0.6038 | **4.01** |
+| Config 5 Pure S5 gelu | 0.5917 | 3.55 | 0.6034 | 3.62 |
+| Corner 1 Pure S5 half_glu2 | 0.6089 | 2.65 | 0.6159 | 2.68 |
+| Corner 3' Mambino half_glu2 | 0.6138 | 2.48 | 0.6171 | 2.50 |
 
 ### 8b. Sequential chip
 
 | Config | test@peakval mean | test@peakval / mJ (×10⁻³) | test_max mean | test_max / mJ (×10⁻³) |
 |---|---:|---:|---:|---:|
-| **Config 4** Mambino gelu | 0.5999 | **12.38** | 0.6033 | **12.44** |
-| Config 5 Pure S5 gelu | 0.5924 | 11.03 | 0.6033 | 11.24 |
-| Corner 1 Pure S5 half_glu2 | 0.6107 | 7.29 | 0.6153 | 7.35 |
-| Corner 3' Mambino half_glu2 | 0.6143 | 6.82 | 0.6186 | 6.87 |
+| **Config 4** Mambino gelu | 0.5993 | **12.36** | 0.6038 | **12.46** |
+| Config 5 Pure S5 gelu | 0.5917 | 11.02 | 0.6034 | 11.24 |
+| Corner 1 Pure S5 half_glu2 | 0.6089 | 7.27 | 0.6159 | 7.35 |
+| Corner 3' Mambino half_glu2 | 0.6138 | 6.82 | 0.6171 | 6.85 |
 
-**Config 4 wins acc/mJ under both accuracy definitions and both chip topologies.**
+**Config 4 wins acc/mJ under both accuracy definitions and both chip topologies.** At n=8, this
+lead is stable across all four quadrants (digital pipe/seq × test@peakval / test_max).
 
 ## 9. Methodology citations
 
