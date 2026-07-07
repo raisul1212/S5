@@ -240,7 +240,7 @@
     </header>
 
     <div class="svgwrap">
-      <svg viewBox="0 0 920 680" role="img" aria-label="Mambino architecture diagram">
+      <svg viewBox="0 0 940 760" role="img" aria-label="Mambino architecture diagram">
         <defs>
           <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-soft)"/>
@@ -252,15 +252,26 @@
 
         <!-- Input node -->
         <g>
-          <rect x="410" y="14" width="100" height="34" rx="17" fill="var(--surface)" stroke="var(--ink)" class="block"/>
-          <text x="460" y="35" text-anchor="middle" class="label var">x[t]</text>
-          <text x="460" y="65" text-anchor="middle" class="tag">input, dim H = 128</text>
+          <rect x="420" y="14" width="100" height="34" rx="17" fill="var(--surface)" stroke="var(--ink)" class="block"/>
+          <text x="470" y="35" text-anchor="middle" class="label var">x[t]</text>
+          <text x="470" y="65" text-anchor="middle" class="tag">input, dim H = 128</text>
         </g>
-        <!-- Split arrows to left (main path) and right (predictor path) -->
-        <path d="M 460 80 L 460 100 L 220 100 L 220 130" class="arrow" marker-end="url(#arr)"/>
-        <path d="M 460 100 L 700 100 L 700 130" class="arrow" marker-end="url(#arr)"/>
 
-        <!-- MAIN PATH (left column): B_bar @ x -->
+        <!-- 3-way fan-out from input: shared horizontal bus at y=90 -->
+        <path d="M 470 80 L 470 90" class="arrow-thick"/>
+        <!-- Horizontal bus -->
+        <path d="M 220 90 L 720 90" class="arrow-thick"/>
+        <!-- Junction dot at branching point -->
+        <circle cx="470" cy="90" r="4" fill="var(--ink)"/>
+        <!-- Three drop-down arrows: left (main B̄·x), center (surprise), right (predictor) -->
+        <path d="M 220 90 L 220 130" class="arrow" marker-end="url(#arr)"/>
+        <path d="M 470 90 L 470 300" class="arrow" marker-end="url(#arr)"/>
+        <path d="M 720 90 L 720 130" class="arrow" marker-end="url(#arr)"/>
+        <text x="235" y="108" class="flowlabel">x[t]</text>
+        <text x="485" y="108" class="flowlabel">x[t]</text>
+        <text x="735" y="108" class="flowlabel">x[t]</text>
+
+        <!-- MAIN PATH (left column): B̄·x -->
         <g>
           <rect x="130" y="132" width="180" height="70" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
           <text x="220" y="158" text-anchor="middle" class="label">Input projection</text>
@@ -270,96 +281,121 @@
 
         <!-- PREDICTOR PATH (right column): Predictor SSM -->
         <g>
-          <rect x="600" y="132" width="200" height="90" rx="4" fill="var(--c-pred-bg)" stroke="var(--c-pred)" class="block"/>
-          <text x="700" y="158" text-anchor="middle" class="label">Predictor SSM</text>
-          <text x="700" y="178" text-anchor="middle" class="sublabel">forward-only causal scan</text>
-          <text x="700" y="200" text-anchor="middle" class="var">Λ_s , B_s , C_s</text>
-          <text x="700" y="214" text-anchor="middle" class="tag">glu_rank does not gate this</text>
+          <rect x="610" y="132" width="220" height="90" rx="4" fill="var(--c-pred-bg)" stroke="var(--c-pred)" class="block"/>
+          <text x="720" y="158" text-anchor="middle" class="label">Predictor SSM</text>
+          <text x="720" y="178" text-anchor="middle" class="sublabel">forward-only causal scan</text>
+          <text x="720" y="200" text-anchor="middle" class="var">Λ_s , B_s , C_s</text>
+          <text x="720" y="214" text-anchor="middle" class="tag">predicts x[t] from past x[0..t-1]</text>
         </g>
 
         <!-- Arrow from predictor down to surprise -->
-        <path d="M 700 224 L 700 264 L 700 274" class="arrow" marker-end="url(#arr)"/>
-        <text x="720" y="252" class="flowlabel">pred[t]</text>
+        <path d="M 720 222 L 720 296" class="arrow" marker-end="url(#arr)"/>
+        <text x="735" y="260" class="flowlabel">pred[t]</text>
 
-        <!-- Surprise block -->
+        <!-- Surprise block (center-middle) -->
         <g>
-          <rect x="580" y="276" width="240" height="66" rx="4" fill="var(--c-surp-bg)" stroke="var(--c-surp)" class="block"/>
-          <text x="700" y="302" text-anchor="middle" class="label">Predictive-coding error (surprise)</text>
-          <text x="700" y="326" text-anchor="middle" class="var">ε[t] = x[t] − pred[t]</text>
+          <rect x="360" y="300" width="360" height="60" rx="4" fill="var(--c-surp-bg)" stroke="var(--c-surp)" class="block"/>
+          <text x="540" y="322" text-anchor="middle" class="label">Predictive-coding error (surprise)</text>
+          <text x="540" y="346" text-anchor="middle" class="var">ε[t] = x[t] − pred[t]</text>
         </g>
 
-        <!-- Direct x[t] tap into surprise block -->
-        <path d="M 510 32 L 870 32 L 870 260 L 820 275" class="arrow dashed" marker-end="url(#arr)"/>
-        <text x="800" y="52" text-anchor="end" class="flowlabel">x[t] (direct tap)</text>
-
         <!-- Arrow from surprise down to W_eps -->
-        <path d="M 700 344 L 700 380 L 700 388" class="arrow" marker-end="url(#arr)"/>
+        <path d="M 540 360 L 540 398" class="arrow" marker-end="url(#arr)"/>
 
         <!-- W_eps block -->
         <g>
-          <rect x="600" y="390" width="200" height="68" rx="4" fill="var(--c-surp-bg)" stroke="var(--c-surp)" class="block"/>
-          <text x="700" y="416" text-anchor="middle" class="label">W_ε feedback projection</text>
-          <text x="700" y="438" text-anchor="middle" class="var">W̄_ε · ε[t]</text>
-          <text x="700" y="452" text-anchor="middle" class="sublabel">→ (L, local_P)</text>
+          <rect x="420" y="400" width="240" height="68" rx="4" fill="var(--c-surp-bg)" stroke="var(--c-surp)" class="block"/>
+          <text x="540" y="426" text-anchor="middle" class="label">W_ε feedback projection</text>
+          <text x="540" y="448" text-anchor="middle" class="var">W̄_ε · ε[t]</text>
+          <text x="540" y="462" text-anchor="middle" class="sublabel">→ (L, local_P)</text>
         </g>
 
         <!-- Arrow from B_bar @ x down to sum -->
-        <path d="M 220 204 L 220 470 L 434 470" class="arrow" marker-end="url(#arr)"/>
+        <path d="M 220 204 L 220 500 L 334 500" class="arrow" marker-end="url(#arr)"/>
         <!-- Arrow from W_eps @ eps down-left to sum -->
-        <path d="M 700 460 L 700 470 L 486 470" class="arrow" marker-end="url(#arr)"/>
+        <path d="M 540 468 L 540 500 L 386 500" class="arrow" marker-end="url(#arr)"/>
 
         <!-- Sum node -->
         <g>
-          <circle cx="460" cy="470" r="16" class="plus"/>
-          <text x="460" y="475" text-anchor="middle" class="plus-text">+</text>
+          <circle cx="360" cy="500" r="16" class="plus"/>
+          <text x="360" y="505" text-anchor="middle" class="plus-text">+</text>
         </g>
 
         <!-- Down to main SSM -->
-        <path d="M 460 486 L 460 512" class="arrow-thick" marker-end="url(#arr-thick)"/>
+        <path d="M 360 516 L 360 540" class="arrow-thick" marker-end="url(#arr-thick)"/>
 
         <!-- Main SSM scan block (bidirectional) -->
         <g>
-          <rect x="220" y="514" width="480" height="86" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-          <text x="460" y="540" text-anchor="middle" class="label">Main SSM · bidirectional scan</text>
-          <text x="460" y="560" text-anchor="middle" class="var">x[t+1] = Λ̄ · x[t] + Bu[t] ,  Bu = B̄·x + W̄_ε·ε</text>
-          <text x="460" y="580" text-anchor="middle" class="sublabel">forward + backward passes → concat along local_P axis</text>
-          <text x="460" y="595" text-anchor="middle" class="tag">chip: sequential streaming, one state register per direction</text>
+          <rect x="120" y="542" width="480" height="90" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <text x="360" y="568" text-anchor="middle" class="label">Main SSM · bidirectional scan</text>
+          <text x="360" y="588" text-anchor="middle" class="var">x[t+1] = Λ̄ · x[t] + Bu[t] ,  Bu = B̄·x + W̄_ε·ε</text>
+          <text x="360" y="606" text-anchor="middle" class="sublabel">forward + backward passes → concat along local_P axis</text>
+          <text x="360" y="622" text-anchor="middle" class="tag">chip: sequential streaming, one state register per direction</text>
         </g>
 
-        <!-- Arrow down to C_tilde -->
-        <path d="M 460 606 L 460 622" class="arrow-thick" marker-end="url(#arr-thick)"/>
+        <!-- Down to C_tilde output projection -->
+        <path d="M 360 636 L 360 656" class="arrow-thick" marker-end="url(#arr-thick)"/>
 
-        <!-- C_tilde and gate (single row below) -->
+        <!-- C_tilde output projection -->
         <g>
-          <rect x="220" y="626" width="220" height="50" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
-          <text x="330" y="648" text-anchor="middle" class="label">Output projection</text>
-          <text x="330" y="666" text-anchor="middle" class="var">y = C̃ · [xs_fwd | xs_bwd]</text>
+          <rect x="230" y="660" width="260" height="50" rx="4" fill="var(--c-main-bg)" stroke="var(--c-main)" class="block"/>
+          <text x="360" y="682" text-anchor="middle" class="label">Output projection</text>
+          <text x="360" y="700" text-anchor="middle" class="var">y = C̃ · [xs_fwd | xs_bwd]</text>
         </g>
 
-        <!-- Arrow from output projection to gate -->
-        <path d="M 440 651 L 480 651" class="arrow-thick" marker-end="url(#arr-thick)"/>
+        <!-- SPLIT to two activation variants -->
+        <path d="M 360 712 L 360 726 L 200 726 L 200 738" class="arrow-thick" marker-end="url(#arr-thick)"/>
+        <path d="M 360 726 L 570 726 L 570 738" class="arrow-thick" marker-end="url(#arr-thick)"/>
+        <circle cx="360" cy="726" r="4" fill="var(--ink)"/>
 
+        <!-- Variant A: gelu (Config 4, Config 5) -->
         <g>
-          <rect x="480" y="626" width="220" height="50" rx="4" fill="var(--c-gate-bg)" stroke="var(--c-gate)" class="block"/>
-          <text x="590" y="646" text-anchor="middle" class="label">half_glu2 gate (rank r)</text>
-          <text x="590" y="664" text-anchor="middle" class="var">y · σ(W_r,up · W_r,dn · y)</text>
+          <rect x="60" y="740" width="280" height="60" rx="4" fill="var(--c-mac-bg)" stroke="var(--c-mac)" class="block"/>
+          <text x="200" y="750" text-anchor="middle" class="tag">variant A · activation_fn=gelu</text>
+          <text x="200" y="770" text-anchor="middle" class="label">Pointwise GELU</text>
+          <text x="200" y="788" text-anchor="middle" class="var">y ← GELU(y)</text>
+          <text x="200" y="800" text-anchor="middle" class="sublabel">no gate matrices instantiated · Configs 4 &amp; 5</text>
         </g>
 
-        <path d="M 700 651 L 780 651" class="arrow-thick" marker-end="url(#arr-thick)"/>
+        <!-- Variant B: half_glu2 (Corner 1, Corner 3') -->
         <g>
-          <rect x="780" y="628" width="90" height="46" rx="23" fill="var(--surface)" stroke="var(--ink)" class="block"/>
-          <text x="825" y="655" text-anchor="middle" class="label var">y[t]</text>
+          <rect x="440" y="740" width="290" height="60" rx="4" fill="var(--c-gate-bg)" stroke="var(--c-gate)" class="block"/>
+          <text x="585" y="750" text-anchor="middle" class="tag">variant B · activation_fn=half_glu2</text>
+          <text x="585" y="770" text-anchor="middle" class="label">Gated output · rank r</text>
+          <text x="585" y="788" text-anchor="middle" class="var">y · σ(W_r,up · W_r,dn · y)</text>
+          <text x="585" y="800" text-anchor="middle" class="sublabel">Corner 1: r = H (full) · Corner 3′: r = 40 (low-rank)</text>
         </g>
 
-        <!-- Rank inset panel -->
+        <!-- Merge arrows to output -->
+        <path d="M 200 800 L 200 820 L 800 820 L 800 740" class="arrow"/>
+        <path d="M 585 800 L 585 820" class="arrow"/>
+        <path d="M 800 720 L 830 720" class="arrow-thick" marker-end="url(#arr-thick)"/>
         <g>
-          <rect x="30" y="330" width="180" height="112" rx="4" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
-          <text x="120" y="352" text-anchor="middle" class="tag">gate parameterisation</text>
-          <text x="40" y="374" class="var" font-size="11">glu_rank = 0 →</text>
-          <text x="40" y="390" class="sublabel">full Dense(H, H)</text>
-          <text x="40" y="410" class="var" font-size="11">glu_rank = r &lt; H →</text>
-          <text x="40" y="426" class="sublabel">Dense(H, r) ∘ Dense(r, H)</text>
-          <text x="40" y="440" class="sublabel">≈ 2r/H of full-rank params</text>
+          <rect x="830" y="700" width="90" height="46" rx="23" fill="var(--surface)" stroke="var(--ink)" class="block"/>
+          <text x="875" y="727" text-anchor="middle" class="label var">y[t]</text>
+        </g>
+
+        <!-- Config annotation inset -->
+        <g>
+          <rect x="30" y="470" width="70" height="140" rx="4" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <text x="65" y="488" text-anchor="middle" class="tag">config</text>
+          <text x="65" y="510" text-anchor="middle" class="sublabel" font-size="10">C4 · Mambino</text>
+          <text x="65" y="524" text-anchor="middle" class="sublabel" font-size="10">gelu · P=8</text>
+          <text x="65" y="546" text-anchor="middle" class="sublabel" font-size="10">C5 · Pure S5</text>
+          <text x="65" y="560" text-anchor="middle" class="sublabel" font-size="10">gelu · P=16</text>
+          <text x="65" y="582" text-anchor="middle" class="sublabel" font-size="10">C1 · Pure S5</text>
+          <text x="65" y="596" text-anchor="middle" class="sublabel" font-size="10">half_glu2 · r=H</text>
+        </g>
+
+        <!-- Pure S5 marker: dropped branches -->
+        <g>
+          <rect x="740" y="460" width="180" height="128" rx="4" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
+          <text x="830" y="478" text-anchor="middle" class="tag">Pure S5 (no Mambino)</text>
+          <text x="830" y="500" text-anchor="middle" class="sublabel" font-size="10">predictor branch</text>
+          <text x="830" y="514" text-anchor="middle" class="sublabel" font-size="10">and W_ε feedback</text>
+          <text x="830" y="528" text-anchor="middle" class="sublabel" font-size="10">are removed</text>
+          <text x="830" y="552" text-anchor="middle" class="sublabel" font-size="10">Bu[t] = B̄ · x[t]</text>
+          <text x="830" y="572" text-anchor="middle" class="sublabel" font-size="10">only, no ε feedback</text>
         </g>
 
       </svg>
