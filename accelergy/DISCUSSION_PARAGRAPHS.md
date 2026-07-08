@@ -52,19 +52,23 @@ than Config 5 at the same 106K parameter budget.
 
 ---
 
-## Paragraph 3 — Chip efficiency headline
+## Paragraph 3 — Digital chip efficiency headline
 
 Combining the accuracy and PPAC results across both iso-params
-comparisons, Mambino dominates on chip efficiency per accuracy point.
-Under the digital PPAC model (Accelergy 0.4 with CACTI SRAM and NeuroSim
-INT8 MAC primitives at 22 nm), Config 4 achieves 3.98 × 10⁻³ accuracy
-per mJ (pipelined chip topology, test@peakval), compared to 3.55 × 10⁻³
-for Config 5, 2.65 × 10⁻³ for Corner 1, and 2.48 × 10⁻³ for Corner 3'.
-Under the sequential chip topology (one layer at a time, reduced
-activation SRAM buffer), Config 4 reaches 12.36 × 10⁻³. Config 4 wins
-chip efficiency in every quadrant of {digital, mixed-signal} ×
+comparisons, Mambino dominates digital chip efficiency per accuracy
+point. Under the digital PPAC model (Accelergy 0.4 with CACTI SRAM and
+NeuroSim INT8 MAC primitives at 22 nm, applied to a standard-cell chip
+implementation with no exotic analog blocks), Config 4 achieves
+3.98 × 10⁻³ accuracy per mJ (pipelined chip topology, test@peakval),
+compared to 3.55 × 10⁻³ for Config 5, 2.65 × 10⁻³ for Corner 1, and
+2.48 × 10⁻³ for Corner 3'. Under the sequential chip topology (one layer
+at a time, reduced activation SRAM buffer), Config 4 reaches
+12.36 × 10⁻³. Config 4 wins chip efficiency in all four quadrants of
 {pipelined, sequential} × {test@peakval, test_max}. This dominance is
 robust across n=8 seeds and stable under both accuracy definitions.
+All chip numbers are for a standard 22 nm digital implementation; the
+mixed-signal PIM reference in Appendix A of the master PPAC document is
+context, not part of the paper's chip claim.
 
 ---
 

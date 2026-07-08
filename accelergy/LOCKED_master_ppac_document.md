@@ -1,14 +1,24 @@
 # Master Document: Training Runs + JAXPR FLOPs + Accelergy PPAC
 
-Locked 2026-07-07 (v6 — Corner 2 iso-params ablation added).
+Locked 2026-07-07 (v7 — Mambino paper scope: digital chip only; mixed-signal moved to appendix).
 All numbers from executed code + published methodologies.
+
+**v7 scope decision:** The Mambino paper claim is the **architecture** (predictor + `W̄_ε`
+feedback) and its **digital chip implementation** at 22 nm using standard components (SRAM +
+INT8 MAC + register file). The analog 3T + 1C state cell is a separate, more fundamental
+circuit contribution applicable to ANY SSM — reserved for a companion paper. Consequently:
+- §6 digital PPAC + §8a digital acc/mJ are the paper's primary chip claim.
+- §7 mixed-signal PIM PPAC is relegated to **Appendix A** as context (generic RRAM crossbar
+  reference), not part of the paper's claims. Reviewers should not evaluate the paper on
+  the mixed-signal numbers.
+- STUDENT_STATE_CELL_MEMO + Round-2 SPICE work continue in parallel, feeding the companion
+  state-cell paper, not this one.
 
 **v6 changes from v5:** (1) Added **Corner 2** (Pure S5 P=16 r=40, 188,682 params — bit-perfect
 iso-params with Corner 3') as the paper-worthy pairwise ablation isolating Mambino's mechanism
 from state-DOF; (2) Corner 3' vs Corner 2 paired t-test at n=8: **t=8.46, two-tailed p ≈ 6.5×10⁻⁵**
 — cleanly attributes accuracy win to the predictor mechanism, not state-DOF; (3) Corner 2 is
-Pareto-dominated by both Corner 1 and Corner 3' in every {digital, mixed-signal} × {pipelined,
-sequential} × accuracy quadrant at 188K.
+Pareto-dominated by both Corner 1 and Corner 3' at 188K.
 
 **v5 changes from v4:** (1) §5 expanded from 5-seed to **8-seed** multi-seed sweep (added
 seeds 1, 2, 3 at unified current-code SHA `46517fe`); (2) Added paired significance tests
@@ -264,10 +274,16 @@ Reported under **two chip topologies** that differ only in activation SRAM buffe
 
 Rankings within each topology are preserved: **Config 4 < Config 5 < Corner 1 < Corner 3'** for energy in both scenarios.
 
-## 7. Mixed-signal PIM PPAC (Accelergy 0.4 + NeuroSim PIM + CACTI, 22nm)
+## Appendix A. Reference mixed-signal PIM PPAC (out of Mambino paper scope; kept as context)
 
-**Caveat:** NeuroSim PIM with `nvmexplorer_RRAM` reference cell — represents a **generic 22nm RRAM analog crossbar**, NOT this paper's true analog RC state cell. See [`STUDENT_STATE_CELL_MEMO.md`](https://github.com/raisul1212/S5/blob/mambino-ssm/accelergy/STUDENT_STATE_CELL_MEMO.md) for characterization data needed to replace the RRAM reference with the actual state-cell PPAC.
+**SCOPE NOTE.** This section is **NOT part of the Mambino paper's main claims** as of v7. It is
+kept in the master document as a reference PPAC surface for a generic 22 nm RRAM crossbar
+running the same LRA-ListOps workload, so the digital numbers in §6 can be contextualised
+against a mainstream analog-PIM comparator. The Mambino paper does not claim any mixed-signal
+chip advantage. Analog state-cell PPAC on our own circuit design is deferred to a companion
+paper; see [`STUDENT_STATE_CELL_MEMO.md`](STUDENT_STATE_CELL_MEMO.md) for the parallel effort.
 
+Methodology: Accelergy 0.4 + NeuroSim PIM + CACTI, 22 nm, RRAM cell = `nvmexplorer_RRAM`.
 Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(MACs / 16384)`.
 
 ### 7a. Pipelined chip (4.2 MB activation SRAM)
@@ -292,7 +308,11 @@ Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(
 
 **Note on the same-area cluster (Config 4 = Corner 1 = Corner 3' at 5.01 mm² pipelined, 1.00 mm² sequential):** All three share P=8 (so identical 256 KB streaming state SRAM), identical activation SRAM (4.2 MB pipelined / 512 KB sequential), and no weight SRAM in the mixed-signal chip (weights are on-array in the PIM crossbar). Config 5 stands slightly larger because P=16 doubles its streaming state SRAM to 512 KB. The energy ranking is still Config 4 < Config 5 < Corner 1 < Corner 3' — driven by MAC count, not state footprint.
 
-## 8. Accuracy-per-mJ (digital) — chip efficiency metric
+## 8. Accuracy-per-mJ — chip efficiency metric
+
+**§8 is the Mambino paper's primary chip-efficiency table.** Digital PPAC is the paper's claim;
+mixed-signal reference numbers (Appendix A) are not part of the main-paper acc/mJ tables. If a
+reviewer wants a mixed-signal comparator, see Appendix A of the master document.
 
 ### 8a. Pipelined chip
 
