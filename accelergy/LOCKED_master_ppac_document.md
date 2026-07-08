@@ -1,7 +1,14 @@
 # Master Document: Training Runs + JAXPR FLOPs + Accelergy PPAC
 
-Locked 2026-07-07 (v5 — 8-seed multi-seed sweep + significance tests).
+Locked 2026-07-07 (v6 — Corner 2 iso-params ablation added).
 All numbers from executed code + published methodologies.
+
+**v6 changes from v5:** (1) Added **Corner 2** (Pure S5 P=16 r=40, 188,682 params — bit-perfect
+iso-params with Corner 3') as the paper-worthy pairwise ablation isolating Mambino's mechanism
+from state-DOF; (2) Corner 3' vs Corner 2 paired t-test at n=8: **t=8.46, two-tailed p ≈ 6.5×10⁻⁵**
+— cleanly attributes accuracy win to the predictor mechanism, not state-DOF; (3) Corner 2 is
+Pareto-dominated by both Corner 1 and Corner 3' in every {digital, mixed-signal} × {pipelined,
+sequential} × accuracy quadrant at 188K.
 
 **v5 changes from v4:** (1) §5 expanded from 5-seed to **8-seed** multi-seed sweep (added
 seeds 1, 2, 3 at unified current-code SHA `46517fe`); (2) Added paired significance tests
@@ -97,9 +104,11 @@ Seeds: {6554595, 42, 12345, 271828, 314159, 1, 2, 3}. All 32 runs COMPLETED at 4
 | Config 4 Mambino gelu 106K | **0.5993 ± 0.0072** | 0.6038 ± 0.0061 |
 | Config 5 Pure S5 gelu 106K | 0.5917 ± 0.0081 | 0.6034 ± 0.0052 |
 | Corner 1 Pure S5 half_glu2 188K | 0.6089 ± 0.0053 | 0.6159 ± 0.0046 |
+| **Corner 2** Pure S5 P=16 r=40 188K | **0.5991 ± 0.0041** | 0.6069 ± 0.0041 |
 | Corner 3' Mambino half_glu2 188K | **0.6138 ± 0.0027** | **0.6171 ± 0.0050** |
 
-Ranking (test@peakval): Corner 3' > Corner 1 > Config 4 > Config 5. Stable.
+Ranking at 188K (test@peakval): **Corner 3' > Corner 1 > Corner 2**.
+Corner 2 (bigger state, smaller gate) is the WORST at 188K — worse than Corner 1 and much worse than Corner 3'.
 
 ### 5b. Significance tests (paired, matched seeds)
 
@@ -127,13 +136,37 @@ apply. Effect sizes and p-values below.
 - Mean paired diff = +0.0013 (Mambino better)
 - Not significant (essentially tied within noise)
 
-### 5c. Paper-defensible framing
+**188K iso-params + iso-DOF (Corner 3' vs Corner 2), test@peakval — the paper-worthy ablation:**
+- Both configs: 188,682 params (bit-perfect match), 16 total state DOF per layer, rank-40 gate.
+- Only difference: Mambino predictor + `W̄_ε` feedback (Corner 3') vs single Pure S5 SSM at P=16 (Corner 2).
+- Mean paired diff = +0.01463 (Mambino better)
+- Paired t = **8.46**, df = 7
+- **Two-tailed p ≈ 6.5 × 10⁻⁵** — HIGHLY SIGNIFICANT at α=0.001
+- Cleanly attributes the accuracy win to the predictive-coding mechanism, not to state-DOF.
 
-**Under standard two-tailed convention (recommended default for ML papers):**
-- 188K iso-params: **Mambino significantly outperforms Pure S5 on test@peakval** (p=0.022)
-- 106K iso-params: Mambino trends toward higher test@peakval (p=0.064) — significant only under directional hypothesis (one-tailed p=0.032)
+**188K, Corner 2 vs Corner 1 (both Pure S5, big-state-small-gate vs small-state-big-gate):**
+- Mean paired diff = **−0.00975** (Corner 2 WORSE than Corner 1)
+- Paired t = **−4.06**, df = 7
+- **Two-tailed p ≈ 0.005** — SIGNIFICANT at α=0.01
+- Doubling P and reducing gate to rank-40 is a net loss for Pure S5.
 
-**Stability win at 188K:** Corner 3' std (0.0027) is **49% lower** than Corner 1 std (0.0053) — Mambino trains more stably at higher param count.
+### 5c. Paper-defensible framing (v6, with Corner 2)
+
+**Primary claim (188K iso-params + iso-DOF):**
+Mambino's predictor mechanism SIGNIFICANTLY outperforms an equal-parameter Pure S5 that spends the same "spare" budget on more SSM state (t=8.46, p ≈ 6.5×10⁻⁵). This directly attributes the accuracy gain to the predictive-coding mechanism, not to state-DOF.
+
+**Secondary claim (188K vs Corner 1):**
+Mambino also outperforms the canonical Pure S5 recipe (t=2.94, p=0.022 two-tailed).
+
+**Tertiary claim (Pure S5 within 188K):**
+Under a fixed 188K budget, Pure S5 CANNOT rescue itself by adding state at the cost of a smaller gate — Corner 2 is significantly WORSE than Corner 1 (t=−4.06, p=0.005). Mambino's predictor branch is what unlocks the accuracy gain, not the budget redistribution alone.
+
+**Ranking at 188K:** Corner 3' > Corner 1 > Corner 2 (test@peakval, all pairwise significant).
+
+**Stability win:** Corner 3' std (0.0027) is **49% lower** than Corner 1 (0.0053) and **34% lower** than Corner 2 (0.0041) — Mambino trains most stably.
+
+**106K iso-params (Config 4 vs Config 5):**
+Mambino trends toward higher test@peakval (p=0.064 two-tailed / 0.032 one-tailed) — significant under the directional hypothesis motivated by architectural design intent.
 
 ### 5d. Per-seed table (raw)
 
@@ -142,42 +175,54 @@ apply. Effect sizes and p-values below.
 | C4 test@peakval | 0.5940 | 0.6035 | 0.6100 | 0.5875 | 0.6045 | 0.5950 | 0.6025 | 0.5970 |
 | C5 test@peakval | 0.5830 | 0.6010 | 0.5930 | 0.5980 | 0.5870 | 0.5790 | 0.6005 | 0.5920 |
 | C1 test@peakval | 0.6080 | 0.6200 | 0.6090 | 0.6070 | 0.6095 | 0.6030 | 0.6100 | 0.6045 |
+| **C2 test@peakval** | **0.5990** | **0.6015** | **0.5980** | **0.5955** | **0.5960** | **0.5990** | **0.5960** | **0.6080** |
 | C3' test@peakval | 0.6180 | 0.6165 | 0.6150 | 0.6125 | 0.6095 | 0.6130 | 0.6140 | 0.6115 |
 | C4 test_max | 0.6010 | 0.6035 | 0.6100 | 0.5915 | 0.6105 | 0.6025 | 0.6035 | 0.6080 |
 | C5 test_max | 0.6000 | 0.6080 | 0.6115 | 0.6020 | 0.5950 | 0.6060 | 0.6050 | 0.6000 |
 | C1 test_max | 0.6115 | 0.6235 | 0.6120 | 0.6175 | 0.6120 | 0.6170 | 0.6135 | 0.6200 |
+| **C2 test_max** | **0.6115** | **0.6050** | **0.6035** | **0.6035** | **0.6065** | **0.6140** | **0.6025** | **0.6085** |
 | C3' test_max | 0.6220 | 0.6235 | 0.6150 | 0.6220 | 0.6105 | 0.6150 | 0.6175 | 0.6115 |
 
 Note: seed=6554595 originals (SHA `a32cb6bb`/`7fe1aa43`/`7343b68b`) were rerun at current SHA `46517fe` and appear here; original single-seed accuracies from those older SHAs differed slightly due to code drift in `s5/ssm.py`, `s5/mambino_ssm.py`, `s5/layers.py` between then and now. All numbers reported in this doc are from the unified current-code sweep.
 
-### 5e. Architectural implication of the 188K result
+### 5e. Architectural implication of the 188K three-way ablation
 
-The 188K iso-params comparison is a controlled ablation on how a fixed parameter budget
-should be spent. Both configs match at 188K params; they differ in *where* the parameters
-sit:
+At 188K params, three configurations occupy the same parameter budget but spend it differently:
 
-| Config | Output GLU gate (`out2`) | Predictor branch | Params |
-|---|---|---|---:|
-| Corner 1 (Pure S5, `glu_rank=0`) | Full-rank `Dense(H=128, H=128)` | none | 188,490 |
-| Corner 3' (Mambino, `glu_rank=40`) | Low-rank `Dense(128, 40) @ Dense(40, 128)` — **~30% of full capacity** | Mambino predictor + `W_ε` feedback | 188,682 |
+| Config | Main SSM P | Predictor branch | Output gate rank | Total SSM state DOF/layer | Params |
+|---|---:|---|---|---:|---:|
+| Corner 1 (Pure S5, `ssm_size_base=16, glu_rank=0`) | 8 | none | full `Dense(H, H)` | 8 (complex) → 16 real | 188,490 |
+| **Corner 2** (Pure S5, `ssm_size_base=32, glu_rank=40`) | **16** | none | low-rank r=40 | 16 (complex) → 32 real | 188,682 |
+| Corner 3' (Mambino, `ssm_size_base=16, glu_rank=40`) | 8 | + fwd-only P=8 | low-rank r=40 | 8 main + 8 predictor = 16 (complex) → 32 real | 188,682 |
 
-Corner 3' wins test@peakval significantly (+0.49 pp, paired t=2.94, p=0.022 two-tailed).
-So under a fixed 188K parameter budget:
+**Corner 2 and Corner 3' have identical parameter count AND identical total SSM state
+dimensionality per layer** (32 real values, arranged either as one big P=16 SSM in Corner 2
+or as two P=8 SSMs in Corner 3'). They differ ONLY in **whether the second block of state
+is coupled to the main scan via a Mambino predictive-coding feedback loop** or is just extra
+capacity in a single Pure S5 SSM.
 
-- **Budget redistribution wins.** Moving parameters *away from a full-rank output gate*
-  and *toward a predictive-coding branch* produces higher accuracy than spending the same
-  budget on gate capacity alone.
-- **The output gate can be sparse.** The rank-40 factorization is ~30% of the full-rank
-  gate's parameter count. Nothing collapses in accuracy — the sparse gate is sufficient
-  to shape the SSM state's output.
-- **The predictor is not redundant with the SSM.** If it were, cutting gate capacity
-  by 70% would hurt. It doesn't, so the predictor is doing architecturally distinct work.
+Under the 8-seed matched-pair paired t-test:
 
-This is the "why Mambino works" ablation. The predictor+`W_ε` branch produces real
-accuracy value beyond what output-gate expressiveness alone can supply. Chip
-consequence: the sparse gate contributes 3× fewer MACs in the gate matmul than a
-full-rank gate would — a direct, structural chip-cost advantage that stacks with the
-accuracy gain.
+- **Corner 3' vs Corner 2 (the Mambino mechanism ablation):**
+  paired diff = +0.01463 test@peakval, t = 8.46, df = 7, two-tailed **p ≈ 6.5 × 10⁻⁵**.
+  Mambino's predictor + `W̄_ε` mechanism produces a >1 pp accuracy improvement over
+  arranging the same state as a single wider SSM — cleanly attributed to the predictive-coding
+  mechanism because state DOF and parameter budget are held fixed.
+
+- **Corner 2 vs Corner 1 (Pure S5 budget-redistribution):**
+  paired diff = −0.00975 (Corner 2 WORSE), t = −4.06, p ≈ 0.005. Under Pure S5 alone,
+  swapping full-rank gate for double state is a net LOSS. Pure S5 cannot rescue itself
+  by rearranging its budget.
+
+- **Corner 3' vs Corner 1 (compound Mambino + gate reduction):**
+  paired diff = +0.0049, t = 2.94, p = 0.022. Confounded (both mechanism and gate change)
+  — provides triangulation but not clean isolation.
+
+**Conclusion:** At 188K parameter budget, the Mambino predictor mechanism is the causal
+driver of the accuracy gain. The 3-way ablation table above is the paper's central
+architectural claim. Chip consequence: Corner 3' also uses **half** the streaming state
+SRAM of Corner 2 (256 KB vs 512 KB, §11) at higher accuracy, so the mechanism win stacks
+with a direct memory-footprint win.
 
 ## 6. Digital PPAC (Accelergy 0.4 + CACTI + NeuroSim, 22nm INT8, 1 GHz clock)
 
@@ -195,6 +240,7 @@ Reported under **two chip topologies** that differ only in activation SRAM buffe
 | Config 4 | **150.57** | **4.70** |
 | Config 5 | 166.80 | 4.95 |
 | Corner 1 | 229.89 | **4.77** |
+| **Corner 2** | **264.54** | **5.02** ← highest energy at 188K |
 | Corner 3' | 247.22 | **4.77** ← equal to Corner 1 |
 
 ### 6b. Sequential chip (512 KB activation SRAM) — total energy + area
@@ -204,6 +250,7 @@ Reported under **two chip topologies** that differ only in activation SRAM buffe
 | Config 4 | **48.47** | **0.68** |
 | Config 5 | 53.69 | 0.72 |
 | Corner 1 | 83.74 | **0.76** |
+| **Corner 2** | **96.37** | **0.79** ← highest at 188K |
 | Corner 3' | 90.06 | **0.76** ← equal to Corner 1 |
 
 ### Pipelined-to-Sequential ratio (design choice)
@@ -230,6 +277,7 @@ Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(
 | Config 4 | **1.12** | **5.01** | 18,752 |
 | Config 5 | 1.24 | 5.26 | 20,800 |
 | Corner 1 | 1.60 | **5.01** ← equal | 26,946 |
+| **Corner 2** | **1.84** | **5.26** ← same as C5 (P=16 state) | 31,036 |
 | Corner 3' | 1.72 | **5.01** ← equal | 28,993 |
 
 ### 7b. Sequential chip (512 KB activation SRAM)
@@ -239,6 +287,7 @@ Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(
 | Config 4 | **0.32** | **1.00** |
 | Config 5 | 0.35 | 1.03 |
 | Corner 1 | 0.46 | **1.00** ← equal |
+| **Corner 2** | **0.52** | **1.03** ← same as C5 |
 | Corner 3' | 0.49 | **1.00** ← equal |
 
 **Note on the same-area cluster (Config 4 = Corner 1 = Corner 3' at 5.01 mm² pipelined, 1.00 mm² sequential):** All three share P=8 (so identical 256 KB streaming state SRAM), identical activation SRAM (4.2 MB pipelined / 512 KB sequential), and no weight SRAM in the mixed-signal chip (weights are on-array in the PIM crossbar). Config 5 stands slightly larger because P=16 doubles its streaming state SRAM to 512 KB. The energy ranking is still Config 4 < Config 5 < Corner 1 < Corner 3' — driven by MAC count, not state footprint.
@@ -254,6 +303,7 @@ Using 8-seed mean test@peakval and test_max from §5.
 | **Config 4** Mambino gelu | 0.5993 | **3.98** | 0.6038 | **4.01** |
 | Config 5 Pure S5 gelu | 0.5917 | 3.55 | 0.6034 | 3.62 |
 | Corner 1 Pure S5 half_glu2 | 0.6089 | 2.65 | 0.6159 | 2.68 |
+| **Corner 2** Pure S5 P=16 r=40 | 0.5991 | **2.26** ← worst at 188K | 0.6069 | **2.29** ← worst at 188K |
 | Corner 3' Mambino half_glu2 | 0.6138 | 2.48 | 0.6171 | 2.50 |
 
 ### 8b. Sequential chip
@@ -263,10 +313,15 @@ Using 8-seed mean test@peakval and test_max from §5.
 | **Config 4** Mambino gelu | 0.5993 | **12.36** | 0.6038 | **12.46** |
 | Config 5 Pure S5 gelu | 0.5917 | 11.02 | 0.6034 | 11.24 |
 | Corner 1 Pure S5 half_glu2 | 0.6089 | 7.27 | 0.6159 | 7.35 |
+| **Corner 2** Pure S5 P=16 r=40 | 0.5991 | **6.22** ← worst at 188K | 0.6069 | **6.30** ← worst at 188K |
 | Corner 3' Mambino half_glu2 | 0.6138 | 6.82 | 0.6171 | 6.85 |
 
 **Config 4 wins acc/mJ under both accuracy definitions and both chip topologies.** At n=8, this
 lead is stable across all four quadrants (digital pipe/seq × test@peakval / test_max).
+
+**Corner 2 is Pareto-dominated at 188K:** in every quadrant it has lower accuracy AND higher
+energy than either Corner 1 or Corner 3'. Doubling P at the cost of gate rank buys Pure S5
+nothing on-chip.
 
 ## 9. Methodology citations
 
