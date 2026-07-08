@@ -1,0 +1,41 @@
+config,label,family,params,band,seed,test_peakval,test_max
+config4,Config 4 (Mambino gelu),Mambino,105738,106K,6554595,0.594,0.601
+config4,Config 4 (Mambino gelu),Mambino,105738,106K,42,0.6035,0.6035
+config4,Config 4 (Mambino gelu),Mambino,105738,106K,12345,0.61,0.61
+config4,Config 4 (Mambino gelu),Mambino,105738,106K,271828,0.5875,0.5915
+config4,Config 4 (Mambino gelu),Mambino,105738,106K,314159,0.6045,0.6105
+config4,Config 4 (Mambino gelu),Mambino,105738,106K,1,0.595,0.6025
+config4,Config 4 (Mambino gelu),Mambino,105738,106K,2,0.6025,0.6035
+config4,Config 4 (Mambino gelu),Mambino,105738,106K,3,0.597,0.608
+config5,Config 5 (Pure S5 gelu),Pure S5,105738,106K,6554595,0.583,0.6
+config5,Config 5 (Pure S5 gelu),Pure S5,105738,106K,42,0.601,0.608
+config5,Config 5 (Pure S5 gelu),Pure S5,105738,106K,12345,0.593,0.6115
+config5,Config 5 (Pure S5 gelu),Pure S5,105738,106K,271828,0.598,0.602
+config5,Config 5 (Pure S5 gelu),Pure S5,105738,106K,314159,0.587,0.595
+config5,Config 5 (Pure S5 gelu),Pure S5,105738,106K,1,0.579,0.606
+config5,Config 5 (Pure S5 gelu),Pure S5,105738,106K,2,0.6005,0.605
+config5,Config 5 (Pure S5 gelu),Pure S5,105738,106K,3,0.592,0.6
+corner1,"Corner 1 (Pure S5 half_glu2, full-rank gate)",Pure S5,188490,188K,6554595,0.608,0.6115
+corner1,"Corner 1 (Pure S5 half_glu2, full-rank gate)",Pure S5,188490,188K,42,0.62,0.6235
+corner1,"Corner 1 (Pure S5 half_glu2, full-rank gate)",Pure S5,188490,188K,12345,0.609,0.612
+corner1,"Corner 1 (Pure S5 half_glu2, full-rank gate)",Pure S5,188490,188K,271828,0.607,0.6175
+corner1,"Corner 1 (Pure S5 half_glu2, full-rank gate)",Pure S5,188490,188K,314159,0.6095,0.612
+corner1,"Corner 1 (Pure S5 half_glu2, full-rank gate)",Pure S5,188490,188K,1,0.603,0.617
+corner1,"Corner 1 (Pure S5 half_glu2, full-rank gate)",Pure S5,188490,188K,2,0.61,0.6135
+corner1,"Corner 1 (Pure S5 half_glu2, full-rank gate)",Pure S5,188490,188K,3,0.6045,0.62
+corner2,"Corner 2 (Pure S5 P=16, r=40 gate)",Pure S5,188682,188K,6554595,0.599,0.6115
+corner2,"Corner 2 (Pure S5 P=16, r=40 gate)",Pure S5,188682,188K,42,0.6015,0.605
+corner2,"Corner 2 (Pure S5 P=16, r=40 gate)",Pure S5,188682,188K,12345,0.598,0.6035
+corner2,"Corner 2 (Pure S5 P=16, r=40 gate)",Pure S5,188682,188K,271828,0.5955,0.6035
+corner2,"Corner 2 (Pure S5 P=16, r=40 gate)",Pure S5,188682,188K,314159,0.596,0.6065
+corner2,"Corner 2 (Pure S5 P=16, r=40 gate)",Pure S5,188682,188K,1,0.599,0.614
+corner2,"Corner 2 (Pure S5 P=16, r=40 gate)",Pure S5,188682,188K,2,0.596,0.6025
+corner2,"Corner 2 (Pure S5 P=16, r=40 gate)",Pure S5,188682,188K,3,0.608,0.6085
+corner3p,"Corner 3p (Mambino half_glu2, r=40 gate)",Mambino,188682,188K,6554595,0.618,0.622
+corner3p,"Corner 3p (Mambino half_glu2, r=40 gate)",Mambino,188682,188K,42,0.6165,0.6235
+corner3p,"Corner 3p (Mambino half_glu2, r=40 gate)",Mambino,188682,188K,12345,0.615,0.615
+corner3p,"Corner 3p (Mambino half_glu2, r=40 gate)",Mambino,188682,188K,271828,0.6125,0.622
+corner3p,"Corner 3p (Mambino half_glu2, r=40 gate)",Mambino,188682,188K,314159,0.6095,0.6105
+corner3p,"Corner 3p (Mambino half_glu2, r=40 gate)",Mambino,188682,188K,1,0.613,0.615
+corner3p,"Corner 3p (Mambino half_glu2, r=40 gate)",Mambino,188682,188K,2,0.614,0.6175
+corner3p,"Corner 3p (Mambino half_glu2, r=40 gate)",Mambino,188682,188K,3,0.6115,0.6115

@@ -1,0 +1,4 @@
+model,citation,venue_or_title,reported_test_acc_pct,chip_friendly
+S7,Han et al. 2024,Selective and Simplified Structure,63.77,No - selective scan requires per-token param recompute
+Mega,Ma et al. 2023,Moving Average Equipped Gated Attention,63.14,No - attention component quadratic
+S5,Smith et al. 2023,Simplified State Space Layers (ICLR),62.15,Yes - diagonal SSM (family Mambino builds on)

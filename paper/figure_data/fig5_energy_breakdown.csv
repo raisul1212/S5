@@ -1,0 +1,11 @@
+config,label,family,params,band,topology,weight_sram_mJ,activation_sram_mJ,state_sram_mJ,mac_array_mJ,reg_accum_mJ,total_mJ
+config4,Config 4 (Mambino gelu),Mambino,105738,106K,pipelined,11.0909,139.4469,0.00054154,0.002636,0.025091,150.5661
+config4,Config 4 (Mambino gelu),Mambino,105738,106K,sequential,11.0909,37.3479,0.0001777,0.002636,0.025091,48.4667
+config5,Config 5 (Pure S5 gelu),Pure S5,105738,106K,pipelined,12.3013,154.4655,0.00132598,0.002923,0.027832,166.7988
+config5,Config 5 (Pure S5 gelu),Pure S5,105738,106K,sequential,12.3013,41.3537,0.00045823,0.002923,0.027832,53.6861
+corner1,"Corner 1 (Pure S5 half_glu2, full-rank gate)",Pure S5,188490,188K,pipelined,30.3312,199.5213,0.00054154,0.003787,0.036053,229.8928
+corner1,"Corner 1 (Pure S5 half_glu2, full-rank gate)",Pure S5,188490,188K,sequential,30.3312,53.3709,0.0001777,0.003787,0.036053,83.7421
+corner2,"Corner 2 (Pure S5 P=16, r=40 gate)",Pure S5,188682,188K,pipelined,34.9393,229.5585,0.00132598,0.004363,0.041533,264.545
+corner2,"Corner 2 (Pure S5 P=16, r=40 gate)",Pure S5,188682,188K,sequential,34.9393,61.3825,0.00045823,0.004363,0.041533,96.3681
+corner3p,"Corner 3p (Mambino half_glu2, r=40 gate)",Mambino,188682,188K,pipelined,32.6352,214.5399,0.00054154,0.004075,0.038793,247.2185
+corner3p,"Corner 3p (Mambino half_glu2, r=40 gate)",Mambino,188682,188K,sequential,32.6352,57.3767,0.0001777,0.004075,0.038793,90.055

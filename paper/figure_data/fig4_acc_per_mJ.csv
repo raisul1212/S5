@@ -1,0 +1,11 @@
+config,label,family,params,band,topology,energy_mJ,area_mm2,mean_test_peakval,mean_test_max,acc_peakval_per_mJ_x1e3,acc_max_per_mJ_x1e3
+config4,Config 4 (Mambino gelu),Mambino,105738,106K,pipelined,150.57,4.7,0.5993,0.6038,3.98,4.01
+config4,Config 4 (Mambino gelu),Mambino,105738,106K,sequential,48.47,0.68,0.5993,0.6038,12.363,12.457
+config5,Config 5 (Pure S5 gelu),Pure S5,105738,106K,pipelined,166.8,4.95,0.5917,0.6034,3.547,3.618
+config5,Config 5 (Pure S5 gelu),Pure S5,105738,106K,sequential,53.69,0.72,0.5917,0.6034,11.02,11.239
+corner1,"Corner 1 (Pure S5 half_glu2, full-rank gate)",Pure S5,188490,188K,pipelined,229.89,4.77,0.6089,0.6159,2.649,2.679
+corner1,"Corner 1 (Pure S5 half_glu2, full-rank gate)",Pure S5,188490,188K,sequential,83.74,0.76,0.6089,0.6159,7.271,7.355
+corner2,"Corner 2 (Pure S5 P=16, r=40 gate)",Pure S5,188682,188K,pipelined,264.54,5.02,0.5991,0.6069,2.265,2.294
+corner2,"Corner 2 (Pure S5 P=16, r=40 gate)",Pure S5,188682,188K,sequential,96.37,0.79,0.5991,0.6069,6.217,6.297
+corner3p,"Corner 3p (Mambino half_glu2, r=40 gate)",Mambino,188682,188K,pipelined,247.22,4.77,0.6138,0.6171,2.483,2.496
+corner3p,"Corner 3p (Mambino half_glu2, r=40 gate)",Mambino,188682,188K,sequential,90.06,0.76,0.6138,0.6171,6.815,6.852

@@ -1,0 +1,5 @@
+comparison_class,comparison,config_a,config_b,band,mean_paired_diff_peakval,paired_t,df,p_two_tailed,p_one_tailed,marker
+106K iso-params,Config 4 vs Config 5,config4,config5,106K,0.0076,2.2,7,0.064,0.032,ns_two_star_one
+188K iso-params,Corner 3p vs Corner 1,corner3p,corner1,188K,0.0049,2.94,7,0.022,0.011,star
+188K iso-params + iso-DOF,Corner 3p vs Corner 2,corner3p,corner2,188K,0.01463,8.46,7,6.5e-05,3.25e-05,triple_star
+188K Pure S5 redistribution,Corner 2 vs Corner 1,corner2,corner1,188K,-0.00975,-4.06,7,0.005,0.0025,double_star_reversed
