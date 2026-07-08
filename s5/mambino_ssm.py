@@ -24,21 +24,54 @@ S5's framework with complex P-dim state):
     L_int = mean(||ε||^2)               [sown for logging; lambda_pc * L_int
                                           added to task loss in train step]
 
-References to NCB v031 (frozen):
-  - ssm_core.py:520-534  ("add-DSPC" design comment block, distinguishes
-    additive PC from original DSPC; no M-gate, raw ε)
-  - ssm_core.py:1654-1708 (the additive_pc=True compute path in
-    _forward_parallel; u = x_tilde @ B^T + eps @ W_eps; M = 1)
-  - ssm_core.py:1350-1367 (_maybe_bidirectional_scan; main scan only)
+References to NCB v031 (frozen ancestor):
+  - ssm_core.py:520-534  ("add-DSPC" design comment block; distinguishes
+    additive PC from original DSPC — no M-gate, raw ε)
   - ssm_core.py:1614      (predictor scan parallel_scan_diag, no
     bidirectional wrapper -> predictor is forward only)
+  - ssm_core.py:1618-1620 (causal shift s(t-1) and x_hat readout)
+  - ssm_core.py:1654-1708 (additive_pc=True compute path in
+    _forward_parallel; u = x_tilde @ B^T + eps @ W_eps; M = 1)
+  - ssm_core.py:1350-1367 (_maybe_bidirectional_scan for MAIN scan)
 
-This faithfully ports the architecture that produced 0.4965 on LRA-ListOps
-(SLURM 11143665, 2026-06-28).  Layer-scale and v0.6 selectivity gates
-(eps_gate, input_gate, output_gate) are intentionally OMITTED to keep
-parameter overhead vs vanilla S5 minimal -- they are orthogonal to the
-core predictive-coding contribution and add d_C-resolution Dense layers
-that do not translate to S5's P-dim state philosophy.
+Port fidelity: the six core add-DSPC equations (forward-only predictor,
+causal-shifted readout x_hat(t) = C_s @ s(t-1), raw ε with no RMSNorm,
+M-gate = 1, additive input u = B x + W_ε ε, intrinsic loss mean(||ε||²))
+are all preserved.  This ports the architecture that produced 0.4965 on
+LRA-ListOps (SLURM 11143665, 2026-06-28).
+
+PORT DIVERGENCES vs v031 ancestor (all intentional, all documented for
+reviewer transparency):
+
+  1. Main-scan bidirectional combination:
+       v031 sums:      h = h_fwd + h_bwd, then y = C @ h  (shared C)
+       port concats:   xs = [xs_fwd | xs_bwd], y = C̃ @ xs where
+                       C̃ = [C1 | C2] is S5's separate-C convention
+     Sum-with-shared-C is the C1 = C2 special case of concat-with-
+     separate-C, so the port is a strict superset in output-projection
+     capacity.  This is the standard S5 convention (Smith et al. 2023).
+
+  2. Selectivity stack OMITTED (v031 ssm_core.py:1681-1702):
+       - task_coupling (ScaleGradient on ε)
+       - eps_gate (per-token sigmoid gate on ε before W_ε)
+       - input_gate (per-token sigmoid gate on x̃ before B)
+     These add d_C-resolution Dense layers that do not translate to
+     S5's P-dim state philosophy; orthogonal to core PC contribution.
+
+  3. Mixture-of-A K>1 experts OMITTED (v031 ssm_core.py:1605-1612):
+     Port stays at K=1.  Per v031 comment, "K=1 reduces to the original
+     single-A DSPC behaviour exactly" — so K=1 is a faithful subset,
+     not a divergence in the math.
+
+  4. Log-scale second readout OMITTED (v031 ssm_core.py:1644-1652):
+     v0.7.x nll_gaussian / free_energy losses are LOSS-side variants;
+     port keeps only the raw ε² intrinsic loss.  Main signal path is
+     identical in v031 too (raw ε reaches main scan in all variants).
+
+Complex-state ports (mechanical, not semantic changes vs real-state v031):
+  - v031 uses real state; port uses complex diag state at P (S5 convention).
+    Predictor readout is 2·Re(C_s @ s) in port vs s @ C_s.T in v031;
+    both produce real-valued predictions at H.
 
 Param overhead vs S5 alone (per layer, complex P, with bidirectional main
 + forward-only predictor):

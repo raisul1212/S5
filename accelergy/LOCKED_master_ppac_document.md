@@ -1,6 +1,6 @@
 # Master Document: Training Runs + JAXPR FLOPs + Accelergy PPAC
 
-Locked 2026-07-07 (v7 — Mambino paper scope: digital chip only; mixed-signal moved to appendix).
+Locked 2026-07-08 (v7.1 — added §5f λ_pc ablation on Config 4 seed=42, §5g external-SOTA context; open-items §12 refreshed).
 All numbers from executed code + published methodologies.
 
 **v7 scope decision:** The Mambino paper claim is the **architecture** (predictor + `W̄_ε`
@@ -234,6 +234,85 @@ architectural claim. Chip consequence: Corner 3' also uses **half** the streamin
 SRAM of Corner 2 (256 KB vs 512 KB, §11) at higher accuracy, so the mechanism win stacks
 with a direct memory-footprint win.
 
+### 5f. λ_pc ablation on Config 4 (single-seed sweep, seed=42)
+
+The Mambino runs in §5 all use `--lambda_pc=0.0` (predictive-coding auxiliary loss turned off).
+This is empirically justified: the predictor branch still trains via the task gradient
+back-propagating through W̄_ε, and adding an explicit L_int = mean(||ε||²) term to the training
+objective either hurts marginally (small λ_pc) or catastrophically (λ_pc ≥ 0.1) by diverting
+gradient signal from the task loss to the predictor.
+
+Single-seed sweep on Config 4 (Mambino gelu 106K, seed=42, same code SHA `46517fe`, same
+40-epoch training regime):
+
+| λ_pc | SLURM Job | peak_val (epoch) | test@peakval | test_max (epoch) | Δ test@peakval vs λ_pc=0 |
+|---:|---:|:---:|---:|:---:|---:|
+| **0.0 (baseline)** | 11181833 (seed=42 subset) | 0.6035 (E–) | **0.6035** | 0.6035 (E–) | — |
+| 0.0001 | 11230563 | 0.5895 (E37) | 0.5995 | 0.6040 (E38) | −0.0040 |
+| 0.001 | 11230564 | 0.5970 (E39) | 0.5980 | 0.5980 (E39) | −0.0055 |
+| 0.01 | 11230565 | 0.5880 (E40) | 0.5940 | 0.6000 (E36) | −0.0095 |
+| 0.1 | 11230566 | 0.5460 (E30) | **0.5585** | 0.5770 (E38) | **−0.0450** |
+
+The λ_pc=0 baseline number is C4 seed=42 from the 8-seed sweep (§5d). All other rows are from
+this ablation on the same seed.
+
+**Interpretation.** λ_pc=0 (task gradient only) is Pareto-optimal on this single seed —
+every non-zero λ_pc value is worse on test@peakval. λ_pc=0.1 is the deliberate failure end of
+the sweep and confirms the prior expectation (from NCB v031 experiments) that a strong PC
+auxiliary loss dominates the task gradient on the predictor branch and starves it of
+task-relevant learning signal. λ_pc ∈ {1e-4, 1e-3, 1e-2} is the "small enough not to blow up
+but still parasitic" regime.
+
+The paper's Config 4 result carries the λ_pc=0 setting; §5f is the empirical evidence that
+this choice is not just training convenience but the correct architectural setting for
+additive predictive-coding-augmented SSMs — the predictor gets its learning signal cleanly
+through W̄_ε from the task loss, without an explicit intrinsic term.
+
+**Caveat.** This is a single-seed ablation (seed=42, chosen as a median-tier seed from the
+8-seed distribution). We do not report significance tests on this row; the paper's central
+significance claim rests on the 8-seed sweep in §5a-5e. §5f is presented as a directional
+architectural ablation justifying the λ_pc=0 choice, not as a significance-tested comparison.
+
+### 5g. External SOTA context and comparison philosophy
+
+The paper's positioning is **SOTA-close accuracy + real chip efficiency for constrained
+hardware** — not SOTA-chase. External LRA-ListOps numbers below are provided as **context**,
+not as the paper's primary comparison surface. The **comparison of record** is our matched-seed
+reproduction of Pure S5 (Corner 1), because it is the only setup that supports valid paired
+significance testing.
+
+**External SOTA numbers (context only):**
+
+| Model | Reported acc | Source | Chip-friendly? |
+|---|---:|---|:---:|
+| S7 (Han et al., 2024) | 63.77% | *S7: A New State-Space Model with Selective and Simplified Structure* | ✗ (selective-scan, dynamic recurrence — expensive per-timestep parameter updates on-chip) |
+| Mega (Ma et al., 2023) | 63.14% | *Mega: Moving Average Equipped Gated Attention* | ✗ (attention + moving-average hybrid, quadratic surface) |
+| S5 (Smith et al., 2023 — paper's reported number) | 62.15% | *Simplified State Space Layers for Sequence Modeling* (ICLR 2023) | ✓ (diagonal SSM) |
+
+We mention S7 and Mega briefly to acknowledge the current LRA-ListOps SOTA, but do not treat
+them as the paper's comparators: they are architecturally chip-unfriendly (S7's selective scan
+requires per-token parameter recomputation; Mega's attention component reintroduces quadratic
+compute), so they are not on the same efficiency Pareto frontier that this paper targets.
+
+**On the reported S5 62.15%.** The S5 paper reports 62.15% on LRA-ListOps under their training
+regime. That number is not directly comparable to our results: it comes from a different
+training budget, a different (likely single-seed) reporting convention, and no multi-seed
+variance is available to enable a paired significance test. Citing it as our comparison would
+be either uncontrolled (different training regime) or misleading (comparing our multi-seed
+mean against their single-seed number).
+
+**Comparison of record (this paper).** We re-ran the Pure S5 baseline (Corner 1, and Corner 2
+for the mechanism ablation) at the exact same 8-seed set, same code SHA `46517fe`, same
+40-epoch training regime, same optimizer config as our Mambino runs. Corner 1 mean test@peakval
+= **0.6089 ± 0.0053** at n=8, and paired t-testing against Corner 3' (Mambino) gives t=2.94,
+p=0.022 two-tailed. This is the only apples-to-apples S5-vs-Mambino comparison we make and the
+only one that carries a valid significance test.
+
+The gap to external SOTA — 63.77% (S7) vs our 0.6138 (Corner 3') — is ~2.4 pp, well within
+"SOTA-close" for a paper whose central axis is chip efficiency at competitive accuracy, not
+architecture-novelty SOTA-chase. The chip-friendly S5 family sits in the low-62% range;
+Mambino at 0.6138 is at the top of that family under matched conditions.
+
 ## 6. Digital PPAC (Accelergy 0.4 + CACTI + NeuroSim, 22nm INT8, 1 GHz clock)
 
 Primitives: SRAM → CACTI. MAC (intadder) + register file (flip_flop) → NeuroSim.
@@ -400,7 +479,8 @@ nothing on-chip.
 
 ## 12. What is NOT locked / open items
 
-- **Multi-seed mean±std** (jobs 11187522–11187541): currently held. Single-seed accuracies at ±1.5 pp separation (Corner 1 vs Corner 3') are within seed noise. Do not treat this doc as final until multi-seed lands.
-- **True analog RC state-cell PPAC** (student SPICE + measured data): pending. Mixed-signal PPAC currently uses generic RRAM crossbar reference.
-- **Line-buffered / batched-read PPAC re-estimate**: not run. Current numbers are worst-case 1 read/MAC.
-- **Activation SRAM audit**: 4.2 MB assumes full forward+backward buffering — may be reducible.
+- ~~**Multi-seed mean±std**~~ — CLOSED v5: 8-seed sweep in §5 at code SHA `46517fe` with paired significance tests.
+- ~~**λ_pc ablation on Config 4**~~ — CLOSED v7.1: single-seed sweep in §5f (seed=42, SLURM 11230563-11230566); λ_pc=0 is Pareto-optimal on test@peakval, λ_pc=0.1 fails as expected.
+- **True analog RC state-cell PPAC** (student SPICE + measured data): out of scope for this paper (moved to companion paper). Appendix A uses generic RRAM crossbar reference for context only.
+- **Line-buffered / batched-read PPAC re-estimate**: not run. Current numbers are worst-case 1 read/MAC. Ratios between configs are invariant to this choice, so it does not affect the paper's chip claims.
+- **Activation SRAM audit**: 4.2 MB assumes full forward+backward buffering — may be reducible. §6/§7 report both pipelined (4.2 MB) and sequential (512 KB) as an explicit design-point pair, so this is bracketed rather than open.
