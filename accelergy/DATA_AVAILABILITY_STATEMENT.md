@@ -2,8 +2,9 @@
 
 **Paper title:** *Mambino: Predictive-Coding-Augmented State-Space Models for Efficient Long-Range Reasoning on Constrained Hardware*
 
-Paste-ready text for the paper's Data Availability / Reproducibility section. Populate
-the two `[TBD]` placeholders after PURR deposit assigns a DOI.
+Paste-ready text for the paper's Data Availability / Reproducibility section.
+
+**PURR DOI (populated 2026-07-08):** [10.4231/9ADT-WP13](https://doi.org/10.4231/9ADT-WP13)
 
 ---
 
@@ -18,7 +19,8 @@ output YAMLs for all 5 configurations under both pipelined and sequential
 chip topologies, and the frozen conda environment specification.
 
 **Trained checkpoints, run logs, and per-run accuracy manifest.** Available at
-Purdue University Research Repository (PURR), DOI: [TBD PURR DOI after upload].
+Purdue University Research Repository (PURR),
+DOI [10.4231/9ADT-WP13](https://doi.org/10.4231/9ADT-WP13).
 The deposit contains 54 training-run directories (~345 MB uncompressed / 242 MB
 compressed): 40 runs from the 5-config × 8-seed sweep backing §5, 6 runs from
 the λ_pc single-seed ablation backing §5f, and 8 runs from single-seed
@@ -76,7 +78,8 @@ YAMLs, and Python environment freeze are available at
 <https://github.com/raisul1212/S5> at git tag `mambino-paper-v1`. Trained
 checkpoints, full run logs, per-run manifest, and SHA-256 hashes for all 54
 training runs (5 configurations × 8 seeds + λ_pc ablation + exploration runs)
-are archived at Purdue University Research Repository, DOI [TBD]. Runs used
+are archived at Purdue University Research Repository, DOI
+[10.4231/9ADT-WP13](https://doi.org/10.4231/9ADT-WP13). Runs used
 NVIDIA A30 GPUs on Purdue Gilbreth, Python 3.11 + JAX 0.4.30. Random seeds:
 `{6554595, 42, 12345, 271828, 314159, 1, 2, 3}`.
 
@@ -109,8 +112,9 @@ Suggested PURR metadata:
 - **Related identifiers:** point to the GitHub tag `mambino-paper-v1` as the
   companion code artifact
 
-## Post-upload action
+## Post-upload action — COMPLETED 2026-07-08
 
-After PURR issues the DOI, populate two `[TBD]` placeholders:
-1. `DATA_AVAILABILITY_STATEMENT.md` (this file)
-2. The paper's Data Availability section body text
+- ✅ PURR DOI populated in both long form and short form above:
+  [10.4231/9ADT-WP13](https://doi.org/10.4231/9ADT-WP13)
+- ⏳ Copy the appropriate form into the paper's Data Availability section
+  when assembling the manuscript.

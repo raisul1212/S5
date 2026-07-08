@@ -31,7 +31,9 @@ at both α=0.05 two-tailed and α=0.05 one-tailed.
 
 ## 0. Code + raw data locations
 
-**Public code (GitHub):** <https://github.com/raisul1212/S5/tree/mambino-ssm>
+**Public code (GitHub):** <https://github.com/raisul1212/S5/tree/mambino-paper-v1> (frozen tag) — active development on `mambino-ssm` branch.
+
+**PURR data deposit (checkpoints + logs + manifest):** DOI [10.4231/9ADT-WP13](https://doi.org/10.4231/9ADT-WP13).
 
 - Training driver: [`run_train.py`](https://github.com/raisul1212/S5/blob/mambino-ssm/run_train.py)
 - SSM implementations: [`s5/ssm.py`](https://github.com/raisul1212/S5/blob/mambino-ssm/s5/ssm.py), [`s5/mambino_ssm.py`](https://github.com/raisul1212/S5/blob/mambino-ssm/s5/mambino_ssm.py)
