@@ -1,0 +1,19 @@
+config_label	seed_id	test_peakval
+category	seed	fraction
+category axis	one of 8 matched seeds	§5d per-seed
+Config 4	6554595	0.5940
+Config 4	42	0.6035
+Config 4	12345	0.6100
+Config 4	271828	0.5875
+Config 4	314159	0.6045
+Config 4	1	0.5950
+Config 4	2	0.6025
+Config 4	3	0.5970
+Config 5	6554595	0.5830
+Config 5	42	0.6010
+Config 5	12345	0.5930
+Config 5	271828	0.5980
+Config 5	314159	0.5870
+Config 5	1	0.5790
+Config 5	2	0.6005
+Config 5	3	0.5920

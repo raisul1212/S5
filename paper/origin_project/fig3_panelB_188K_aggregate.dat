@@ -1,0 +1,6 @@
+config_label	mean_peakval	sem_peakval	std_peakval	n_seeds
+category	fraction	fraction	fraction	count
+§5a mean n=8	§5a SEM = std/sqrt(8)	§5a std	fixed
+Corner 1	0.608875	0.001810	0.005118	8
+Corner 2	0.599125	0.001454	0.004112	8
+Corner 3'	0.613750	0.000968	0.002739	8

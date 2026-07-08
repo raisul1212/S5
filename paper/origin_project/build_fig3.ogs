@@ -1,0 +1,98 @@
+// ====================================================================
+// Mambino paper - Figure 3 (accuracy Pareto) - OriginLab build script
+// ====================================================================
+// Builds two workbooks + one significance table + two column-plus-scatter
+// graphs (Panel A at 106K, Panel B at 188K).
+//
+// USAGE
+//   1. In Origin, open Script Window (Alt+3) or Command Window.
+//   2. Set path variable to this folder (edit line below):
+//         string path$ = "C:\Users\raisul\dev\ssm-baselines\S5\paper\origin_project\";
+//   3. Run:  run.file(build_fig3.ogs);
+//
+// Alternatively, place this .ogs in the same folder as the .dat files
+// and run from that working directory.
+// ====================================================================
+
+// -------- USER: set path to origin_project folder --------
+string path$ = "C:\Users\raisul\dev\ssm-baselines\S5\paper\origin_project\";
+// ---------------------------------------------------------
+
+// -------- Panel A aggregate (means + SEM) --------
+newbook name:="Fig3_PanelA_106K" sheet:="aggregate" option:=1 chk:=0;
+impasc fname:="%(path$)fig3_panelA_106K_aggregate.dat"
+    options.names.longnames:=1
+    options.names.units:=2
+    options.names.comments:=3
+    options.names.firstdata:=4;
+wks.col1.type = 4;   // config_label as X (Category)
+wks.col2.type = 1;   // mean_peakval as Y
+wks.col3.type = 3;   // sem_peakval as yEr
+wks.col4.type = 2;   // std_peakval (disregard for plotting; kept for reference)
+wks.col5.type = 2;   // n_seeds (disregard)
+
+// -------- Panel A per-seed dots --------
+newsheet name:="seeds" cols:=3 xy:="XY" option:=1;
+impasc fname:="%(path$)fig3_panelA_106K_seeds.dat"
+    options.names.longnames:=1
+    options.names.units:=2
+    options.names.comments:=3
+    options.names.firstdata:=4;
+wks.col1.type = 4;   // config_label as X (Category, aligns with aggregate)
+wks.col2.type = 6;   // seed_id as Label
+wks.col3.type = 1;   // test_peakval as Y (dot values)
+
+// -------- Panel A plot --------
+page.active$ = "aggregate";
+plotxy iy:=(1,2) yer:=3 plot:=203;   // Column plot with error bars
+// Add scatter overlay from seeds sheet
+page.active$ = "seeds";
+plotxy iy:=(1,3) plot:=201 ogl:=<active>;   // Scatter dots on active graph
+// Restyle
+graph1!layer1.x.label.data.pos = 2;   // ticks below
+set %C -w 500;                        // scatter symbol size (may need tuning)
+
+
+// -------- Panel B aggregate (means + SEM) --------
+newbook name:="Fig3_PanelB_188K" sheet:="aggregate" option:=1 chk:=0;
+impasc fname:="%(path$)fig3_panelB_188K_aggregate.dat"
+    options.names.longnames:=1
+    options.names.units:=2
+    options.names.comments:=3
+    options.names.firstdata:=4;
+wks.col1.type = 4;
+wks.col2.type = 1;
+wks.col3.type = 3;
+wks.col4.type = 2;
+wks.col5.type = 2;
+
+newsheet name:="seeds" cols:=3 xy:="XY" option:=1;
+impasc fname:="%(path$)fig3_panelB_188K_seeds.dat"
+    options.names.longnames:=1
+    options.names.units:=2
+    options.names.comments:=3
+    options.names.firstdata:=4;
+wks.col1.type = 4;
+wks.col2.type = 6;
+wks.col3.type = 1;
+
+page.active$ = "aggregate";
+plotxy iy:=(1,2) yer:=3 plot:=203;
+page.active$ = "seeds";
+plotxy iy:=(1,3) plot:=201 ogl:=<active>;
+
+
+// -------- Significance annotations (for reference; brackets drawn manually) --------
+newbook name:="Fig3_Significance" sheet:="pairs" option:=1 chk:=0;
+impasc fname:="%(path$)fig3_significance.dat"
+    options.names.longnames:=1
+    options.names.units:=2
+    options.names.comments:=3
+    options.names.firstdata:=4;
+
+// ----- Report -----
+type -a Fig 3 workbooks built successfully.;
+type -a  - Fig3_PanelA_106K (aggregate + seeds) + column plot with error bars + scatter overlay;
+type -a  - Fig3_PanelB_188K (aggregate + seeds) + column plot with error bars + scatter overlay;
+type -a  - Fig3_Significance (paired-t table, 4 rows) - use these values to hand-annotate brackets;
+type -a Next: reformat axes (y range 0.575-0.625) and draw significance brackets manually.;

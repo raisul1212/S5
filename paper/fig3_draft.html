@@ -1,0 +1,453 @@
+<title>Mambino paper — Fig 3 (accuracy Pareto, draft)</title>
+<style>
+  :root {
+    --ink: #0f1216;
+    --ink-soft: #3a3f47;
+    --muted: #5d6570;
+    --ground: #f7f5f0;
+    --surface: #ffffff;
+    --rule: #d7d3ca;
+    --rule-soft: #e8e3d8;
+
+    --mambino:     #1c7488;
+    --mambino-bg:  #d4e6ec;
+    --pures5:      #8a7a5c;
+    --pures5-bg:   #ece5d4;
+    --pures5-alt:  #a24728;
+    --pures5-alt-bg: #f0d9cf;
+    --sig-strong:  #4b5866;
+
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", "Menlo", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #e9e5df; --ink-soft: #b8b2a9; --muted: #8a8f97;
+      --ground: #17191c; --surface: #1e2027;
+      --rule: #33363c; --rule-soft: #262930;
+      --mambino-bg:  #1c3a41;
+      --pures5-bg:   #2e2a20;
+      --pures5-alt-bg: #3a2620;
+      --sig-strong: #b0b8c4;
+    }
+  }
+  :root[data-theme="light"] {
+    --ink: #0f1216; --ink-soft: #3a3f47; --muted: #5d6570;
+    --ground: #f7f5f0; --surface: #ffffff;
+    --rule: #d7d3ca; --rule-soft: #e8e3d8;
+    --mambino-bg: #d4e6ec;
+    --pures5-bg: #ece5d4;
+    --pures5-alt-bg: #f0d9cf;
+    --sig-strong: #4b5866;
+  }
+  :root[data-theme="dark"] {
+    --ink: #e9e5df; --ink-soft: #b8b2a9; --muted: #8a8f97;
+    --ground: #17191c; --surface: #1e2027;
+    --rule: #33363c; --rule-soft: #262930;
+    --mambino-bg: #1c3a41;
+    --pures5-bg: #2e2a20;
+    --pures5-alt-bg: #3a2620;
+    --sig-strong: #b0b8c4;
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 32px 64px;
+  }
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+  }
+  header .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  header .subtitle {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0;
+    max-width: 68ch;
+  }
+
+  figure {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 32px 28px 22px;
+    margin: 0 0 28px;
+  }
+  figure h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    letter-spacing: -0.005em;
+  }
+  figure .panel-subtitle {
+    color: var(--muted);
+    font-size: 12.5px;
+    margin: 0 0 18px;
+    max-width: 60ch;
+  }
+  figure svg { display: block; width: 100%; height: auto; }
+
+  .caption {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--rule-soft);
+    color: var(--ink-soft);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .caption code { font-family: var(--mono); font-size: 11px; color: var(--ink); }
+  .caption em { color: var(--muted); font-style: normal; }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  footer a { color: var(--ink-soft); text-decoration-color: var(--rule); }
+  footer a:hover { color: var(--ink); text-decoration-color: var(--ink); }
+
+  /* SVG token styling */
+  .axis text {
+    font-family: var(--sans);
+    font-size: 11px;
+    fill: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .axis line, .axis path { stroke: var(--rule); stroke-width: 1; fill: none; }
+  .gridline { stroke: var(--rule-soft); stroke-width: 1; stroke-dasharray: 2 3; }
+  .yaxis-label {
+    font-family: var(--sans);
+    font-size: 11px;
+    fill: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .bar-label {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    fill: var(--ink);
+  }
+  .bar-sub {
+    font-family: var(--sans);
+    font-size: 10.5px;
+    fill: var(--muted);
+  }
+  .bar-mean {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    fill: var(--ink);
+    font-variant-numeric: tabular-nums;
+    text-anchor: middle;
+  }
+  .errbar { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+  .seed-dot { opacity: 0.5; }
+  .sig-line { stroke: var(--sig-strong); stroke-width: 1.2; fill: none; }
+  .sig-marker {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    fill: var(--sig-strong);
+    text-anchor: middle;
+  }
+  .sig-p {
+    font-family: var(--mono);
+    font-size: 10px;
+    fill: var(--muted);
+    text-anchor: middle;
+    font-variant-numeric: tabular-nums;
+  }
+  .break-mark { stroke: var(--rule); stroke-width: 1; fill: var(--surface); }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+  .legend-swatch {
+    display: inline-block;
+    width: 22px; height: 10px;
+    border-radius: 1px;
+    vertical-align: middle;
+    margin-right: 6px;
+    border: 1px solid var(--rule);
+  }
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">Mambino paper · Figure 3 · working draft</p>
+    <h1>Accuracy on LRA-ListOps at two matched-parameter budgets</h1>
+    <p class="subtitle">
+      Test accuracy at peak validation epoch, mean ± SEM over n = 8 matched seeds
+      {6554595, 42, 12345, 271828, 314159, 1, 2, 3}. Individual seed dots overlaid.
+      Paired-t significance annotations between pairs.
+    </p>
+  </header>
+
+  <figure id="panel-A">
+    <h2>A. 106K-parameter band</h2>
+    <p class="panel-subtitle">
+      Iso-parameter comparison between Mambino and the Pure S5 baseline, both at
+      identical trainable-parameter count (105 738 params).
+    </p>
+    <div class="legend">
+      <span><span class="legend-swatch" style="background: var(--mambino-bg); border-color: var(--mambino);"></span>Mambino</span>
+      <span><span class="legend-swatch" style="background: var(--pures5-bg); border-color: var(--pures5);"></span>Pure S5</span>
+      <span style="color: var(--muted); font-size: 11px;">·  dots = individual seeds  ·  bar = mean  ·  whisker = ±SEM</span>
+    </div>
+    <svg id="svg-A" viewBox="0 0 900 300" role="img" aria-label="Panel A: 106K accuracy comparison"></svg>
+  </figure>
+
+  <figure id="panel-B">
+    <h2>B. 188K-parameter band</h2>
+    <p class="panel-subtitle">
+      Three-way comparison at 188 K params. <strong>Corner 3′ vs Corner 2</strong> is the
+      paper's central mechanism-attribution ablation (equal params, equal total SSM
+      state DOF; only the Mambino predictor mechanism differs).
+    </p>
+    <div class="legend">
+      <span><span class="legend-swatch" style="background: var(--mambino-bg); border-color: var(--mambino);"></span>Mambino</span>
+      <span><span class="legend-swatch" style="background: var(--pures5-bg); border-color: var(--pures5);"></span>Pure S5 (full gate)</span>
+      <span><span class="legend-swatch" style="background: var(--pures5-alt-bg); border-color: var(--pures5-alt);"></span>Pure S5 (P=16, r=40 gate)</span>
+    </div>
+    <svg id="svg-B" viewBox="0 0 900 380" role="img" aria-label="Panel B: 188K three-way ablation"></svg>
+  </figure>
+
+  <div class="caption">
+    <strong>Fig 3.</strong>
+    Test accuracy at peak validation on LRA-ListOps (L = 2048, 10-class,
+    n = 8 matched seeds) for both parameter budgets. Bars show the mean;
+    whiskers show ±SEM (standard error of the mean, n = 8); dots show individual
+    seed accuracies. Paired-t brackets: <em>n.s.</em> is not significant at
+    α = 0.05 two-tailed; <em>*</em> is p &lt; 0.05, <em>**</em> is p &lt; 0.01,
+    <em>***</em> is p &lt; 0.001. The y-axis is clipped to make within-band
+    differences visible; the ⩘ break marker indicates the clip.
+    Data source: [<code>paper/figure_data/fig3_accuracy_aggregate.csv</code>]
+    and [<code>paper/figure_data/fig3_pairwise_ttests.csv</code>] under git tag
+    <code>mambino-paper-v1</code>. Checkpoints archived at
+    PURR DOI 10.4231/9ADT-WP13.
+  </div>
+
+  <footer>
+    Working draft. Frozen data pulled from
+    <code>LOCKED_master_ppac_document.md §5a, §5b, §5d</code>.
+    Style tokens match Figs 1, 1-baseline, and 2. Edit values in the
+    embedded <code>DATA</code> object at the bottom of this document to iterate.
+  </footer>
+</main>
+
+<script>
+  // ── Data — matches paper/figure_data/*.csv ────────────────────────────────
+  const seeds = [6554595, 42, 12345, 271828, 314159, 1, 2, 3];
+
+  const perSeed = {
+    config4:  [0.5940, 0.6035, 0.6100, 0.5875, 0.6045, 0.5950, 0.6025, 0.5970],
+    config5:  [0.5830, 0.6010, 0.5930, 0.5980, 0.5870, 0.5790, 0.6005, 0.5920],
+    corner1:  [0.6080, 0.6200, 0.6090, 0.6070, 0.6095, 0.6030, 0.6100, 0.6045],
+    corner2:  [0.5990, 0.6015, 0.5980, 0.5955, 0.5960, 0.5990, 0.5960, 0.6080],
+    corner3p: [0.6180, 0.6165, 0.6150, 0.6125, 0.6095, 0.6130, 0.6140, 0.6115],
+  };
+
+  const DATA = {
+    yRange: [0.575, 0.625],       // clipped axis
+    yTicks: [0.58, 0.59, 0.60, 0.61, 0.62],
+    panels: {
+      A: {
+        margins: { top: 40, right: 40, bottom: 90, left: 70 },
+        bars: [
+          { key: "config4", label: "Config 4",  sub: "Mambino gelu",   family: "mambino", mean: 0.59925,  sem: 0.002537 },
+          { key: "config5", label: "Config 5",  sub: "Pure S5 gelu",   family: "pures5",  mean: 0.591687, sem: 0.002880 },
+        ],
+        sigs: [
+          { from: "config4", to: "config5", marker: "n.s. / *",
+            p: "p = 0.064 (two-tailed) / 0.032 (one-tailed)", level: 1 },
+        ],
+      },
+      B: {
+        margins: { top: 60, right: 40, bottom: 90, left: 70 },
+        bars: [
+          { key: "corner1",  label: "Corner 1",   sub: "Pure S5, full-rank gate", family: "pures5",     mean: 0.608875, sem: 0.001810 },
+          { key: "corner2",  label: "Corner 2",   sub: "Pure S5, P=16, r=40",     family: "pures5_alt", mean: 0.599125, sem: 0.001454 },
+          { key: "corner3p", label: "Corner 3′",  sub: "Mambino half_glu2",       family: "mambino",    mean: 0.61375,  sem: 0.000968 },
+        ],
+        // brackets stacked by level (1 = closest to bars, higher = further above)
+        sigs: [
+          { from: "corner1",  to: "corner2",  marker: "**",  p: "p = 0.005",       level: 1 },
+          { from: "corner3p", to: "corner2",  marker: "***", p: "p = 6.5 × 10⁻⁵", level: 2 },
+          { from: "corner1",  to: "corner3p", marker: "*",   p: "p = 0.022",       level: 3 },
+        ],
+      },
+    },
+  };
+
+  // ── Drawing helpers ────────────────────────────────────────────────────────
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs = {}, children = []) => {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    for (const c of [].concat(children)) if (c) e.appendChild(c);
+    return e;
+  };
+  const txt = (s, attrs = {}) => {
+    const t = el("text", attrs);
+    t.textContent = s;
+    return t;
+  };
+
+  const familyColor = {
+    mambino:    { bar: "var(--mambino-bg)",    stroke: "var(--mambino)" },
+    pures5:     { bar: "var(--pures5-bg)",     stroke: "var(--pures5)" },
+    pures5_alt: { bar: "var(--pures5-alt-bg)", stroke: "var(--pures5-alt)" },
+  };
+
+  function draw(svgId, panel) {
+    const svg = document.getElementById(svgId);
+    const vb = svg.viewBox.baseVal;
+    const W = vb.width, H = vb.height;
+    const m = panel.margins;
+    const plotW = W - m.left - m.right;
+    const plotH = H - m.top - m.bottom;
+
+    const [yMin, yMax] = DATA.yRange;
+    const y = (v) => m.top + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+
+    const nBars = panel.bars.length;
+    const bandW = plotW / nBars;
+    const barW = Math.min(90, bandW * 0.44);
+    const cx = (i) => m.left + bandW * (i + 0.5);
+
+    // ── Y-axis + gridlines ───
+    const axis = el("g", { class: "axis" });
+    axis.appendChild(el("line", {
+      x1: m.left, y1: m.top, x2: m.left, y2: m.top + plotH,
+    }));
+    for (const yt of DATA.yTicks) {
+      const yy = y(yt);
+      axis.appendChild(el("line", { class: "gridline", x1: m.left, y1: yy, x2: m.left + plotW, y2: yy }));
+      axis.appendChild(txt(yt.toFixed(2), {
+        x: m.left - 8, y: yy + 3.5, "text-anchor": "end",
+      }));
+    }
+    // y-axis label
+    const yl = txt("test accuracy @ peak val", {
+      class: "yaxis-label",
+      transform: `translate(${m.left - 46}, ${m.top + plotH / 2}) rotate(-90)`,
+      "text-anchor": "middle",
+    });
+    axis.appendChild(yl);
+    // break marker at bottom of y-axis
+    axis.appendChild(el("path", {
+      class: "break-mark",
+      d: `M ${m.left - 6} ${m.top + plotH + 4} l 12 -6 l -6 12 l 12 -6 l -6 12 l 12 -6`,
+      transform: `translate(-6, -6)`,
+    }));
+    svg.appendChild(axis);
+
+    // ── Bars, error bars, per-seed dots, labels ───
+    panel.bars.forEach((b, i) => {
+      const col = familyColor[b.family];
+      const bx = cx(i) - barW / 2;
+      const by = y(b.mean);
+      const bh = (m.top + plotH) - by;
+      svg.appendChild(el("rect", {
+        x: bx, y: by, width: barW, height: bh,
+        fill: col.bar, stroke: col.stroke, "stroke-width": 1.4,
+      }));
+
+      // Error bar (SEM)
+      const eb = el("g", { class: "errbar" });
+      const yHigh = y(b.mean + b.sem);
+      const yLow  = y(b.mean - b.sem);
+      const capW = 10;
+      eb.appendChild(el("line", { x1: cx(i), y1: yHigh, x2: cx(i), y2: yLow, stroke: "var(--ink-soft)", "stroke-width": 1.5 }));
+      eb.appendChild(el("line", { x1: cx(i) - capW / 2, y1: yHigh, x2: cx(i) + capW / 2, y2: yHigh, stroke: "var(--ink-soft)", "stroke-width": 1.5 }));
+      eb.appendChild(el("line", { x1: cx(i) - capW / 2, y1: yLow,  x2: cx(i) + capW / 2, y2: yLow,  stroke: "var(--ink-soft)", "stroke-width": 1.5 }));
+      svg.appendChild(eb);
+
+      // Per-seed dots (jittered)
+      const seedVals = perSeed[b.key];
+      seedVals.forEach((v, k) => {
+        const jitter = ((k * 37) % 100) / 100 - 0.5; // deterministic
+        const dx = cx(i) + jitter * (barW * 0.55);
+        const dy = y(v);
+        svg.appendChild(el("circle", {
+          class: "seed-dot", cx: dx, cy: dy, r: 2.5,
+          fill: col.stroke, "fill-opacity": 0.75, stroke: "var(--surface)", "stroke-width": 0.8,
+        }));
+      });
+
+      // Mean label above bar (in the whitespace above the error bar)
+      svg.appendChild(txt(b.mean.toFixed(4), {
+        class: "bar-mean", x: cx(i), y: yHigh - 8,
+      }));
+
+      // X-axis labels
+      const labelY = m.top + plotH + 20;
+      svg.appendChild(txt(b.label, { class: "bar-label", x: cx(i), y: labelY, "text-anchor": "middle" }));
+      svg.appendChild(txt(b.sub,   { class: "bar-sub",   x: cx(i), y: labelY + 15, "text-anchor": "middle" }));
+    });
+
+    // ── Significance brackets ────
+    // Bracket base sits above the highest bar mean + error, spaced by "level"
+    const barRight = (b) => panel.bars.findIndex((x) => x.key === b);
+    const anchorY = () => {
+      let ymax = Infinity; // smallest y coord = highest visual point
+      for (const b of panel.bars) ymax = Math.min(ymax, y(b.mean + b.sem));
+      return ymax - 12;
+    };
+
+    panel.sigs.forEach((s) => {
+      const iA = barRight(s.from);
+      const iB = barRight(s.to);
+      const x1 = cx(Math.min(iA, iB));
+      const x2 = cx(Math.max(iA, iB));
+      const yBase = anchorY() - (s.level - 1) * 26;
+      const tick = 6;
+      const bracket = el("g");
+      bracket.appendChild(el("path", {
+        class: "sig-line",
+        d: `M ${x1} ${yBase + tick} L ${x1} ${yBase} L ${x2} ${yBase} L ${x2} ${yBase + tick}`,
+      }));
+      // marker + p
+      bracket.appendChild(txt(s.marker, { class: "sig-marker", x: (x1 + x2) / 2, y: yBase - 5 }));
+      const pLine = s.tval ? `${s.p}  ·  ${s.tval}` : s.p;
+      bracket.appendChild(txt(pLine, { class: "sig-p", x: (x1 + x2) / 2, y: yBase - 18 }));
+      svg.appendChild(bracket);
+    });
+  }
+
+  draw("svg-A", DATA.panels.A);
+  draw("svg-B", DATA.panels.B);
+</script>

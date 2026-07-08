@@ -1,0 +1,7 @@
+panel	from_config	to_config	mean_paired_diff	paired_t	df	p_two_tailed	marker	bracket_level
+category	category	category	fraction	stat	count	prob	symbol	int
+	§5b	§5b	§5b	§5b	fixed	§5b	drawing hint	1=lowest
+A	Config 4	Config 5	0.0076	2.20	7	0.064	n.s. / *	1
+B	Corner 1	Corner 2	-0.00975	-4.06	7	0.005	**	1
+B	Corner 3'	Corner 2	0.01463	8.46	7	0.000065	***	2
+B	Corner 1	Corner 3'	-0.0049	-2.94	7	0.022	*	3
