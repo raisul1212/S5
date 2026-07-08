@@ -1,0 +1,19 @@
+ART:
+    version: '0.4'
+    tables:
+      - name: chip.pim_row_drivers
+        area: 219.375
+      - name: chip.pim_col_drivers
+        area: 202.056
+      - name: chip.pim_cells
+        area: 0.025652
+      - name: chip.pim_adc
+        area: 401079.0
+      - name: chip.activation_sram
+        area: 4353200.0
+      - name: chip.state_sram
+        area: 505750.0
+      - name: chip.acc_adder
+        area: 22.247
+      - name: chip.reg_accum
+        area: 39.5502

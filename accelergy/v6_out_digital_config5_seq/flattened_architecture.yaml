@@ -1,0 +1,67 @@
+architecture:
+    version: '0.4'
+    local:
+      - name: chip.weight_sram
+        class: SRAM
+        attributes:
+            technology: 22
+            global_cycle_seconds: 1e-09
+            width: 1024
+            depth: 826
+            action_latency_cycles: 1
+            cycle_seconds: 1e-09
+            n_instances: 1
+            n_rw_ports: 1
+            n_banks: 1
+        area_scale: 1.0
+        energy_scale: 1.0
+      - name: chip.activation_sram
+        class: SRAM
+        attributes:
+            technology: 22
+            global_cycle_seconds: 1e-09
+            width: 1024
+            depth: 4096
+            action_latency_cycles: 1
+            cycle_seconds: 1e-09
+            n_instances: 1
+            n_rw_ports: 1
+            n_banks: 1
+        area_scale: 1.0
+        energy_scale: 1.0
+      - name: chip.state_sram
+        class: SRAM
+        attributes:
+            technology: 22
+            global_cycle_seconds: 1e-09
+            width: 256
+            depth: 2048
+            action_latency_cycles: 1
+            cycle_seconds: 1e-09
+            n_instances: 1
+            n_rw_ports: 1
+            n_banks: 1
+        area_scale: 1.0
+        energy_scale: 1.0
+      - name: chip.mac_array
+        class: intadder
+        attributes:
+            technology: 22
+            global_cycle_seconds: 1e-09
+            n_bits: 8
+            action_latency_cycles: 1
+            cycle_seconds: 1e-09
+            n_instances: 1
+        area_scale: 1.0
+        energy_scale: 1.0
+      - name: chip.reg_accum
+        class: flip_flop
+        attributes:
+            technology: 22
+            global_cycle_seconds: 1e-09
+            n_bits: 32
+            action_latency_cycles: 1
+            cycle_seconds: 1e-09
+            n_instances: 1
+        area_scale: 1.0
+        energy_scale: 1.0

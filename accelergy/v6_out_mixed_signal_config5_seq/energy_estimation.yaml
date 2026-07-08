@@ -1,0 +1,20 @@
+energy_estimation:
+    version: '0.4'
+    components:
+      - name: chip.pim_row_drivers
+        energy: 115493.13031000001
+      - name: chip.pim_col_drivers
+        energy: 4.4614351554
+      - name: chip.pim_cells
+        energy: 209602.61256264
+      - name: chip.pim_adc
+        energy: 1202574.1312
+      - name: chip.activation_sram
+        energy: 323076857.77599996
+      - name: chip.state_sram
+        energy: 458229.3504
+      - name: chip.acc_adder
+        energy: 45488.70144
+      - name: chip.reg_accum
+        energy: 27831615.821184
+    Total: 352939865.9845317

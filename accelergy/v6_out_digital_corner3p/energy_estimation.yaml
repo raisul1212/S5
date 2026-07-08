@@ -1,0 +1,14 @@
+energy_estimation:
+    version: '0.4'
+    components:
+      - name: chip.weight_sram
+        energy: 32635247991.5346
+      - name: chip.activation_sram
+        energy: 214539861096.70398
+      - name: chip.state_sram
+        energy: 541543.6288
+      - name: chip.mac_array
+        energy: 4074812.25495552
+      - name: chip.reg_accum
+        energy: 38792949.4968064
+    Total: 247218518393.61914

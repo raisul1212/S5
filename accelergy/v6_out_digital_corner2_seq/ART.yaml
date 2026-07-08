@@ -1,0 +1,13 @@
+ART:
+    version: '0.4'
+    tables:
+      - name: chip.weight_sram
+        area: 160889.0
+      - name: chip.activation_sram
+        area: 565581.0
+      - name: chip.state_sram
+        area: 65016.4
+      - name: chip.mac_array
+        area: 11.1235
+      - name: chip.reg_accum
+        area: 39.5502

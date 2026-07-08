@@ -1,0 +1,18 @@
+ART_summary:
+    version: '0.4'
+    table_summary:
+      - name: chip.weight_sram
+        area: 160889.0
+        primitive_estimations: CactiSRAM
+      - name: chip.activation_sram
+        area: 565581.0
+        primitive_estimations: CactiSRAM
+      - name: chip.state_sram
+        area: 30317.1
+        primitive_estimations: CactiSRAM
+      - name: chip.mac_array
+        area: 11.1235
+        primitive_estimations: Neurosim Plug-In
+      - name: chip.reg_accum
+        area: 39.5502
+        primitive_estimations: Neurosim Plug-In

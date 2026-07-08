@@ -1,0 +1,93 @@
+ERT_summary:
+    version: '0.4'
+    table_summary:
+      - name: chip.pim_row_drivers
+        actions:
+          - name: read
+            energy: 0.0161261
+          - name: write
+            energy: 0.686215
+          - name: leak
+            energy: 2.00105e-14
+        primitive_estimation(s):
+          - name: chip.pim_row_drivers
+            estimator: Neurosim Plug-In
+      - name: chip.pim_col_drivers
+        actions:
+          - name: read
+            energy: 0.0
+          - name: write
+            energy: 4.21933e-05
+          - name: leak
+            energy: 2.00105e-14
+        primitive_estimation(s):
+          - name: chip.pim_col_drivers
+            estimator: Neurosim Plug-In
+      - name: chip.pim_cells
+        actions:
+          - name: read
+            energy: 0.000431693
+          - name: write
+            energy: 0.590957
+          - name: leak
+            energy: 0.0
+        primitive_estimation(s):
+          - name: chip.pim_cells
+            estimator: Neurosim Plug-In
+      - name: chip.pim_adc
+        actions:
+          - name: read
+            energy: 0.451688
+          - name: convert
+            energy: 0.451688
+          - name: leak
+            energy: 1.79551e-12
+        primitive_estimation(s):
+          - name: chip.pim_adc
+            estimator: Neurosim Plug-In
+      - name: chip.activation_sram
+        actions:
+          - name: read
+            energy: 119.381
+          - name: write
+            energy: 159.739
+          - name: leak
+            energy: 0.0694738
+        primitive_estimation(s):
+          - name: chip.activation_sram
+            estimator: CactiSRAM
+      - name: chip.state_sram
+        actions:
+          - name: read
+            energy: 13.6217
+          - name: write
+            energy: 14.3464
+          - name: leak
+            energy: 0.00962144
+        primitive_estimation(s):
+          - name: chip.state_sram
+            estimator: CactiSRAM
+      - name: chip.acc_adder
+        actions:
+          - name: mac_random
+            energy: 0.0170856
+          - name: add
+            energy: 0.0170856
+          - name: read
+            energy: 0.0170856
+          - name: leak
+            energy: 2.14752e-06
+        primitive_estimation(s):
+          - name: chip.acc_adder
+            estimator: Neurosim Plug-In
+      - name: chip.reg_accum
+        actions:
+          - name: read
+            energy: 0.0816683
+          - name: write
+            energy: 0.0
+          - name: leak
+            energy: 5.00262e-06
+        primitive_estimation(s):
+          - name: chip.reg_accum
+            estimator: Neurosim Plug-In

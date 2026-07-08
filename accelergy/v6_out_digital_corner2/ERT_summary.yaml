@@ -1,0 +1,60 @@
+ERT_summary:
+    version: '0.4'
+    table_summary:
+      - name: chip.weight_sram
+        actions:
+          - name: read
+            energy: 68.6661
+          - name: write
+            energy: 97.6469
+          - name: leak
+            energy: 0.0252909
+        primitive_estimation(s):
+          - name: chip.weight_sram
+            estimator: CactiSRAM
+      - name: chip.activation_sram
+        actions:
+          - name: read
+            energy: 447.589
+          - name: write
+            energy: 460.698
+          - name: leak
+            energy: 0.534333
+        primitive_estimation(s):
+          - name: chip.activation_sram
+            estimator: CactiSRAM
+      - name: chip.state_sram
+        actions:
+          - name: read
+            energy: 41.8303
+          - name: write
+            energy: 39.1014
+          - name: leak
+            energy: 0.0701353
+        primitive_estimation(s):
+          - name: chip.state_sram
+            estimator: CactiSRAM
+      - name: chip.mac_array
+        actions:
+          - name: mac_random
+            energy: 0.00857844
+          - name: add
+            energy: 0.00857844
+          - name: read
+            energy: 0.00857844
+          - name: leak
+            energy: 1.07376e-06
+        primitive_estimation(s):
+          - name: chip.mac_array
+            estimator: Neurosim Plug-In
+      - name: chip.reg_accum
+        actions:
+          - name: read
+            energy: 0.0816683
+          - name: write
+            energy: 0.0
+          - name: leak
+            energy: 5.00262e-06
+        primitive_estimation(s):
+          - name: chip.reg_accum
+            estimator: Neurosim Plug-In
