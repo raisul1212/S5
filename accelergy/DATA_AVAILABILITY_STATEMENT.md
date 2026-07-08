@@ -1,4 +1,6 @@
-# Data Availability + Reproducibility Statement — Mambino paper
+# Data Availability + Reproducibility Statement
+
+**Paper title:** *Mambino: Predictive-Coding-Augmented State-Space Models for Efficient Long-Range Reasoning on Constrained Hardware*
 
 Paste-ready text for the paper's Data Availability / Reproducibility section. Populate
 the two `[TBD]` placeholders after PURR deposit assigns a DOI.
@@ -94,8 +96,9 @@ Files to upload (from `C:\Users\raisul\dev\nc-block\Neurocognitive Block\mambino
    and `run.log` in the deposit (also inside the tarball; un-nested here)
 
 Suggested PURR metadata:
-- **Title:** *Mambino paper (v1) — trained checkpoints, run logs, and manifest for
-  predictive-coding-augmented S5 SSM on LRA-ListOps*
+- **Title:** *Mambino: Predictive-Coding-Augmented State-Space Models for Efficient
+  Long-Range Reasoning on Constrained Hardware — trained checkpoints, run logs, and
+  per-run manifest (v1)*
 - **Author:** Raisul Islam
 - **Affiliation:** Purdue University
 - **Keywords:** state-space model, S5, predictive coding, LRA-ListOps, chip

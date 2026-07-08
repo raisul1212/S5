@@ -1,5 +1,8 @@
 # Master Document: Training Runs + JAXPR FLOPs + Accelergy PPAC
 
+**Paper title (locked 2026-07-08):**
+*Mambino: Predictive-Coding-Augmented State-Space Models for Efficient Long-Range Reasoning on Constrained Hardware*
+
 Locked 2026-07-08 (v7.1 — added §5f λ_pc ablation on Config 4 seed=42, §5g external-SOTA context; open-items §12 refreshed).
 All numbers from executed code + published methodologies.
 
