@@ -1,0 +1,49 @@
+# Mixed-signal PIM action counts -- Corner 2 pipelined
+# MACs = 508,560,640; tile activations = ceil(508560640 / 16384) = 31,036
+action_counts:
+  version: 0.4
+  local:
+    - name: chip.pim_row_drivers
+      action_counts:
+        - name: read
+          counts: 3972608     # 31,036 tiles * 128 rows
+        - name: write
+          counts: 188682
+    - name: chip.pim_col_drivers
+      action_counts:
+        - name: read
+          counts: 3972608
+        - name: write
+          counts: 188682
+    - name: chip.pim_cells
+      action_counts:
+        - name: read
+          counts: 508560640
+        - name: write
+          counts: 188682
+    - name: chip.pim_adc
+      action_counts:
+        - name: read
+          counts: 3972608
+    - name: chip.activation_sram
+      action_counts:
+        - name: read
+          counts: 3972608
+        - name: write
+          counts: 32784
+    - name: chip.state_sram
+      action_counts:
+        - name: read
+          counts: 16384        # streaming: L * n_layers = 2048 * 8 buffered-direction reads
+        - name: write
+          counts: 16384        # streaming: L * n_layers = 2048 * 8 buffered-direction writes
+    - name: chip.acc_adder
+      action_counts:
+        - name: mac_random
+          counts: 3972608
+    - name: chip.reg_accum
+      action_counts:
+        - name: read
+          counts: 508560640
+        - name: write
+          counts: 508560640

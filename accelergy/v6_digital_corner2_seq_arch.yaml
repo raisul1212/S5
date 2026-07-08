@@ -1,0 +1,43 @@
+# Digital chip architecture -- Corner 2 (Pure S5 P=16 r=40, 188K) — SEQUENTIAL topology.
+# One layer at a time; smaller activation and state buffers.
+architecture:
+  version: 0.4
+  subtree:
+    - name: chip
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+      local:
+        - name: weight_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 1474
+        - name: activation_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 4096          # sequential: 512 KB (1 layer at a time)
+        - name: state_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 256
+            depth: 2048          # sequential: 64 KB (L=2048 * 1 layer * local_P=32 bytes)
+        - name: mac_array
+          class: intadder
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 8
+        - name: reg_accum
+          class: flip_flop
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 32

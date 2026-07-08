@@ -1,0 +1,33 @@
+# Corner 2 (Pure S5 P=16 r=40 188K) - JAXPR: 1,093,335,772 FLOPs, dot_general 1,017,121,280
+# MACs = dot_general / 2 = 508,560,640
+action_counts:
+  version: 0.4
+  local:
+    - name: chip.weight_sram
+      action_counts:
+        - name: read
+          counts: 508560640
+        - name: write
+          counts: 188682
+    - name: chip.activation_sram
+      action_counts:
+        - name: read
+          counts: 508560640
+        - name: write
+          counts: 4194304
+    - name: chip.state_sram
+      action_counts:
+        - name: read
+          counts: 16384        # streaming: L * n_layers = 2048 * 8 buffered-direction reads
+        - name: write
+          counts: 16384        # streaming: L * n_layers = 2048 * 8 buffered-direction writes
+    - name: chip.mac_array
+      action_counts:
+        - name: mac_random
+          counts: 508560640
+    - name: chip.reg_accum
+      action_counts:
+        - name: read
+          counts: 508560640
+        - name: write
+          counts: 508560640

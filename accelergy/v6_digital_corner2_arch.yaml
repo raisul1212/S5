@@ -1,0 +1,44 @@
+# Digital chip architecture -- Corner 2 (Pure S5, half_glu2, ssm_size_base=32 → P=16, glu_rank=40, bidir, batchnorm)
+# 188,682 params (iso-params with Corner 3'), 22nm INT8, 1 GHz clock.
+# State SRAM sized per Config 5 (P=16, local_P=32) → 512 KB pipelined.
+architecture:
+  version: 0.4
+  subtree:
+    - name: chip
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-9
+      local:
+        - name: weight_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 1474          # 188,682 params / 128 (same as Corner 3')
+        - name: activation_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 1024
+            depth: 32784         # 4.2 MB / 128
+        - name: state_sram
+          class: SRAM
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            width: 256           # streaming: local_P=32 bytes = 256 bits (Pure S5 P=16)
+            depth: 16384         # pipelined: 512 KB (matches Config 5)
+        - name: mac_array
+          class: intadder
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 8
+        - name: reg_accum
+          class: flip_flop
+          attributes:
+            technology: 22
+            global_cycle_seconds: 1.0e-9
+            n_bits: 32
