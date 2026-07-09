@@ -7,14 +7,15 @@
     "cycles": 131072,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 809968.435,
+    "e_act_sram_pJ": 1397876.326,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 3163532.988,
+    "total_pJ": 3751440.879,
     "repeat": 1,
-    "total_pJ_with_repeat": 3163532.988
+    "total_pJ_with_repeat": 3751440.879
   },
   "config4__M8_N2048_K128_complex_real__8x8": {
     "M": 8,
@@ -24,14 +25,15 @@
     "cycles": 65536,
     "util_pct": 100.0,
     "real_macs": 4194304,
+    "capacity_ok": true,
     "e_mac_pJ": 1306764.771,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 511390.31,
+    "e_act_sram_pJ": 888465.306,
     "e_weights_spad_pJ": 70728.548,
     "e_psum_spad_pJ": 502318.655,
-    "total_pJ": 3169357.088,
+    "total_pJ": 3546432.084,
     "repeat": 24,
-    "total_pJ_with_repeat": 76064570.112
+    "total_pJ_with_repeat": 85114370.016
   },
   "config4__M128_N2048_K8_complex_complex__8x8": {
     "M": 128,
@@ -41,14 +43,15 @@
     "cycles": 131072,
     "util_pct": 100.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 97269.35,
-    "e_act_sram_pJ": 1781583.053,
+    "e_act_sram_pJ": 2361258.803,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 5638476.353,
+    "total_pJ": 6218152.103,
     "repeat": 8,
-    "total_pJ_with_repeat": 45107810.824
+    "total_pJ_with_repeat": 49745216.824
   },
   "config4__M128_N2048_K16_complex_complex__8x8": {
     "M": 128,
@@ -58,14 +61,15 @@
     "cycles": 262144,
     "util_pct": 100.0,
     "real_macs": 16777216,
+    "capacity_ok": true,
     "e_mac_pJ": 5227059.085,
     "e_weight_sram_pJ": 194538.701,
-    "e_act_sram_pJ": 2753776.845,
+    "e_act_sram_pJ": 4099234.202,
     "e_weights_spad_pJ": 282914.193,
     "e_psum_spad_pJ": 2009274.62,
-    "total_pJ": 10467563.445,
+    "total_pJ": 11813020.801,
     "repeat": 8,
-    "total_pJ_with_repeat": 83740507.56
+    "total_pJ_with_repeat": 94504166.408
   },
   "config4__M1_N10_K128_real_real__8x8": {
     "M": 1,
@@ -75,14 +79,15 @@
     "cycles": 32,
     "util_pct": 62.5,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 249.702,
+    "e_act_sram_pJ": 443.332,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2723.167,
+    "total_pJ": 2916.797,
     "repeat": 1,
-    "total_pJ_with_repeat": 2723.167
+    "total_pJ_with_repeat": 2916.797
   },
   "config4__M2048_N128_K20_real_real__16x16": {
     "M": 2048,
@@ -92,14 +97,15 @@
     "cycles": 32768,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 506157.875,
+    "e_act_sram_pJ": 854759.014,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2859722.428,
+    "total_pJ": 3208323.567,
     "repeat": 1,
-    "total_pJ_with_repeat": 2859722.428
+    "total_pJ_with_repeat": 3208323.567
   },
   "config4__M8_N2048_K128_complex_real__16x16": {
     "M": 8,
@@ -109,14 +115,15 @@
     "cycles": 16384,
     "util_pct": 100.0,
     "real_macs": 4194304,
+    "capacity_ok": true,
     "e_mac_pJ": 1306764.771,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 268341.862,
+    "e_act_sram_pJ": 453971.456,
     "e_weights_spad_pJ": 70728.548,
     "e_psum_spad_pJ": 502318.655,
-    "total_pJ": 2926308.64,
+    "total_pJ": 3111938.234,
     "repeat": 24,
-    "total_pJ_with_repeat": 70231407.36
+    "total_pJ_with_repeat": 74686517.616
   },
   "config4__M128_N2048_K8_complex_complex__16x16": {
     "M": 128,
@@ -126,14 +133,15 @@
     "cycles": 65536,
     "util_pct": 50.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 97269.35,
-    "e_act_sram_pJ": 1295486.157,
+    "e_act_sram_pJ": 1492271.104,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 5152379.457,
+    "total_pJ": 5349164.404,
     "repeat": 8,
-    "total_pJ_with_repeat": 41219035.656
+    "total_pJ_with_repeat": 42793315.232
   },
   "config4__M128_N2048_K16_complex_complex__16x16": {
     "M": 128,
@@ -143,14 +151,15 @@
     "cycles": 65536,
     "util_pct": 100.0,
     "real_macs": 16777216,
+    "capacity_ok": true,
     "e_mac_pJ": 5227059.085,
     "e_weight_sram_pJ": 194538.701,
-    "e_act_sram_pJ": 1781583.053,
+    "e_act_sram_pJ": 2361258.803,
     "e_weights_spad_pJ": 282914.193,
     "e_psum_spad_pJ": 2009274.62,
-    "total_pJ": 9495369.653,
+    "total_pJ": 10075045.403,
     "repeat": 8,
-    "total_pJ_with_repeat": 75962957.224
+    "total_pJ_with_repeat": 80600363.224
   },
   "config4__M1_N10_K128_real_real__16x16": {
     "M": 1,
@@ -160,14 +169,15 @@
     "cycles": 8,
     "util_pct": 62.5,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 231.176,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2704.641,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2704.641
   },
   "config4__M2048_N128_K20_real_real__32x32": {
     "M": 2048,
@@ -177,14 +187,15 @@
     "cycles": 8192,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 354252.595,
+    "e_act_sram_pJ": 583200.358,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2707817.148,
+    "total_pJ": 2936764.911,
     "repeat": 1,
-    "total_pJ_with_repeat": 2707817.148
+    "total_pJ_with_repeat": 2936764.911
   },
   "config4__M8_N2048_K128_complex_real__32x32": {
     "M": 8,
@@ -194,14 +205,15 @@
     "cycles": 4096,
     "util_pct": 100.0,
     "real_macs": 4194304,
+    "capacity_ok": true,
     "e_mac_pJ": 1306764.771,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 146817.638,
+    "e_act_sram_pJ": 236724.531,
     "e_weights_spad_pJ": 70728.548,
     "e_psum_spad_pJ": 502318.655,
-    "total_pJ": 2804784.416,
+    "total_pJ": 2894691.309,
     "repeat": 24,
-    "total_pJ_with_repeat": 67314825.984
+    "total_pJ_with_repeat": 69472591.416
   },
   "config4__M128_N2048_K8_complex_complex__32x32": {
     "M": 128,
@@ -211,14 +223,15 @@
     "cycles": 32768,
     "util_pct": 25.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 97269.35,
-    "e_act_sram_pJ": 1052437.709,
+    "e_act_sram_pJ": 1057777.254,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 4909331.009,
+    "total_pJ": 4914670.554,
     "repeat": 8,
-    "total_pJ_with_repeat": 39274648.072
+    "total_pJ_with_repeat": 39317364.432
   },
   "config4__M128_N2048_K16_complex_complex__32x32": {
     "M": 128,
@@ -228,14 +241,15 @@
     "cycles": 32768,
     "util_pct": 50.0,
     "real_macs": 16777216,
+    "capacity_ok": true,
     "e_mac_pJ": 5227059.085,
     "e_weight_sram_pJ": 194538.701,
-    "e_act_sram_pJ": 1295486.157,
+    "e_act_sram_pJ": 1492271.104,
     "e_weights_spad_pJ": 282914.193,
     "e_psum_spad_pJ": 2009274.62,
-    "total_pJ": 9009272.757,
+    "total_pJ": 9206057.704,
     "repeat": 8,
-    "total_pJ_with_repeat": 72074182.056
+    "total_pJ_with_repeat": 73648461.632
   },
   "config4__M1_N10_K128_real_real__32x32": {
     "M": 1,
@@ -245,14 +259,15 @@
     "cycles": 4,
     "util_pct": 31.25,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 231.176,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2704.641,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2704.641
   },
   "config4__M2048_N128_K20_real_real__64x64": {
     "M": 2048,
@@ -262,14 +277,15 @@
     "cycles": 4096,
     "util_pct": 31.25,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 278299.955,
+    "e_act_sram_pJ": 447421.03,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2631864.508,
+    "total_pJ": 2800985.583,
     "repeat": 1,
-    "total_pJ_with_repeat": 2631864.508
+    "total_pJ_with_repeat": 2800985.583
   },
   "config4__M8_N2048_K128_complex_real__64x64": {
     "M": 8,
@@ -279,14 +295,15 @@
     "cycles": 1024,
     "util_pct": 100.0,
     "real_macs": 4194304,
+    "capacity_ok": true,
     "e_mac_pJ": 1306764.771,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 86055.526,
+    "e_act_sram_pJ": 128101.069,
     "e_weights_spad_pJ": 70728.548,
     "e_psum_spad_pJ": 502318.655,
-    "total_pJ": 2744022.304,
+    "total_pJ": 2786067.847,
     "repeat": 24,
-    "total_pJ_with_repeat": 65856535.296
+    "total_pJ_with_repeat": 66865628.328
   },
   "config4__M128_N2048_K8_complex_complex__64x64": {
     "M": 128,
@@ -296,14 +313,15 @@
     "cycles": 16384,
     "util_pct": 12.5,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 97269.35,
-    "e_act_sram_pJ": 930913.485,
+    "e_act_sram_pJ": 840530.33,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 4787806.785,
+    "total_pJ": 4697423.63,
     "repeat": 8,
-    "total_pJ_with_repeat": 38302454.28
+    "total_pJ_with_repeat": 37579389.04
   },
   "config4__M128_N2048_K16_complex_complex__64x64": {
     "M": 128,
@@ -313,14 +331,15 @@
     "cycles": 16384,
     "util_pct": 25.0,
     "real_macs": 16777216,
+    "capacity_ok": true,
     "e_mac_pJ": 5227059.085,
     "e_weight_sram_pJ": 194538.701,
-    "e_act_sram_pJ": 1052437.709,
+    "e_act_sram_pJ": 1057777.254,
     "e_weights_spad_pJ": 282914.193,
     "e_psum_spad_pJ": 2009274.62,
-    "total_pJ": 8766224.309,
+    "total_pJ": 8771563.854,
     "repeat": 8,
-    "total_pJ_with_repeat": 70129794.472
+    "total_pJ_with_repeat": 70172510.832
   },
   "config4__M1_N10_K128_real_real__64x64": {
     "M": 1,
@@ -330,14 +349,15 @@
     "cycles": 2,
     "util_pct": 15.62,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 231.176,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2704.641,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2704.641
   },
   "config5__M2048_N128_K20_real_real__8x8": {
     "M": 2048,
@@ -347,14 +367,15 @@
     "cycles": 131072,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 809968.435,
+    "e_act_sram_pJ": 1397876.326,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 3163532.988,
+    "total_pJ": 3751440.879,
     "repeat": 1,
-    "total_pJ_with_repeat": 3163532.988
+    "total_pJ_with_repeat": 3751440.879
   },
   "config5__M16_N2048_K128_complex_real__8x8": {
     "M": 16,
@@ -364,14 +385,15 @@
     "cycles": 131072,
     "util_pct": 100.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 1022780.621,
+    "e_act_sram_pJ": 1776930.611,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 5560559.374,
+    "total_pJ": 6314709.364,
     "repeat": 8,
-    "total_pJ_with_repeat": 44484474.992
+    "total_pJ_with_repeat": 50517674.912
   },
   "config5__M128_N2048_K32_complex_complex__8x8": {
     "M": 128,
@@ -381,14 +403,15 @@
     "cycles": 524288,
     "util_pct": 100.0,
     "real_macs": 33554432,
+    "capacity_ok": true,
     "e_mac_pJ": 10454118.171,
     "e_weight_sram_pJ": 389077.402,
-    "e_act_sram_pJ": 4698164.429,
+    "e_act_sram_pJ": 7575184.998,
     "e_weights_spad_pJ": 565828.387,
     "e_psum_spad_pJ": 4018549.241,
-    "total_pJ": 20125737.628,
+    "total_pJ": 23002758.198,
     "repeat": 8,
-    "total_pJ_with_repeat": 161005901.024
+    "total_pJ_with_repeat": 184022065.584
   },
   "config5__M1_N10_K128_real_real__8x8": {
     "M": 1,
@@ -398,14 +421,15 @@
     "cycles": 32,
     "util_pct": 62.5,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 249.702,
+    "e_act_sram_pJ": 443.332,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2723.167,
+    "total_pJ": 2916.797,
     "repeat": 1,
-    "total_pJ_with_repeat": 2723.167
+    "total_pJ_with_repeat": 2916.797
   },
   "config5__M2048_N128_K20_real_real__16x16": {
     "M": 2048,
@@ -415,14 +439,15 @@
     "cycles": 32768,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 506157.875,
+    "e_act_sram_pJ": 854759.014,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2859722.428,
+    "total_pJ": 3208323.567,
     "repeat": 1,
-    "total_pJ_with_repeat": 2859722.428
+    "total_pJ_with_repeat": 3208323.567
   },
   "config5__M16_N2048_K128_complex_real__16x16": {
     "M": 16,
@@ -432,14 +457,15 @@
     "cycles": 32768,
     "util_pct": 100.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 536683.725,
+    "e_act_sram_pJ": 907942.912,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 5074462.478,
+    "total_pJ": 5445721.665,
     "repeat": 8,
-    "total_pJ_with_repeat": 40595699.824
+    "total_pJ_with_repeat": 43565773.32
   },
   "config5__M128_N2048_K32_complex_complex__16x16": {
     "M": 128,
@@ -449,14 +475,15 @@
     "cycles": 131072,
     "util_pct": 100.0,
     "real_macs": 33554432,
+    "capacity_ok": true,
     "e_mac_pJ": 10454118.171,
     "e_weight_sram_pJ": 389077.402,
-    "e_act_sram_pJ": 2753776.845,
+    "e_act_sram_pJ": 4099234.202,
     "e_weights_spad_pJ": 565828.387,
     "e_psum_spad_pJ": 4018549.241,
-    "total_pJ": 18181350.044,
+    "total_pJ": 19526807.401,
     "repeat": 8,
-    "total_pJ_with_repeat": 145450800.352
+    "total_pJ_with_repeat": 156214459.208
   },
   "config5__M1_N10_K128_real_real__16x16": {
     "M": 1,
@@ -466,14 +493,15 @@
     "cycles": 8,
     "util_pct": 62.5,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 231.176,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2704.641,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2704.641
   },
   "config5__M2048_N128_K20_real_real__32x32": {
     "M": 2048,
@@ -483,14 +511,15 @@
     "cycles": 8192,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 354252.595,
+    "e_act_sram_pJ": 583200.358,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2707817.148,
+    "total_pJ": 2936764.911,
     "repeat": 1,
-    "total_pJ_with_repeat": 2707817.148
+    "total_pJ_with_repeat": 2936764.911
   },
   "config5__M16_N2048_K128_complex_real__32x32": {
     "M": 16,
@@ -500,14 +529,15 @@
     "cycles": 8192,
     "util_pct": 100.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 293635.277,
+    "e_act_sram_pJ": 473449.062,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 4831414.03,
+    "total_pJ": 5011227.815,
     "repeat": 8,
-    "total_pJ_with_repeat": 38651312.24
+    "total_pJ_with_repeat": 40089822.52
   },
   "config5__M128_N2048_K32_complex_complex__32x32": {
     "M": 128,
@@ -517,14 +547,15 @@
     "cycles": 32768,
     "util_pct": 100.0,
     "real_macs": 33554432,
+    "capacity_ok": true,
     "e_mac_pJ": 10454118.171,
     "e_weight_sram_pJ": 389077.402,
-    "e_act_sram_pJ": 1781583.053,
+    "e_act_sram_pJ": 2361258.803,
     "e_weights_spad_pJ": 565828.387,
     "e_psum_spad_pJ": 4018549.241,
-    "total_pJ": 17209156.252,
+    "total_pJ": 17788832.003,
     "repeat": 8,
-    "total_pJ_with_repeat": 137673250.016
+    "total_pJ_with_repeat": 142310656.024
   },
   "config5__M1_N10_K128_real_real__32x32": {
     "M": 1,
@@ -534,14 +565,15 @@
     "cycles": 4,
     "util_pct": 31.25,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 231.176,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2704.641,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2704.641
   },
   "config5__M2048_N128_K20_real_real__64x64": {
     "M": 2048,
@@ -551,14 +583,15 @@
     "cycles": 4096,
     "util_pct": 31.25,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 278299.955,
+    "e_act_sram_pJ": 447421.03,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2631864.508,
+    "total_pJ": 2800985.583,
     "repeat": 1,
-    "total_pJ_with_repeat": 2631864.508
+    "total_pJ_with_repeat": 2800985.583
   },
   "config5__M16_N2048_K128_complex_real__64x64": {
     "M": 16,
@@ -568,14 +601,15 @@
     "cycles": 2048,
     "util_pct": 100.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 172111.053,
+    "e_act_sram_pJ": 256202.138,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 4709889.806,
+    "total_pJ": 4793980.89,
     "repeat": 8,
-    "total_pJ_with_repeat": 37679118.448
+    "total_pJ_with_repeat": 38351847.12
   },
   "config5__M128_N2048_K32_complex_complex__64x64": {
     "M": 128,
@@ -585,14 +619,15 @@
     "cycles": 16384,
     "util_pct": 50.0,
     "real_macs": 33554432,
+    "capacity_ok": true,
     "e_mac_pJ": 10454118.171,
     "e_weight_sram_pJ": 389077.402,
-    "e_act_sram_pJ": 1295486.157,
+    "e_act_sram_pJ": 1492271.104,
     "e_weights_spad_pJ": 565828.387,
     "e_psum_spad_pJ": 4018549.241,
-    "total_pJ": 16723059.356,
+    "total_pJ": 16919844.304,
     "repeat": 8,
-    "total_pJ_with_repeat": 133784474.848
+    "total_pJ_with_repeat": 135358754.432
   },
   "config5__M1_N10_K128_real_real__64x64": {
     "M": 1,
@@ -602,14 +637,15 @@
     "cycles": 2,
     "util_pct": 15.62,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 231.176,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2704.641,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2704.641
   },
   "corner1__M2048_N128_K20_real_real__8x8": {
     "M": 2048,
@@ -619,14 +655,15 @@
     "cycles": 131072,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 809968.435,
+    "e_act_sram_pJ": 1657264.538,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 3163532.988,
+    "total_pJ": 4010829.09,
     "repeat": 1,
-    "total_pJ_with_repeat": 3163532.988
+    "total_pJ_with_repeat": 4010829.09
   },
   "corner1__M8_N2048_K128_complex_real__8x8": {
     "M": 8,
@@ -636,14 +673,15 @@
     "cycles": 65536,
     "util_pct": 100.0,
     "real_macs": 4194304,
+    "capacity_ok": true,
     "e_mac_pJ": 1306764.771,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 511390.31,
+    "e_act_sram_pJ": 1030155.059,
     "e_weights_spad_pJ": 70728.548,
     "e_psum_spad_pJ": 502318.655,
-    "total_pJ": 3169357.088,
+    "total_pJ": 3688121.837,
     "repeat": 8,
-    "total_pJ_with_repeat": 25354856.704
+    "total_pJ_with_repeat": 29504974.696
   },
   "corner1__M128_N2048_K16_complex_complex__8x8": {
     "M": 128,
@@ -653,14 +691,15 @@
     "cycles": 262144,
     "util_pct": 100.0,
     "real_macs": 16777216,
+    "capacity_ok": true,
     "e_mac_pJ": 5227059.085,
     "e_weight_sram_pJ": 194538.701,
-    "e_act_sram_pJ": 2753776.845,
+    "e_act_sram_pJ": 4822178.202,
     "e_weights_spad_pJ": 282914.193,
     "e_psum_spad_pJ": 2009274.62,
-    "total_pJ": 10467563.445,
+    "total_pJ": 12535964.801,
     "repeat": 8,
-    "total_pJ_with_repeat": 83740507.56
+    "total_pJ_with_repeat": 100287718.408
   },
   "corner1__M2048_N128_K128_real_real__8x8": {
     "M": 2048,
@@ -670,14 +709,15 @@
     "cycles": 524288,
     "util_pct": 100.0,
     "real_macs": 33554432,
+    "capacity_ok": true,
     "e_mac_pJ": 10454118.171,
     "e_weight_sram_pJ": 24317.338,
-    "e_act_sram_pJ": 4091122.483,
+    "e_act_sram_pJ": 8441685.606,
     "e_weights_spad_pJ": 565828.387,
     "e_psum_spad_pJ": 4018549.241,
-    "total_pJ": 19153935.619,
+    "total_pJ": 23504498.742,
     "repeat": 8,
-    "total_pJ_with_repeat": 153231484.952
+    "total_pJ_with_repeat": 188035989.936
   },
   "corner1__M1_N10_K128_real_real__8x8": {
     "M": 1,
@@ -687,14 +727,15 @@
     "cycles": 32,
     "util_pct": 62.5,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 249.702,
+    "e_act_sram_pJ": 515.24,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2723.167,
+    "total_pJ": 2988.705,
     "repeat": 1,
-    "total_pJ_with_repeat": 2723.167
+    "total_pJ_with_repeat": 2988.705
   },
   "corner1__M2048_N128_K20_real_real__16x16": {
     "M": 2048,
@@ -704,14 +745,15 @@
     "cycles": 32768,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 506157.875,
+    "e_act_sram_pJ": 1029077.402,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2859722.428,
+    "total_pJ": 3382641.954,
     "repeat": 1,
-    "total_pJ_with_repeat": 2859722.428
+    "total_pJ_with_repeat": 3382641.954
   },
   "corner1__M8_N2048_K128_complex_real__16x16": {
     "M": 8,
@@ -721,14 +763,15 @@
     "cycles": 16384,
     "util_pct": 100.0,
     "real_macs": 4194304,
+    "capacity_ok": true,
     "e_mac_pJ": 1306764.771,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 268341.862,
+    "e_act_sram_pJ": 527605.35,
     "e_weights_spad_pJ": 70728.548,
     "e_psum_spad_pJ": 502318.655,
-    "total_pJ": 2926308.64,
+    "total_pJ": 3185572.128,
     "repeat": 8,
-    "total_pJ_with_repeat": 23410469.12
+    "total_pJ_with_repeat": 25484577.024
   },
   "corner1__M128_N2048_K16_complex_complex__16x16": {
     "M": 128,
@@ -738,14 +781,15 @@
     "cycles": 65536,
     "util_pct": 100.0,
     "real_macs": 16777216,
+    "capacity_ok": true,
     "e_mac_pJ": 5227059.085,
     "e_weight_sram_pJ": 194538.701,
-    "e_act_sram_pJ": 1781583.053,
+    "e_act_sram_pJ": 2811979.366,
     "e_weights_spad_pJ": 282914.193,
     "e_psum_spad_pJ": 2009274.62,
-    "total_pJ": 9495369.653,
+    "total_pJ": 10525765.966,
     "repeat": 8,
-    "total_pJ_with_repeat": 75962957.224
+    "total_pJ_with_repeat": 84206127.728
   },
   "corner1__M2048_N128_K128_real_real__16x16": {
     "M": 2048,
@@ -755,14 +799,15 @@
     "cycles": 131072,
     "util_pct": 100.0,
     "real_macs": 33554432,
+    "capacity_ok": true,
     "e_mac_pJ": 10454118.171,
     "e_weight_sram_pJ": 24317.338,
-    "e_act_sram_pJ": 2146734.899,
+    "e_act_sram_pJ": 4421287.936,
     "e_weights_spad_pJ": 565828.387,
     "e_psum_spad_pJ": 4018549.241,
-    "total_pJ": 17209548.035,
+    "total_pJ": 19484101.072,
     "repeat": 8,
-    "total_pJ_with_repeat": 137676384.28
+    "total_pJ_with_repeat": 155872808.576
   },
   "corner1__M1_N10_K128_real_real__16x16": {
     "M": 1,
@@ -772,14 +817,15 @@
     "cycles": 8,
     "util_pct": 62.5,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 269.854,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2743.319,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2743.319
   },
   "corner1__M2048_N128_K20_real_real__32x32": {
     "M": 2048,
@@ -789,14 +835,15 @@
     "cycles": 8192,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 354252.595,
+    "e_act_sram_pJ": 714983.834,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2707817.148,
+    "total_pJ": 3068548.386,
     "repeat": 1,
-    "total_pJ_with_repeat": 2707817.148
+    "total_pJ_with_repeat": 3068548.386
   },
   "corner1__M8_N2048_K128_complex_real__32x32": {
     "M": 8,
@@ -806,14 +853,15 @@
     "cycles": 4096,
     "util_pct": 100.0,
     "real_macs": 4194304,
+    "capacity_ok": true,
     "e_mac_pJ": 1306764.771,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 146817.638,
+    "e_act_sram_pJ": 276330.496,
     "e_weights_spad_pJ": 70728.548,
     "e_psum_spad_pJ": 502318.655,
-    "total_pJ": 2804784.416,
+    "total_pJ": 2934297.274,
     "repeat": 8,
-    "total_pJ_with_repeat": 22438275.328
+    "total_pJ_with_repeat": 23474378.192
   },
   "corner1__M128_N2048_K16_complex_complex__32x32": {
     "M": 128,
@@ -823,14 +871,15 @@
     "cycles": 32768,
     "util_pct": 50.0,
     "real_macs": 16777216,
+    "capacity_ok": true,
     "e_mac_pJ": 5227059.085,
     "e_weight_sram_pJ": 194538.701,
-    "e_act_sram_pJ": 1295486.157,
+    "e_act_sram_pJ": 1806879.949,
     "e_weights_spad_pJ": 282914.193,
     "e_psum_spad_pJ": 2009274.62,
-    "total_pJ": 9009272.757,
+    "total_pJ": 9520666.549,
     "repeat": 8,
-    "total_pJ_with_repeat": 72074182.056
+    "total_pJ_with_repeat": 76165332.392
   },
   "corner1__M2048_N128_K128_real_real__32x32": {
     "M": 2048,
@@ -840,14 +889,15 @@
     "cycles": 32768,
     "util_pct": 100.0,
     "real_macs": 33554432,
+    "capacity_ok": true,
     "e_mac_pJ": 10454118.171,
     "e_weight_sram_pJ": 24317.338,
-    "e_act_sram_pJ": 1174541.107,
+    "e_act_sram_pJ": 2411089.101,
     "e_weights_spad_pJ": 565828.387,
     "e_psum_spad_pJ": 4018549.241,
-    "total_pJ": 16237354.243,
+    "total_pJ": 17473902.236,
     "repeat": 8,
-    "total_pJ_with_repeat": 129898833.944
+    "total_pJ_with_repeat": 139791217.888
   },
   "corner1__M1_N10_K128_real_real__32x32": {
     "M": 1,
@@ -857,14 +907,15 @@
     "cycles": 4,
     "util_pct": 31.25,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 269.854,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2743.319,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2743.319
   },
   "corner1__M2048_N128_K20_real_real__64x64": {
     "M": 2048,
@@ -874,14 +925,15 @@
     "cycles": 4096,
     "util_pct": 31.25,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 278299.955,
+    "e_act_sram_pJ": 557937.05,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2631864.508,
+    "total_pJ": 2911501.602,
     "repeat": 1,
-    "total_pJ_with_repeat": 2631864.508
+    "total_pJ_with_repeat": 2911501.602
   },
   "corner1__M8_N2048_K128_complex_real__64x64": {
     "M": 8,
@@ -891,14 +943,15 @@
     "cycles": 1024,
     "util_pct": 100.0,
     "real_macs": 4194304,
+    "capacity_ok": true,
     "e_mac_pJ": 1306764.771,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 86055.526,
+    "e_act_sram_pJ": 150693.069,
     "e_weights_spad_pJ": 70728.548,
     "e_psum_spad_pJ": 502318.655,
-    "total_pJ": 2744022.304,
+    "total_pJ": 2808659.847,
     "repeat": 8,
-    "total_pJ_with_repeat": 21952178.432
+    "total_pJ_with_repeat": 22469278.776
   },
   "corner1__M128_N2048_K16_complex_complex__64x64": {
     "M": 128,
@@ -908,14 +961,15 @@
     "cycles": 16384,
     "util_pct": 25.0,
     "real_macs": 16777216,
+    "capacity_ok": true,
     "e_mac_pJ": 5227059.085,
     "e_weight_sram_pJ": 194538.701,
-    "e_act_sram_pJ": 1052437.709,
+    "e_act_sram_pJ": 1304330.24,
     "e_weights_spad_pJ": 282914.193,
     "e_psum_spad_pJ": 2009274.62,
-    "total_pJ": 8766224.309,
+    "total_pJ": 9018116.84,
     "repeat": 8,
-    "total_pJ_with_repeat": 70129794.472
+    "total_pJ_with_repeat": 72144934.72
   },
   "corner1__M2048_N128_K128_real_real__64x64": {
     "M": 2048,
@@ -925,14 +979,15 @@
     "cycles": 8192,
     "util_pct": 100.0,
     "real_macs": 33554432,
+    "capacity_ok": true,
     "e_mac_pJ": 10454118.171,
     "e_weight_sram_pJ": 24317.338,
-    "e_act_sram_pJ": 688444.211,
+    "e_act_sram_pJ": 1405989.683,
     "e_weights_spad_pJ": 565828.387,
     "e_psum_spad_pJ": 4018549.241,
-    "total_pJ": 15751257.347,
+    "total_pJ": 16468802.819,
     "repeat": 8,
-    "total_pJ_with_repeat": 126010058.776
+    "total_pJ_with_repeat": 131750422.552
   },
   "corner1__M1_N10_K128_real_real__64x64": {
     "M": 1,
@@ -942,14 +997,15 @@
     "cycles": 2,
     "util_pct": 15.62,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 269.854,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2743.319,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2743.319
   },
   "corner2__M2048_N128_K20_real_real__8x8": {
     "M": 2048,
@@ -959,14 +1015,15 @@
     "cycles": 131072,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 809968.435,
+    "e_act_sram_pJ": 1533129.523,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 3163532.988,
+    "total_pJ": 3886694.076,
     "repeat": 1,
-    "total_pJ_with_repeat": 3163532.988
+    "total_pJ_with_repeat": 3886694.076
   },
   "corner2__M16_N2048_K128_complex_real__8x8": {
     "M": 16,
@@ -976,14 +1033,15 @@
     "cycles": 131072,
     "util_pct": 100.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 1022780.621,
+    "e_act_sram_pJ": 1961056.666,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 5560559.374,
+    "total_pJ": 6498835.418,
     "repeat": 8,
-    "total_pJ_with_repeat": 44484474.992
+    "total_pJ_with_repeat": 51990683.344
   },
   "corner2__M128_N2048_K32_complex_complex__8x8": {
     "M": 128,
@@ -993,14 +1051,15 @@
     "cycles": 524288,
     "util_pct": 100.0,
     "real_macs": 33554432,
+    "capacity_ok": true,
     "e_mac_pJ": 10454118.171,
     "e_weight_sram_pJ": 389077.402,
-    "e_act_sram_pJ": 4698164.429,
+    "e_act_sram_pJ": 8344515.379,
     "e_weights_spad_pJ": 565828.387,
     "e_psum_spad_pJ": 4018549.241,
-    "total_pJ": 20125737.628,
+    "total_pJ": 23772088.579,
     "repeat": 8,
-    "total_pJ_with_repeat": 161005901.024
+    "total_pJ_with_repeat": 190176708.632
   },
   "corner2__M2048_N40_K128_real_real__8x8": {
     "M": 2048,
@@ -1010,14 +1069,15 @@
     "cycles": 163840,
     "util_pct": 100.0,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 1278475.776,
+    "e_act_sram_pJ": 2503434.24,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5985604.881,
+    "total_pJ": 7210563.345,
     "repeat": 8,
-    "total_pJ_with_repeat": 47884839.048
+    "total_pJ_with_repeat": 57684506.76
   },
   "corner2__M2048_N128_K40_real_real__8x8": {
     "M": 2048,
@@ -1027,14 +1087,15 @@
     "cycles": 163840,
     "util_pct": 100.0,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 1417589.555,
+    "e_act_sram_pJ": 2732733.235,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 6124718.66,
+    "total_pJ": 7439862.34,
     "repeat": 8,
-    "total_pJ_with_repeat": 48997749.28
+    "total_pJ_with_repeat": 59518898.72
   },
   "corner2__M1_N10_K128_real_real__8x8": {
     "M": 1,
@@ -1044,14 +1105,15 @@
     "cycles": 32,
     "util_pct": 62.5,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 249.702,
+    "e_act_sram_pJ": 488.952,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2723.167,
+    "total_pJ": 2962.417,
     "repeat": 1,
-    "total_pJ_with_repeat": 2723.167
+    "total_pJ_with_repeat": 2962.417
   },
   "corner2__M2048_N128_K20_real_real__16x16": {
     "M": 2048,
@@ -1061,14 +1123,15 @@
     "cycles": 32768,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 506157.875,
+    "e_act_sram_pJ": 933327.667,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2859722.428,
+    "total_pJ": 3286892.22,
     "repeat": 1,
-    "total_pJ_with_repeat": 2859722.428
+    "total_pJ_with_repeat": 3286892.22
   },
   "corner2__M16_N2048_K128_complex_real__16x16": {
     "M": 16,
@@ -1078,14 +1141,15 @@
     "cycles": 32768,
     "util_pct": 100.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 536683.725,
+    "e_act_sram_pJ": 1001373.696,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 5074462.478,
+    "total_pJ": 5539152.449,
     "repeat": 8,
-    "total_pJ_with_repeat": 40595699.824
+    "total_pJ_with_repeat": 44313219.592
   },
   "corner2__M128_N2048_K32_complex_complex__16x16": {
     "M": 128,
@@ -1095,14 +1159,15 @@
     "cycles": 131072,
     "util_pct": 100.0,
     "real_macs": 33554432,
+    "capacity_ok": true,
     "e_mac_pJ": 10454118.171,
     "e_weight_sram_pJ": 389077.402,
-    "e_act_sram_pJ": 2753776.845,
+    "e_act_sram_pJ": 4505783.501,
     "e_weights_spad_pJ": 565828.387,
     "e_psum_spad_pJ": 4018549.241,
-    "total_pJ": 18181350.044,
+    "total_pJ": 19933356.7,
     "repeat": 8,
-    "total_pJ_with_repeat": 145450800.352
+    "total_pJ_with_repeat": 159466853.6
   },
   "corner2__M2048_N40_K128_real_real__16x16": {
     "M": 2048,
@@ -1112,14 +1177,15 @@
     "cycles": 65536,
     "util_pct": 62.5,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 1035427.328,
+    "e_act_sram_pJ": 2023592.755,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5742556.433,
+    "total_pJ": 6730721.86,
     "repeat": 8,
-    "total_pJ_with_repeat": 45940451.464
+    "total_pJ_with_repeat": 53845774.88
   },
   "corner2__M2048_N128_K40_real_real__16x16": {
     "M": 2048,
@@ -1129,14 +1195,15 @@
     "cycles": 65536,
     "util_pct": 62.5,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 809968.435,
+    "e_act_sram_pJ": 1533129.523,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5517097.54,
+    "total_pJ": 6240258.628,
     "repeat": 8,
-    "total_pJ_with_repeat": 44136780.32
+    "total_pJ_with_repeat": 49922069.024
   },
   "corner2__M1_N10_K128_real_real__16x16": {
     "M": 1,
@@ -1146,14 +1213,15 @@
     "cycles": 8,
     "util_pct": 62.5,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 254.654,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2728.119,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2728.119
   },
   "corner2__M2048_N128_K20_real_real__32x32": {
     "M": 2048,
@@ -1163,14 +1231,15 @@
     "cycles": 8192,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 354252.595,
+    "e_act_sram_pJ": 633426.739,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2707817.148,
+    "total_pJ": 2986991.292,
     "repeat": 1,
-    "total_pJ_with_repeat": 2707817.148
+    "total_pJ_with_repeat": 2986991.292
   },
   "corner2__M16_N2048_K128_complex_real__32x32": {
     "M": 16,
@@ -1180,14 +1249,15 @@
     "cycles": 8192,
     "util_pct": 100.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 293635.277,
+    "e_act_sram_pJ": 521532.211,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 4831414.03,
+    "total_pJ": 5059310.964,
     "repeat": 8,
-    "total_pJ_with_repeat": 38651312.24
+    "total_pJ_with_repeat": 40474487.712
   },
   "corner2__M128_N2048_K32_complex_complex__32x32": {
     "M": 128,
@@ -1197,14 +1267,15 @@
     "cycles": 32768,
     "util_pct": 100.0,
     "real_macs": 33554432,
+    "capacity_ok": true,
     "e_mac_pJ": 10454118.171,
     "e_weight_sram_pJ": 389077.402,
-    "e_act_sram_pJ": 1781583.053,
+    "e_act_sram_pJ": 2586417.562,
     "e_weights_spad_pJ": 565828.387,
     "e_psum_spad_pJ": 4018549.241,
-    "total_pJ": 17209156.252,
+    "total_pJ": 18013990.761,
     "repeat": 8,
-    "total_pJ_with_repeat": 137673250.016
+    "total_pJ_with_repeat": 144111926.088
   },
   "corner2__M2048_N40_K128_real_real__32x32": {
     "M": 2048,
@@ -1214,14 +1285,15 @@
     "cycles": 16384,
     "util_pct": 62.5,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 549330.432,
+    "e_act_sram_pJ": 1063909.786,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5256459.537,
+    "total_pJ": 5771038.89,
     "repeat": 8,
-    "total_pJ_with_repeat": 42051676.296
+    "total_pJ_with_repeat": 46168311.12
   },
   "corner2__M2048_N128_K40_real_real__32x32": {
     "M": 2048,
@@ -1231,14 +1303,15 @@
     "cycles": 16384,
     "util_pct": 62.5,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 506157.875,
+    "e_act_sram_pJ": 933327.667,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5213286.98,
+    "total_pJ": 5640456.772,
     "repeat": 8,
-    "total_pJ_with_repeat": 41706295.84
+    "total_pJ_with_repeat": 45123654.176
   },
   "corner2__M1_N10_K128_real_real__32x32": {
     "M": 1,
@@ -1248,14 +1321,15 @@
     "cycles": 4,
     "util_pct": 31.25,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 254.654,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2728.119,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2728.119
   },
   "corner2__M2048_N128_K20_real_real__64x64": {
     "M": 2048,
@@ -1265,14 +1339,15 @@
     "cycles": 4096,
     "util_pct": 31.25,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 278299.955,
+    "e_act_sram_pJ": 483476.275,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2631864.508,
+    "total_pJ": 2837040.828,
     "repeat": 1,
-    "total_pJ_with_repeat": 2631864.508
+    "total_pJ_with_repeat": 2837040.828
   },
   "corner2__M16_N2048_K128_complex_real__64x64": {
     "M": 16,
@@ -1282,14 +1357,15 @@
     "cycles": 2048,
     "util_pct": 100.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 172111.053,
+    "e_act_sram_pJ": 281611.469,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 4709889.806,
+    "total_pJ": 4819390.222,
     "repeat": 8,
-    "total_pJ_with_repeat": 37679118.448
+    "total_pJ_with_repeat": 38555121.776
   },
   "corner2__M128_N2048_K32_complex_complex__64x64": {
     "M": 128,
@@ -1299,14 +1375,15 @@
     "cycles": 16384,
     "util_pct": 50.0,
     "real_macs": 33554432,
+    "capacity_ok": true,
     "e_mac_pJ": 10454118.171,
     "e_weight_sram_pJ": 389077.402,
-    "e_act_sram_pJ": 1295486.157,
+    "e_act_sram_pJ": 1626734.592,
     "e_weights_spad_pJ": 565828.387,
     "e_psum_spad_pJ": 4018549.241,
-    "total_pJ": 16723059.356,
+    "total_pJ": 17054307.792,
     "repeat": 8,
-    "total_pJ_with_repeat": 133784474.848
+    "total_pJ_with_repeat": 136434462.336
   },
   "corner2__M2048_N40_K128_real_real__64x64": {
     "M": 2048,
@@ -1316,14 +1393,15 @@
     "cycles": 4096,
     "util_pct": 62.5,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 306281.984,
+    "e_act_sram_pJ": 584068.301,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5013411.089,
+    "total_pJ": 5291197.406,
     "repeat": 8,
-    "total_pJ_with_repeat": 40107288.712
+    "total_pJ_with_repeat": 42329579.248
   },
   "corner2__M2048_N128_K40_real_real__64x64": {
     "M": 2048,
@@ -1333,14 +1411,15 @@
     "cycles": 4096,
     "util_pct": 62.5,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 354252.595,
+    "e_act_sram_pJ": 633426.739,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5061381.7,
+    "total_pJ": 5340555.844,
     "repeat": 8,
-    "total_pJ_with_repeat": 40491053.6
+    "total_pJ_with_repeat": 42724446.752
   },
   "corner2__M1_N10_K128_real_real__64x64": {
     "M": 1,
@@ -1350,14 +1429,15 @@
     "cycles": 2,
     "util_pct": 15.62,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 254.654,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2728.119,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2728.119
   },
   "corner3p__M2048_N128_K20_real_real__8x8": {
     "M": 2048,
@@ -1367,14 +1447,15 @@
     "cycles": 131072,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 809968.435,
+    "e_act_sram_pJ": 1533129.523,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 3163532.988,
+    "total_pJ": 3886694.076,
     "repeat": 1,
-    "total_pJ_with_repeat": 3163532.988
+    "total_pJ_with_repeat": 3886694.076
   },
   "corner3p__M8_N2048_K128_complex_real__8x8": {
     "M": 8,
@@ -1384,14 +1465,15 @@
     "cycles": 65536,
     "util_pct": 100.0,
     "real_macs": 4194304,
+    "capacity_ok": true,
     "e_mac_pJ": 1306764.771,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 511390.31,
+    "e_act_sram_pJ": 980528.333,
     "e_weights_spad_pJ": 70728.548,
     "e_psum_spad_pJ": 502318.655,
-    "total_pJ": 3169357.088,
+    "total_pJ": 3638495.111,
     "repeat": 24,
-    "total_pJ_with_repeat": 76064570.112
+    "total_pJ_with_repeat": 87323882.664
   },
   "corner3p__M128_N2048_K8_complex_complex__8x8": {
     "M": 128,
@@ -1401,14 +1483,15 @@
     "cycles": 131072,
     "util_pct": 100.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 97269.35,
-    "e_act_sram_pJ": 1781583.053,
+    "e_act_sram_pJ": 2586417.562,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 5638476.353,
+    "total_pJ": 6443310.862,
     "repeat": 8,
-    "total_pJ_with_repeat": 45107810.824
+    "total_pJ_with_repeat": 51546486.896
   },
   "corner3p__M128_N2048_K16_complex_complex__8x8": {
     "M": 128,
@@ -1418,14 +1501,15 @@
     "cycles": 262144,
     "util_pct": 100.0,
     "real_macs": 16777216,
+    "capacity_ok": true,
     "e_mac_pJ": 5227059.085,
     "e_weight_sram_pJ": 194538.701,
-    "e_act_sram_pJ": 2753776.845,
+    "e_act_sram_pJ": 4505783.501,
     "e_weights_spad_pJ": 282914.193,
     "e_psum_spad_pJ": 2009274.62,
-    "total_pJ": 10467563.445,
+    "total_pJ": 12219570.101,
     "repeat": 8,
-    "total_pJ_with_repeat": 83740507.56
+    "total_pJ_with_repeat": 97756560.808
   },
   "corner3p__M2048_N40_K128_real_real__8x8": {
     "M": 2048,
@@ -1435,14 +1519,15 @@
     "cycles": 163840,
     "util_pct": 100.0,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 1278475.776,
+    "e_act_sram_pJ": 2503434.24,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5985604.881,
+    "total_pJ": 7210563.345,
     "repeat": 8,
-    "total_pJ_with_repeat": 47884839.048
+    "total_pJ_with_repeat": 57684506.76
   },
   "corner3p__M2048_N128_K40_real_real__8x8": {
     "M": 2048,
@@ -1452,14 +1537,15 @@
     "cycles": 163840,
     "util_pct": 100.0,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 1417589.555,
+    "e_act_sram_pJ": 2732733.235,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 6124718.66,
+    "total_pJ": 7439862.34,
     "repeat": 8,
-    "total_pJ_with_repeat": 48997749.28
+    "total_pJ_with_repeat": 59518898.72
   },
   "corner3p__M1_N10_K128_real_real__8x8": {
     "M": 1,
@@ -1469,14 +1555,15 @@
     "cycles": 32,
     "util_pct": 62.5,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 249.702,
+    "e_act_sram_pJ": 488.952,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2723.167,
+    "total_pJ": 2962.417,
     "repeat": 1,
-    "total_pJ_with_repeat": 2723.167
+    "total_pJ_with_repeat": 2962.417
   },
   "corner3p__M2048_N128_K20_real_real__16x16": {
     "M": 2048,
@@ -1486,14 +1573,15 @@
     "cycles": 32768,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 506157.875,
+    "e_act_sram_pJ": 933327.667,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2859722.428,
+    "total_pJ": 3286892.22,
     "repeat": 1,
-    "total_pJ_with_repeat": 2859722.428
+    "total_pJ_with_repeat": 3286892.22
   },
   "corner3p__M8_N2048_K128_complex_real__16x16": {
     "M": 8,
@@ -1503,14 +1591,15 @@
     "cycles": 16384,
     "util_pct": 100.0,
     "real_macs": 4194304,
+    "capacity_ok": true,
     "e_mac_pJ": 1306764.771,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 268341.862,
+    "e_act_sram_pJ": 500686.848,
     "e_weights_spad_pJ": 70728.548,
     "e_psum_spad_pJ": 502318.655,
-    "total_pJ": 2926308.64,
+    "total_pJ": 3158653.626,
     "repeat": 24,
-    "total_pJ_with_repeat": 70231407.36
+    "total_pJ_with_repeat": 75807687.024
   },
   "corner3p__M128_N2048_K8_complex_complex__16x16": {
     "M": 128,
@@ -1520,14 +1609,15 @@
     "cycles": 65536,
     "util_pct": 50.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 97269.35,
-    "e_act_sram_pJ": 1295486.157,
+    "e_act_sram_pJ": 1626734.592,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 5152379.457,
+    "total_pJ": 5483627.892,
     "repeat": 8,
-    "total_pJ_with_repeat": 41219035.656
+    "total_pJ_with_repeat": 43869023.136
   },
   "corner3p__M128_N2048_K16_complex_complex__16x16": {
     "M": 128,
@@ -1537,14 +1627,15 @@
     "cycles": 65536,
     "util_pct": 100.0,
     "real_macs": 16777216,
+    "capacity_ok": true,
     "e_mac_pJ": 5227059.085,
     "e_weight_sram_pJ": 194538.701,
-    "e_act_sram_pJ": 1781583.053,
+    "e_act_sram_pJ": 2586417.562,
     "e_weights_spad_pJ": 282914.193,
     "e_psum_spad_pJ": 2009274.62,
-    "total_pJ": 9495369.653,
+    "total_pJ": 10300204.161,
     "repeat": 8,
-    "total_pJ_with_repeat": 75962957.224
+    "total_pJ_with_repeat": 82401633.288
   },
   "corner3p__M2048_N40_K128_real_real__16x16": {
     "M": 2048,
@@ -1554,14 +1645,15 @@
     "cycles": 65536,
     "util_pct": 62.5,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 1035427.328,
+    "e_act_sram_pJ": 2023592.755,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5742556.433,
+    "total_pJ": 6730721.86,
     "repeat": 8,
-    "total_pJ_with_repeat": 45940451.464
+    "total_pJ_with_repeat": 53845774.88
   },
   "corner3p__M2048_N128_K40_real_real__16x16": {
     "M": 2048,
@@ -1571,14 +1663,15 @@
     "cycles": 65536,
     "util_pct": 62.5,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 809968.435,
+    "e_act_sram_pJ": 1533129.523,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5517097.54,
+    "total_pJ": 6240258.628,
     "repeat": 8,
-    "total_pJ_with_repeat": 44136780.32
+    "total_pJ_with_repeat": 49922069.024
   },
   "corner3p__M1_N10_K128_real_real__16x16": {
     "M": 1,
@@ -1588,14 +1681,15 @@
     "cycles": 8,
     "util_pct": 62.5,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 254.654,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2728.119,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2728.119
   },
   "corner3p__M2048_N128_K20_real_real__32x32": {
     "M": 2048,
@@ -1605,14 +1699,15 @@
     "cycles": 8192,
     "util_pct": 62.5,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 354252.595,
+    "e_act_sram_pJ": 633426.739,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2707817.148,
+    "total_pJ": 2986991.292,
     "repeat": 1,
-    "total_pJ_with_repeat": 2707817.148
+    "total_pJ_with_repeat": 2986991.292
   },
   "corner3p__M8_N2048_K128_complex_real__32x32": {
     "M": 8,
@@ -1622,14 +1717,15 @@
     "cycles": 4096,
     "util_pct": 100.0,
     "real_macs": 4194304,
+    "capacity_ok": true,
     "e_mac_pJ": 1306764.771,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 146817.638,
+    "e_act_sram_pJ": 260766.106,
     "e_weights_spad_pJ": 70728.548,
     "e_psum_spad_pJ": 502318.655,
-    "total_pJ": 2804784.416,
+    "total_pJ": 2918732.884,
     "repeat": 24,
-    "total_pJ_with_repeat": 67314825.984
+    "total_pJ_with_repeat": 70049589.216
   },
   "corner3p__M128_N2048_K8_complex_complex__32x32": {
     "M": 128,
@@ -1639,14 +1735,15 @@
     "cycles": 32768,
     "util_pct": 25.0,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 97269.35,
-    "e_act_sram_pJ": 1052437.709,
+    "e_act_sram_pJ": 1146893.107,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 4909331.009,
+    "total_pJ": 5003786.407,
     "repeat": 8,
-    "total_pJ_with_repeat": 39274648.072
+    "total_pJ_with_repeat": 40030291.256
   },
   "corner3p__M128_N2048_K16_complex_complex__32x32": {
     "M": 128,
@@ -1656,14 +1753,15 @@
     "cycles": 32768,
     "util_pct": 50.0,
     "real_macs": 16777216,
+    "capacity_ok": true,
     "e_mac_pJ": 5227059.085,
     "e_weight_sram_pJ": 194538.701,
-    "e_act_sram_pJ": 1295486.157,
+    "e_act_sram_pJ": 1626734.592,
     "e_weights_spad_pJ": 282914.193,
     "e_psum_spad_pJ": 2009274.62,
-    "total_pJ": 9009272.757,
+    "total_pJ": 9340521.192,
     "repeat": 8,
-    "total_pJ_with_repeat": 72074182.056
+    "total_pJ_with_repeat": 74724169.536
   },
   "corner3p__M2048_N40_K128_real_real__32x32": {
     "M": 2048,
@@ -1673,14 +1771,15 @@
     "cycles": 16384,
     "util_pct": 62.5,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 549330.432,
+    "e_act_sram_pJ": 1063909.786,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5256459.537,
+    "total_pJ": 5771038.89,
     "repeat": 8,
-    "total_pJ_with_repeat": 42051676.296
+    "total_pJ_with_repeat": 46168311.12
   },
   "corner3p__M2048_N128_K40_real_real__32x32": {
     "M": 2048,
@@ -1690,14 +1789,15 @@
     "cycles": 16384,
     "util_pct": 62.5,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 506157.875,
+    "e_act_sram_pJ": 933327.667,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5213286.98,
+    "total_pJ": 5640456.772,
     "repeat": 8,
-    "total_pJ_with_repeat": 41706295.84
+    "total_pJ_with_repeat": 45123654.176
   },
   "corner3p__M1_N10_K128_real_real__32x32": {
     "M": 1,
@@ -1707,14 +1807,15 @@
     "cycles": 4,
     "util_pct": 31.25,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 254.654,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2728.119,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2728.119
   },
   "corner3p__M2048_N128_K20_real_real__64x64": {
     "M": 2048,
@@ -1724,14 +1825,15 @@
     "cycles": 4096,
     "util_pct": 31.25,
     "real_macs": 5242880,
+    "capacity_ok": true,
     "e_mac_pJ": 1633455.964,
     "e_weight_sram_pJ": 3799.584,
-    "e_act_sram_pJ": 278299.955,
+    "e_act_sram_pJ": 483476.275,
     "e_weights_spad_pJ": 88410.685,
     "e_psum_spad_pJ": 627898.319,
-    "total_pJ": 2631864.508,
+    "total_pJ": 2837040.828,
     "repeat": 1,
-    "total_pJ_with_repeat": 2631864.508
+    "total_pJ_with_repeat": 2837040.828
   },
   "corner3p__M8_N2048_K128_complex_real__64x64": {
     "M": 8,
@@ -1741,14 +1843,15 @@
     "cycles": 1024,
     "util_pct": 100.0,
     "real_macs": 4194304,
+    "capacity_ok": true,
     "e_mac_pJ": 1306764.771,
     "e_weight_sram_pJ": 778154.803,
-    "e_act_sram_pJ": 86055.526,
+    "e_act_sram_pJ": 140805.734,
     "e_weights_spad_pJ": 70728.548,
     "e_psum_spad_pJ": 502318.655,
-    "total_pJ": 2744022.304,
+    "total_pJ": 2798772.512,
     "repeat": 24,
-    "total_pJ_with_repeat": 65856535.296
+    "total_pJ_with_repeat": 67170540.288
   },
   "corner3p__M128_N2048_K8_complex_complex__64x64": {
     "M": 128,
@@ -1758,14 +1861,15 @@
     "cycles": 16384,
     "util_pct": 12.5,
     "real_macs": 8388608,
+    "capacity_ok": true,
     "e_mac_pJ": 2613529.543,
     "e_weight_sram_pJ": 97269.35,
-    "e_act_sram_pJ": 930913.485,
+    "e_act_sram_pJ": 906972.365,
     "e_weights_spad_pJ": 141457.097,
     "e_psum_spad_pJ": 1004637.31,
-    "total_pJ": 4787806.785,
+    "total_pJ": 4763865.665,
     "repeat": 8,
-    "total_pJ_with_repeat": 38302454.28
+    "total_pJ_with_repeat": 38110925.32
   },
   "corner3p__M128_N2048_K16_complex_complex__64x64": {
     "M": 128,
@@ -1775,14 +1879,15 @@
     "cycles": 16384,
     "util_pct": 25.0,
     "real_macs": 16777216,
+    "capacity_ok": true,
     "e_mac_pJ": 5227059.085,
     "e_weight_sram_pJ": 194538.701,
-    "e_act_sram_pJ": 1052437.709,
+    "e_act_sram_pJ": 1146893.107,
     "e_weights_spad_pJ": 282914.193,
     "e_psum_spad_pJ": 2009274.62,
-    "total_pJ": 8766224.309,
+    "total_pJ": 8860679.707,
     "repeat": 8,
-    "total_pJ_with_repeat": 70129794.472
+    "total_pJ_with_repeat": 70885437.656
   },
   "corner3p__M2048_N40_K128_real_real__64x64": {
     "M": 2048,
@@ -1792,14 +1897,15 @@
     "cycles": 4096,
     "util_pct": 62.5,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 306281.984,
+    "e_act_sram_pJ": 584068.301,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5013411.089,
+    "total_pJ": 5291197.406,
     "repeat": 8,
-    "total_pJ_with_repeat": 40107288.712
+    "total_pJ_with_repeat": 42329579.248
   },
   "corner3p__M2048_N128_K40_real_real__64x64": {
     "M": 2048,
@@ -1809,14 +1915,15 @@
     "cycles": 4096,
     "util_pct": 62.5,
     "real_macs": 10485760,
+    "capacity_ok": true,
     "e_mac_pJ": 3266911.928,
     "e_weight_sram_pJ": 7599.168,
-    "e_act_sram_pJ": 354252.595,
+    "e_act_sram_pJ": 633426.739,
     "e_weights_spad_pJ": 176821.371,
     "e_psum_spad_pJ": 1255796.638,
-    "total_pJ": 5061381.7,
+    "total_pJ": 5340555.844,
     "repeat": 8,
-    "total_pJ_with_repeat": 40491053.6
+    "total_pJ_with_repeat": 42724446.752
   },
   "corner3p__M1_N10_K128_real_real__64x64": {
     "M": 1,
@@ -1826,13 +1933,14 @@
     "cycles": 2,
     "util_pct": 15.62,
     "real_macs": 1280,
+    "capacity_ok": true,
     "e_mac_pJ": 398.793,
     "e_weight_sram_pJ": 1899.792,
-    "e_act_sram_pJ": 131.026,
+    "e_act_sram_pJ": 254.654,
     "e_weights_spad_pJ": 21.585,
     "e_psum_spad_pJ": 153.295,
-    "total_pJ": 2604.491,
+    "total_pJ": 2728.119,
     "repeat": 1,
-    "total_pJ_with_repeat": 2604.491
+    "total_pJ_with_repeat": 2728.119
   }
 }

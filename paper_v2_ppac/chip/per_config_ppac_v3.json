@@ -5,26 +5,27 @@
       "label": "Config 4",
       "family": "Mambino",
       "params_band": "106K",
+      "chip_tier": "320KB",
       "accuracy": 0.5993,
       "array_x": 8,
       "array_y": 8,
       "n_pe": 64,
       "total_cycles": 4849696,
       "latency_ms": 4.8497,
-      "energy_mJ": 0.24401,
-      "power_mW": 50.315,
+      "energy_mJ": 0.27026,
+      "power_mW": 55.728,
       "throughput_ips": 206.198,
       "total_real_macs": 307234048,
-      "pj_per_real_mac": 0.7942,
-      "acc_per_mJ": 2.45602,
-      "acc_x_throughput_per_W": 2456.019,
-      "edp_mJ_ms": 1.18339,
+      "pj_per_real_mac": 0.8797,
+      "acc_per_mJ": 2.21745,
+      "acc_x_throughput_per_W": 2217.454,
+      "edp_mJ_ms": 1.3107,
       "state_sram_reads": 196608,
       "state_sram_writes": 196608,
       "per_component_pJ": {
         "mac": 95720918.28500001,
         "weight_sram": 21015879.055999998,
-        "act_sram": 49366464.761,
+        "act_sram": 74405431.042,
         "weights_spad": 5180887.742,
         "psum_spad": 36794994.774000004,
         "elemwise_structural": 0.0,
@@ -33,7 +34,7 @@
         "elemwise_moderate": 21627726.137,
         "elemwise_reduction": 85.99,
         "state_sram": 1990632.407,
-        "leakage": 331122.747
+        "leakage": 1544396.122
       },
       "per_gemm": [
         {
@@ -44,14 +45,15 @@
           "cycles": 131072,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 809968.435,
+          "e_act_sram_pJ": 1397876.326,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 3163532.988,
+          "total_pJ": 3751440.879,
           "repeat": 1,
-          "total_pJ_with_repeat": 3163532.988
+          "total_pJ_with_repeat": 3751440.879
         },
         {
           "M": 8,
@@ -61,14 +63,15 @@
           "cycles": 65536,
           "util_pct": 100.0,
           "real_macs": 4194304,
+          "capacity_ok": true,
           "e_mac_pJ": 1306764.771,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 511390.31,
+          "e_act_sram_pJ": 888465.306,
           "e_weights_spad_pJ": 70728.548,
           "e_psum_spad_pJ": 502318.655,
-          "total_pJ": 3169357.088,
+          "total_pJ": 3546432.084,
           "repeat": 24,
-          "total_pJ_with_repeat": 76064570.112
+          "total_pJ_with_repeat": 85114370.016
         },
         {
           "M": 128,
@@ -78,14 +81,15 @@
           "cycles": 131072,
           "util_pct": 100.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 97269.35,
-          "e_act_sram_pJ": 1781583.053,
+          "e_act_sram_pJ": 2361258.803,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 5638476.353,
+          "total_pJ": 6218152.103,
           "repeat": 8,
-          "total_pJ_with_repeat": 45107810.824
+          "total_pJ_with_repeat": 49745216.824
         },
         {
           "M": 128,
@@ -95,14 +99,15 @@
           "cycles": 262144,
           "util_pct": 100.0,
           "real_macs": 16777216,
+          "capacity_ok": true,
           "e_mac_pJ": 5227059.085,
           "e_weight_sram_pJ": 194538.701,
-          "e_act_sram_pJ": 2753776.845,
+          "e_act_sram_pJ": 4099234.202,
           "e_weights_spad_pJ": 282914.193,
           "e_psum_spad_pJ": 2009274.62,
-          "total_pJ": 10467563.445,
+          "total_pJ": 11813020.801,
           "repeat": 8,
-          "total_pJ_with_repeat": 83740507.56
+          "total_pJ_with_repeat": 94504166.408
         },
         {
           "M": 1,
@@ -112,14 +117,15 @@
           "cycles": 32,
           "util_pct": 62.5,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 249.702,
+          "e_act_sram_pJ": 443.332,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2723.167,
+          "total_pJ": 2916.797,
           "repeat": 1,
-          "total_pJ_with_repeat": 2723.167
+          "total_pJ_with_repeat": 2916.797
         }
       ]
     },
@@ -128,26 +134,27 @@
       "label": "Config 4",
       "family": "Mambino",
       "params_band": "106K",
+      "chip_tier": "320KB",
       "accuracy": 0.5993,
       "array_x": 16,
       "array_y": 16,
       "n_pe": 256,
       "total_cycles": 1474568,
       "latency_ms": 1.4746,
-      "energy_mJ": 0.22598,
-      "power_mW": 153.251,
+      "energy_mJ": 0.23838,
+      "power_mW": 161.66,
       "throughput_ips": 678.165,
       "total_real_macs": 307234048,
-      "pj_per_real_mac": 0.7355,
-      "acc_per_mJ": 2.65202,
-      "acc_x_throughput_per_W": 2652.018,
-      "edp_mJ_ms": 0.33322,
+      "pj_per_real_mac": 0.7759,
+      "acc_per_mJ": 2.51407,
+      "acc_x_throughput_per_W": 2514.073,
+      "edp_mJ_ms": 0.3515,
       "state_sram_reads": 196608,
       "state_sram_writes": 196608,
       "per_component_pJ": {
         "mac": 95720918.28500001,
         "weight_sram": 21015879.055999998,
-        "act_sram": 31563047.269,
+        "act_sram": 42578544.39,
         "weights_spad": 5180887.742,
         "psum_spad": 36794994.774000004,
         "elemwise_structural": 0.0,
@@ -156,7 +163,7 @@
         "elemwise_moderate": 21627726.137,
         "elemwise_reduction": 85.99,
         "state_sram": 1990632.407,
-        "leakage": 100679.095
+        "leakage": 1484401.383
       },
       "per_gemm": [
         {
@@ -167,14 +174,15 @@
           "cycles": 32768,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 506157.875,
+          "e_act_sram_pJ": 854759.014,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2859722.428,
+          "total_pJ": 3208323.567,
           "repeat": 1,
-          "total_pJ_with_repeat": 2859722.428
+          "total_pJ_with_repeat": 3208323.567
         },
         {
           "M": 8,
@@ -184,14 +192,15 @@
           "cycles": 16384,
           "util_pct": 100.0,
           "real_macs": 4194304,
+          "capacity_ok": true,
           "e_mac_pJ": 1306764.771,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 268341.862,
+          "e_act_sram_pJ": 453971.456,
           "e_weights_spad_pJ": 70728.548,
           "e_psum_spad_pJ": 502318.655,
-          "total_pJ": 2926308.64,
+          "total_pJ": 3111938.234,
           "repeat": 24,
-          "total_pJ_with_repeat": 70231407.36
+          "total_pJ_with_repeat": 74686517.616
         },
         {
           "M": 128,
@@ -201,14 +210,15 @@
           "cycles": 65536,
           "util_pct": 50.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 97269.35,
-          "e_act_sram_pJ": 1295486.157,
+          "e_act_sram_pJ": 1492271.104,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 5152379.457,
+          "total_pJ": 5349164.404,
           "repeat": 8,
-          "total_pJ_with_repeat": 41219035.656
+          "total_pJ_with_repeat": 42793315.232
         },
         {
           "M": 128,
@@ -218,14 +228,15 @@
           "cycles": 65536,
           "util_pct": 100.0,
           "real_macs": 16777216,
+          "capacity_ok": true,
           "e_mac_pJ": 5227059.085,
           "e_weight_sram_pJ": 194538.701,
-          "e_act_sram_pJ": 1781583.053,
+          "e_act_sram_pJ": 2361258.803,
           "e_weights_spad_pJ": 282914.193,
           "e_psum_spad_pJ": 2009274.62,
-          "total_pJ": 9495369.653,
+          "total_pJ": 10075045.403,
           "repeat": 8,
-          "total_pJ_with_repeat": 75962957.224
+          "total_pJ_with_repeat": 80600363.224
         },
         {
           "M": 1,
@@ -235,14 +246,15 @@
           "cycles": 8,
           "util_pct": 62.5,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 231.176,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2704.641,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2704.641
         }
       ]
     },
@@ -251,26 +263,27 @@
       "label": "Config 4",
       "family": "Mambino",
       "params_band": "106K",
+      "chip_tier": "320KB",
       "accuracy": 0.5993,
       "array_x": 32,
       "array_y": 32,
       "n_pe": 1024,
       "total_cycles": 630788,
       "latency_ms": 0.6308,
-      "energy_mJ": 0.21702,
-      "power_mW": 344.045,
+      "energy_mJ": 0.22335,
+      "power_mW": 354.084,
       "throughput_ips": 1585.319,
       "total_real_macs": 307234048,
-      "pj_per_real_mac": 0.7064,
-      "acc_per_mJ": 2.7615,
-      "acc_x_throughput_per_W": 2761.502,
-      "edp_mJ_ms": 0.13689,
+      "pj_per_real_mac": 0.727,
+      "acc_per_mJ": 2.68321,
+      "acc_x_throughput_per_W": 2683.211,
+      "edp_mJ_ms": 0.14089,
       "state_sram_reads": 196608,
       "state_sram_writes": 196608,
       "per_component_pJ": {
         "mac": 95720918.28500001,
         "weight_sram": 21015879.055999998,
-        "act_sram": 22661397.861,
+        "act_sram": 26665207.141999997,
         "weights_spad": 5180887.742,
         "psum_spad": 36794994.774000004,
         "elemwise_structural": 0.0,
@@ -279,7 +292,7 @@
         "elemwise_moderate": 21627726.137,
         "elemwise_reduction": 85.99,
         "state_sram": 1990632.407,
-        "leakage": 43068.319
+        "leakage": 2371469.351
       },
       "per_gemm": [
         {
@@ -290,14 +303,15 @@
           "cycles": 8192,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 354252.595,
+          "e_act_sram_pJ": 583200.358,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2707817.148,
+          "total_pJ": 2936764.911,
           "repeat": 1,
-          "total_pJ_with_repeat": 2707817.148
+          "total_pJ_with_repeat": 2936764.911
         },
         {
           "M": 8,
@@ -307,14 +321,15 @@
           "cycles": 4096,
           "util_pct": 100.0,
           "real_macs": 4194304,
+          "capacity_ok": true,
           "e_mac_pJ": 1306764.771,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 146817.638,
+          "e_act_sram_pJ": 236724.531,
           "e_weights_spad_pJ": 70728.548,
           "e_psum_spad_pJ": 502318.655,
-          "total_pJ": 2804784.416,
+          "total_pJ": 2894691.309,
           "repeat": 24,
-          "total_pJ_with_repeat": 67314825.984
+          "total_pJ_with_repeat": 69472591.416
         },
         {
           "M": 128,
@@ -324,14 +339,15 @@
           "cycles": 32768,
           "util_pct": 25.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 97269.35,
-          "e_act_sram_pJ": 1052437.709,
+          "e_act_sram_pJ": 1057777.254,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 4909331.009,
+          "total_pJ": 4914670.554,
           "repeat": 8,
-          "total_pJ_with_repeat": 39274648.072
+          "total_pJ_with_repeat": 39317364.432
         },
         {
           "M": 128,
@@ -341,14 +357,15 @@
           "cycles": 32768,
           "util_pct": 50.0,
           "real_macs": 16777216,
+          "capacity_ok": true,
           "e_mac_pJ": 5227059.085,
           "e_weight_sram_pJ": 194538.701,
-          "e_act_sram_pJ": 1295486.157,
+          "e_act_sram_pJ": 1492271.104,
           "e_weights_spad_pJ": 282914.193,
           "e_psum_spad_pJ": 2009274.62,
-          "total_pJ": 9009272.757,
+          "total_pJ": 9206057.704,
           "repeat": 8,
-          "total_pJ_with_repeat": 72074182.056
+          "total_pJ_with_repeat": 73648461.632
         },
         {
           "M": 1,
@@ -358,14 +375,15 @@
           "cycles": 4,
           "util_pct": 31.25,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 231.176,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2704.641,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2704.641
         }
       ]
     },
@@ -374,26 +392,27 @@
       "label": "Config 4",
       "family": "Mambino",
       "params_band": "106K",
+      "chip_tier": "320KB",
       "accuracy": 0.5993,
       "array_x": 64,
       "array_y": 64,
       "n_pe": 4096,
       "total_cycles": 290818,
       "latency_ms": 0.2908,
-      "energy_mJ": 0.21255,
-      "power_mW": 730.854,
+      "energy_mJ": 0.21732,
+      "power_mW": 747.269,
       "throughput_ips": 3438.577,
       "total_real_macs": 307234048,
-      "pj_per_real_mac": 0.6918,
-      "acc_per_mJ": 2.81963,
-      "acc_x_throughput_per_W": 2819.631,
-      "edp_mJ_ms": 0.06181,
+      "pj_per_real_mac": 0.7073,
+      "acc_per_mJ": 2.75769,
+      "acc_x_throughput_per_W": 2757.693,
+      "edp_mJ_ms": 0.0632,
       "state_sram_reads": 196608,
       "state_sram_writes": 196608,
       "per_component_pJ": {
         "mac": 95720918.28500001,
         "weight_sram": 21015879.055999998,
-        "act_sram": 18210573.156999998,
+        "act_sram": 18708538.533999998,
         "weights_spad": 5180887.742,
         "psum_spad": 36794994.774000004,
         "elemwise_structural": 0.0,
@@ -402,7 +421,7 @@
         "elemwise_moderate": 21627726.137,
         "elemwise_reduction": 85.99,
         "state_sram": 1990632.407,
-        "leakage": 19856.184
+        "leakage": 4295672.3
       },
       "per_gemm": [
         {
@@ -413,14 +432,15 @@
           "cycles": 4096,
           "util_pct": 31.25,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 278299.955,
+          "e_act_sram_pJ": 447421.03,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2631864.508,
+          "total_pJ": 2800985.583,
           "repeat": 1,
-          "total_pJ_with_repeat": 2631864.508
+          "total_pJ_with_repeat": 2800985.583
         },
         {
           "M": 8,
@@ -430,14 +450,15 @@
           "cycles": 1024,
           "util_pct": 100.0,
           "real_macs": 4194304,
+          "capacity_ok": true,
           "e_mac_pJ": 1306764.771,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 86055.526,
+          "e_act_sram_pJ": 128101.069,
           "e_weights_spad_pJ": 70728.548,
           "e_psum_spad_pJ": 502318.655,
-          "total_pJ": 2744022.304,
+          "total_pJ": 2786067.847,
           "repeat": 24,
-          "total_pJ_with_repeat": 65856535.296
+          "total_pJ_with_repeat": 66865628.328
         },
         {
           "M": 128,
@@ -447,14 +468,15 @@
           "cycles": 16384,
           "util_pct": 12.5,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 97269.35,
-          "e_act_sram_pJ": 930913.485,
+          "e_act_sram_pJ": 840530.33,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 4787806.785,
+          "total_pJ": 4697423.63,
           "repeat": 8,
-          "total_pJ_with_repeat": 38302454.28
+          "total_pJ_with_repeat": 37579389.04
         },
         {
           "M": 128,
@@ -464,14 +486,15 @@
           "cycles": 16384,
           "util_pct": 25.0,
           "real_macs": 16777216,
+          "capacity_ok": true,
           "e_mac_pJ": 5227059.085,
           "e_weight_sram_pJ": 194538.701,
-          "e_act_sram_pJ": 1052437.709,
+          "e_act_sram_pJ": 1057777.254,
           "e_weights_spad_pJ": 282914.193,
           "e_psum_spad_pJ": 2009274.62,
-          "total_pJ": 8766224.309,
+          "total_pJ": 8771563.854,
           "repeat": 8,
-          "total_pJ_with_repeat": 70129794.472
+          "total_pJ_with_repeat": 70172510.832
         },
         {
           "M": 1,
@@ -481,14 +504,15 @@
           "cycles": 2,
           "util_pct": 15.62,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 231.176,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2704.641,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2704.641
         }
       ]
     }
@@ -499,26 +523,27 @@
       "label": "Config 5",
       "family": "Pure S5",
       "params_band": "106K",
+      "chip_tier": "320KB",
       "accuracy": 0.5917,
       "array_x": 8,
       "array_y": 8,
       "n_pe": 64,
       "total_cycles": 5373984,
       "latency_ms": 5.374,
-      "energy_mJ": 0.2414,
-      "power_mW": 44.92,
+      "energy_mJ": 0.27238,
+      "power_mW": 50.685,
       "throughput_ips": 186.082,
       "total_real_macs": 340788480,
-      "pj_per_real_mac": 0.7084,
-      "acc_per_mJ": 2.45112,
-      "acc_x_throughput_per_W": 2451.117,
-      "edp_mJ_ms": 1.29728,
+      "pj_per_real_mac": 0.7993,
+      "acc_per_mJ": 2.17232,
+      "acc_x_throughput_per_W": 2172.317,
+      "edp_mJ_ms": 1.46378,
       "state_sram_reads": 262144,
       "state_sram_writes": 262144,
       "per_component_pJ": {
         "mac": 106175036.469,
         "weight_sram": 9343557.015999999,
-        "act_sram": 46577778.53699999,
+        "act_sram": 76215244.53,
         "weights_spad": 5746716.142,
         "psum_spad": 40813544.022,
         "elemwise_structural": 0.0,
@@ -527,7 +552,7 @@
         "elemwise_moderate": 18188069.561,
         "elemwise_reduction": 81.005,
         "state_sram": 2654176.543,
-        "leakage": 366919.564
+        "leakage": 1711356.763
       },
       "per_gemm": [
         {
@@ -538,14 +563,15 @@
           "cycles": 131072,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 809968.435,
+          "e_act_sram_pJ": 1397876.326,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 3163532.988,
+          "total_pJ": 3751440.879,
           "repeat": 1,
-          "total_pJ_with_repeat": 3163532.988
+          "total_pJ_with_repeat": 3751440.879
         },
         {
           "M": 16,
@@ -555,14 +581,15 @@
           "cycles": 131072,
           "util_pct": 100.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 1022780.621,
+          "e_act_sram_pJ": 1776930.611,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 5560559.374,
+          "total_pJ": 6314709.364,
           "repeat": 8,
-          "total_pJ_with_repeat": 44484474.992
+          "total_pJ_with_repeat": 50517674.912
         },
         {
           "M": 128,
@@ -572,14 +599,15 @@
           "cycles": 524288,
           "util_pct": 100.0,
           "real_macs": 33554432,
+          "capacity_ok": true,
           "e_mac_pJ": 10454118.171,
           "e_weight_sram_pJ": 389077.402,
-          "e_act_sram_pJ": 4698164.429,
+          "e_act_sram_pJ": 7575184.998,
           "e_weights_spad_pJ": 565828.387,
           "e_psum_spad_pJ": 4018549.241,
-          "total_pJ": 20125737.628,
+          "total_pJ": 23002758.198,
           "repeat": 8,
-          "total_pJ_with_repeat": 161005901.024
+          "total_pJ_with_repeat": 184022065.584
         },
         {
           "M": 1,
@@ -589,14 +617,15 @@
           "cycles": 32,
           "util_pct": 62.5,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 249.702,
+          "e_act_sram_pJ": 443.332,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2723.167,
+          "total_pJ": 2916.797,
           "repeat": 1,
-          "total_pJ_with_repeat": 2723.167
+          "total_pJ_with_repeat": 2916.797
         }
       ]
     },
@@ -605,26 +634,27 @@
       "label": "Config 5",
       "family": "Pure S5",
       "params_band": "106K",
+      "chip_tier": "320KB",
       "accuracy": 0.5917,
       "array_x": 16,
       "array_y": 16,
       "n_pe": 256,
       "total_cycles": 1343496,
       "latency_ms": 1.3435,
-      "energy_mJ": 0.22138,
-      "power_mW": 164.777,
+      "energy_mJ": 0.23672,
+      "power_mW": 176.197,
       "throughput_ips": 744.327,
       "total_real_macs": 340788480,
-      "pj_per_real_mac": 0.6496,
-      "acc_per_mJ": 2.67281,
-      "acc_x_throughput_per_W": 2672.814,
-      "edp_mJ_ms": 0.29742,
+      "pj_per_real_mac": 0.6946,
+      "acc_per_mJ": 2.49957,
+      "acc_x_throughput_per_W": 2499.574,
+      "edp_mJ_ms": 0.31803,
       "state_sram_reads": 262144,
       "state_sram_writes": 262144,
       "per_component_pJ": {
         "mac": 106175036.469,
         "weight_sram": 9343557.015999999,
-        "act_sram": 26829973.461000003,
+        "act_sram": 40912407.102,
         "weights_spad": 5746716.142,
         "psum_spad": 40813544.022,
         "elemwise_structural": 0.0,
@@ -633,7 +663,7 @@
         "elemwise_moderate": 18188069.561,
         "elemwise_reduction": 81.005,
         "state_sram": 2654176.543,
-        "leakage": 91729.891
+        "leakage": 1352455.309
       },
       "per_gemm": [
         {
@@ -644,14 +674,15 @@
           "cycles": 32768,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 506157.875,
+          "e_act_sram_pJ": 854759.014,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2859722.428,
+          "total_pJ": 3208323.567,
           "repeat": 1,
-          "total_pJ_with_repeat": 2859722.428
+          "total_pJ_with_repeat": 3208323.567
         },
         {
           "M": 16,
@@ -661,14 +692,15 @@
           "cycles": 32768,
           "util_pct": 100.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 536683.725,
+          "e_act_sram_pJ": 907942.912,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 5074462.478,
+          "total_pJ": 5445721.665,
           "repeat": 8,
-          "total_pJ_with_repeat": 40595699.824
+          "total_pJ_with_repeat": 43565773.32
         },
         {
           "M": 128,
@@ -678,14 +710,15 @@
           "cycles": 131072,
           "util_pct": 100.0,
           "real_macs": 33554432,
+          "capacity_ok": true,
           "e_mac_pJ": 10454118.171,
           "e_weight_sram_pJ": 389077.402,
-          "e_act_sram_pJ": 2753776.845,
+          "e_act_sram_pJ": 4099234.202,
           "e_weights_spad_pJ": 565828.387,
           "e_psum_spad_pJ": 4018549.241,
-          "total_pJ": 18181350.044,
+          "total_pJ": 19526807.401,
           "repeat": 8,
-          "total_pJ_with_repeat": 145450800.352
+          "total_pJ_with_repeat": 156214459.208
         },
         {
           "M": 1,
@@ -695,14 +728,15 @@
           "cycles": 8,
           "util_pct": 62.5,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 231.176,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2704.641,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2704.641
         }
       ]
     },
@@ -711,26 +745,27 @@
       "label": "Config 5",
       "family": "Pure S5",
       "params_band": "106K",
+      "chip_tier": "320KB",
       "accuracy": 0.5917,
       "array_x": 32,
       "array_y": 32,
       "n_pe": 1024,
       "total_cycles": 335876,
       "latency_ms": 0.3359,
-      "energy_mJ": 0.21143,
-      "power_mW": 629.502,
+      "energy_mJ": 0.21898,
+      "power_mW": 651.965,
       "throughput_ips": 2977.289,
       "total_real_macs": 340788480,
-      "pj_per_real_mac": 0.6204,
-      "acc_per_mJ": 2.7985,
-      "acc_x_throughput_per_W": 2798.503,
-      "edp_mJ_ms": 0.07102,
+      "pj_per_real_mac": 0.6426,
+      "acc_per_mJ": 2.70208,
+      "acc_x_throughput_per_W": 2702.082,
+      "edp_mJ_ms": 0.07355,
       "state_sram_reads": 262144,
       "state_sram_writes": 262144,
       "per_component_pJ": {
         "mac": 106175036.469,
         "weight_sram": 9343557.015999999,
-        "act_sram": 16956130.261,
+        "act_sram": 23261094.453999996,
         "weights_spad": 5746716.142,
         "psum_spad": 40813544.022,
         "elemwise_structural": 0.0,
@@ -739,7 +774,7 @@
         "elemwise_moderate": 18188069.561,
         "elemwise_reduction": 81.005,
         "state_sram": 2654176.543,
-        "leakage": 22932.609
+        "leakage": 1262737.464
       },
       "per_gemm": [
         {
@@ -750,14 +785,15 @@
           "cycles": 8192,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 354252.595,
+          "e_act_sram_pJ": 583200.358,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2707817.148,
+          "total_pJ": 2936764.911,
           "repeat": 1,
-          "total_pJ_with_repeat": 2707817.148
+          "total_pJ_with_repeat": 2936764.911
         },
         {
           "M": 16,
@@ -767,14 +803,15 @@
           "cycles": 8192,
           "util_pct": 100.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 293635.277,
+          "e_act_sram_pJ": 473449.062,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 4831414.03,
+          "total_pJ": 5011227.815,
           "repeat": 8,
-          "total_pJ_with_repeat": 38651312.24
+          "total_pJ_with_repeat": 40089822.52
         },
         {
           "M": 128,
@@ -784,14 +821,15 @@
           "cycles": 32768,
           "util_pct": 100.0,
           "real_macs": 33554432,
+          "capacity_ok": true,
           "e_mac_pJ": 10454118.171,
           "e_weight_sram_pJ": 389077.402,
-          "e_act_sram_pJ": 1781583.053,
+          "e_act_sram_pJ": 2361258.803,
           "e_weights_spad_pJ": 565828.387,
           "e_psum_spad_pJ": 4018549.241,
-          "total_pJ": 17209156.252,
+          "total_pJ": 17788832.003,
           "repeat": 8,
-          "total_pJ_with_repeat": 137673250.016
+          "total_pJ_with_repeat": 142310656.024
         },
         {
           "M": 1,
@@ -801,14 +839,15 @@
           "cycles": 4,
           "util_pct": 31.25,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 231.176,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2704.641,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2704.641
         }
       ]
     },
@@ -817,26 +856,27 @@
       "label": "Config 5",
       "family": "Pure S5",
       "params_band": "106K",
+      "chip_tier": "320KB",
       "accuracy": 0.5917,
       "array_x": 64,
       "array_y": 64,
       "n_pe": 4096,
       "total_cycles": 151554,
       "latency_ms": 0.1516,
-      "energy_mJ": 0.20648,
-      "power_mW": 1362.452,
+      "energy_mJ": 0.21113,
+      "power_mW": 1393.097,
       "throughput_ips": 6598.308,
       "total_real_macs": 340788480,
-      "pj_per_real_mac": 0.6059,
-      "acc_per_mJ": 2.86558,
-      "acc_x_throughput_per_W": 2865.584,
-      "edp_mJ_ms": 0.03129,
+      "pj_per_real_mac": 0.6195,
+      "acc_per_mJ": 2.80255,
+      "acc_x_throughput_per_W": 2802.546,
+      "edp_mJ_ms": 0.032,
       "state_sram_reads": 262144,
       "state_sram_writes": 262144,
       "per_component_pJ": {
         "mac": 106175036.469,
         "weight_sram": 9343557.015999999,
-        "act_sram": 12019208.661,
+        "act_sram": 14435438.142,
         "weights_spad": 5746716.142,
         "psum_spad": 40813544.022,
         "elemwise_structural": 0.0,
@@ -845,7 +885,7 @@
         "elemwise_moderate": 18188069.561,
         "elemwise_reduction": 81.005,
         "state_sram": 2654176.543,
-        "leakage": 10347.654
+        "leakage": 2238603.937
       },
       "per_gemm": [
         {
@@ -856,14 +896,15 @@
           "cycles": 4096,
           "util_pct": 31.25,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 278299.955,
+          "e_act_sram_pJ": 447421.03,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2631864.508,
+          "total_pJ": 2800985.583,
           "repeat": 1,
-          "total_pJ_with_repeat": 2631864.508
+          "total_pJ_with_repeat": 2800985.583
         },
         {
           "M": 16,
@@ -873,14 +914,15 @@
           "cycles": 2048,
           "util_pct": 100.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 172111.053,
+          "e_act_sram_pJ": 256202.138,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 4709889.806,
+          "total_pJ": 4793980.89,
           "repeat": 8,
-          "total_pJ_with_repeat": 37679118.448
+          "total_pJ_with_repeat": 38351847.12
         },
         {
           "M": 128,
@@ -890,14 +932,15 @@
           "cycles": 16384,
           "util_pct": 50.0,
           "real_macs": 33554432,
+          "capacity_ok": true,
           "e_mac_pJ": 10454118.171,
           "e_weight_sram_pJ": 389077.402,
-          "e_act_sram_pJ": 1295486.157,
+          "e_act_sram_pJ": 1492271.104,
           "e_weights_spad_pJ": 565828.387,
           "e_psum_spad_pJ": 4018549.241,
-          "total_pJ": 16723059.356,
+          "total_pJ": 16919844.304,
           "repeat": 8,
-          "total_pJ_with_repeat": 133784474.848
+          "total_pJ_with_repeat": 135358754.432
         },
         {
           "M": 1,
@@ -907,14 +950,15 @@
           "cycles": 2,
           "util_pct": 15.62,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 231.176,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2704.641,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2704.641
         }
       ]
     }
@@ -925,26 +969,27 @@
       "label": "Corner 1",
       "family": "Pure S5",
       "params_band": "188K",
+      "chip_tier": "512KB",
       "accuracy": 0.6089,
       "array_x": 8,
       "array_y": 8,
       "n_pe": 64,
       "total_cycles": 6946848,
       "latency_ms": 6.9468,
-      "energy_mJ": 0.3047,
-      "power_mW": 43.862,
+      "energy_mJ": 0.36297,
+      "power_mW": 52.25,
       "throughput_ips": 143.95,
       "total_real_macs": 441451776,
-      "pj_per_real_mac": 0.6902,
-      "acc_per_mJ": 1.99836,
-      "acc_x_throughput_per_W": 1998.356,
-      "edp_mJ_ms": 2.11671,
+      "pj_per_real_mac": 0.8222,
+      "acc_per_mJ": 1.67754,
+      "acc_x_throughput_per_W": 1677.535,
+      "edp_mJ_ms": 2.52152,
       "state_sram_reads": 131072,
       "state_sram_writes": 131072,
       "per_component_pJ": {
         "mac": 137537390.97300002,
         "weight_sram": 7981786.112,
-        "act_sram": 59660535.241000004,
+        "act_sram": 116009930.714,
         "weights_spad": 7444201.294,
         "psum_spad": 52869191.742,
         "elemwise_structural": 0.0,
@@ -954,7 +999,7 @@
         "elemwise_unknown": 163983.977,
         "elemwise_reduction": 81.005,
         "state_sram": 1327088.271,
-        "leakage": 474310.017
+        "leakage": 2397490.282
       },
       "per_gemm": [
         {
@@ -965,14 +1010,15 @@
           "cycles": 131072,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 809968.435,
+          "e_act_sram_pJ": 1657264.538,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 3163532.988,
+          "total_pJ": 4010829.09,
           "repeat": 1,
-          "total_pJ_with_repeat": 3163532.988
+          "total_pJ_with_repeat": 4010829.09
         },
         {
           "M": 8,
@@ -982,14 +1028,15 @@
           "cycles": 65536,
           "util_pct": 100.0,
           "real_macs": 4194304,
+          "capacity_ok": true,
           "e_mac_pJ": 1306764.771,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 511390.31,
+          "e_act_sram_pJ": 1030155.059,
           "e_weights_spad_pJ": 70728.548,
           "e_psum_spad_pJ": 502318.655,
-          "total_pJ": 3169357.088,
+          "total_pJ": 3688121.837,
           "repeat": 8,
-          "total_pJ_with_repeat": 25354856.704
+          "total_pJ_with_repeat": 29504974.696
         },
         {
           "M": 128,
@@ -999,14 +1046,15 @@
           "cycles": 262144,
           "util_pct": 100.0,
           "real_macs": 16777216,
+          "capacity_ok": true,
           "e_mac_pJ": 5227059.085,
           "e_weight_sram_pJ": 194538.701,
-          "e_act_sram_pJ": 2753776.845,
+          "e_act_sram_pJ": 4822178.202,
           "e_weights_spad_pJ": 282914.193,
           "e_psum_spad_pJ": 2009274.62,
-          "total_pJ": 10467563.445,
+          "total_pJ": 12535964.801,
           "repeat": 8,
-          "total_pJ_with_repeat": 83740507.56
+          "total_pJ_with_repeat": 100287718.408
         },
         {
           "M": 2048,
@@ -1016,14 +1064,15 @@
           "cycles": 524288,
           "util_pct": 100.0,
           "real_macs": 33554432,
+          "capacity_ok": true,
           "e_mac_pJ": 10454118.171,
           "e_weight_sram_pJ": 24317.338,
-          "e_act_sram_pJ": 4091122.483,
+          "e_act_sram_pJ": 8441685.606,
           "e_weights_spad_pJ": 565828.387,
           "e_psum_spad_pJ": 4018549.241,
-          "total_pJ": 19153935.619,
+          "total_pJ": 23504498.742,
           "repeat": 8,
-          "total_pJ_with_repeat": 153231484.952
+          "total_pJ_with_repeat": 188035989.936
         },
         {
           "M": 1,
@@ -1033,14 +1082,15 @@
           "cycles": 32,
           "util_pct": 62.5,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 249.702,
+          "e_act_sram_pJ": 515.24,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2723.167,
+          "total_pJ": 2988.705,
           "repeat": 1,
-          "total_pJ_with_repeat": 2723.167
+          "total_pJ_with_repeat": 2988.705
         }
       ]
     },
@@ -1049,26 +1099,27 @@
       "label": "Corner 1",
       "family": "Pure S5",
       "params_band": "188K",
+      "chip_tier": "512KB",
       "accuracy": 0.6089,
       "array_x": 16,
       "array_y": 16,
       "n_pe": 256,
       "total_cycles": 1736712,
       "latency_ms": 1.7367,
-      "energy_mJ": 0.27876,
-      "power_mW": 160.512,
+      "energy_mJ": 0.30948,
+      "power_mW": 178.197,
       "throughput_ips": 575.801,
       "total_real_macs": 441451776,
-      "pj_per_real_mac": 0.6315,
-      "acc_per_mJ": 2.18429,
-      "acc_x_throughput_per_W": 2184.287,
-      "edp_mJ_ms": 0.48413,
+      "pj_per_real_mac": 0.701,
+      "acc_per_mJ": 1.96752,
+      "acc_x_throughput_per_W": 1967.516,
+      "edp_mJ_ms": 0.53747,
       "state_sram_reads": 131072,
       "state_sram_writes": 131072,
       "per_component_pJ": {
         "mac": 137537390.97300002,
         "weight_sram": 7981786.112,
-        "act_sram": 34079567.413,
+        "act_sram": 63116328.472,
         "weights_spad": 7444201.294,
         "psum_spad": 52869191.742,
         "elemwise_structural": 0.0,
@@ -1078,7 +1129,7 @@
         "elemwise_unknown": 163983.977,
         "elemwise_reduction": 81.005,
         "state_sram": 1327088.271,
-        "leakage": 118577.504
+        "leakage": 1794606.429
       },
       "per_gemm": [
         {
@@ -1089,14 +1140,15 @@
           "cycles": 32768,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 506157.875,
+          "e_act_sram_pJ": 1029077.402,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2859722.428,
+          "total_pJ": 3382641.954,
           "repeat": 1,
-          "total_pJ_with_repeat": 2859722.428
+          "total_pJ_with_repeat": 3382641.954
         },
         {
           "M": 8,
@@ -1106,14 +1158,15 @@
           "cycles": 16384,
           "util_pct": 100.0,
           "real_macs": 4194304,
+          "capacity_ok": true,
           "e_mac_pJ": 1306764.771,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 268341.862,
+          "e_act_sram_pJ": 527605.35,
           "e_weights_spad_pJ": 70728.548,
           "e_psum_spad_pJ": 502318.655,
-          "total_pJ": 2926308.64,
+          "total_pJ": 3185572.128,
           "repeat": 8,
-          "total_pJ_with_repeat": 23410469.12
+          "total_pJ_with_repeat": 25484577.024
         },
         {
           "M": 128,
@@ -1123,14 +1176,15 @@
           "cycles": 65536,
           "util_pct": 100.0,
           "real_macs": 16777216,
+          "capacity_ok": true,
           "e_mac_pJ": 5227059.085,
           "e_weight_sram_pJ": 194538.701,
-          "e_act_sram_pJ": 1781583.053,
+          "e_act_sram_pJ": 2811979.366,
           "e_weights_spad_pJ": 282914.193,
           "e_psum_spad_pJ": 2009274.62,
-          "total_pJ": 9495369.653,
+          "total_pJ": 10525765.966,
           "repeat": 8,
-          "total_pJ_with_repeat": 75962957.224
+          "total_pJ_with_repeat": 84206127.728
         },
         {
           "M": 2048,
@@ -1140,14 +1194,15 @@
           "cycles": 131072,
           "util_pct": 100.0,
           "real_macs": 33554432,
+          "capacity_ok": true,
           "e_mac_pJ": 10454118.171,
           "e_weight_sram_pJ": 24317.338,
-          "e_act_sram_pJ": 2146734.899,
+          "e_act_sram_pJ": 4421287.936,
           "e_weights_spad_pJ": 565828.387,
           "e_psum_spad_pJ": 4018549.241,
-          "total_pJ": 17209548.035,
+          "total_pJ": 19484101.072,
           "repeat": 8,
-          "total_pJ_with_repeat": 137676384.28
+          "total_pJ_with_repeat": 155872808.576
         },
         {
           "M": 1,
@@ -1157,14 +1212,15 @@
           "cycles": 8,
           "util_pct": 62.5,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 269.854,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2743.319,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2743.319
         }
       ]
     },
@@ -1173,26 +1229,27 @@
       "label": "Corner 1",
       "family": "Pure S5",
       "params_band": "188K",
+      "chip_tier": "512KB",
       "accuracy": 0.6089,
       "array_x": 32,
       "array_y": 32,
       "n_pe": 1024,
       "total_cycles": 565252,
       "latency_ms": 0.5653,
-      "energy_mJ": 0.26589,
-      "power_mW": 470.398,
+      "energy_mJ": 0.28338,
+      "power_mW": 501.326,
       "throughput_ips": 1769.122,
       "total_real_macs": 441451776,
-      "pj_per_real_mac": 0.6023,
-      "acc_per_mJ": 2.29002,
-      "acc_x_throughput_per_W": 2290.016,
-      "edp_mJ_ms": 0.1503,
+      "pj_per_real_mac": 0.6419,
+      "acc_per_mJ": 2.14874,
+      "acc_x_throughput_per_W": 2148.74,
+      "edp_mJ_ms": 0.16018,
       "state_sram_reads": 131072,
       "state_sram_writes": 131072,
       "per_component_pJ": {
         "mac": 137537390.97300002,
         "weight_sram": 7981786.112,
-        "act_sram": 21289142.836999997,
+        "act_sram": 36669650.056,
         "weights_spad": 7444201.294,
         "psum_spad": 52869191.742,
         "elemwise_structural": 0.0,
@@ -1202,7 +1259,7 @@
         "elemwise_unknown": 163983.977,
         "elemwise_reduction": 81.005,
         "state_sram": 1327088.271,
-        "leakage": 38593.717
+        "leakage": 2140158.062
       },
       "per_gemm": [
         {
@@ -1213,14 +1270,15 @@
           "cycles": 8192,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 354252.595,
+          "e_act_sram_pJ": 714983.834,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2707817.148,
+          "total_pJ": 3068548.386,
           "repeat": 1,
-          "total_pJ_with_repeat": 2707817.148
+          "total_pJ_with_repeat": 3068548.386
         },
         {
           "M": 8,
@@ -1230,14 +1288,15 @@
           "cycles": 4096,
           "util_pct": 100.0,
           "real_macs": 4194304,
+          "capacity_ok": true,
           "e_mac_pJ": 1306764.771,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 146817.638,
+          "e_act_sram_pJ": 276330.496,
           "e_weights_spad_pJ": 70728.548,
           "e_psum_spad_pJ": 502318.655,
-          "total_pJ": 2804784.416,
+          "total_pJ": 2934297.274,
           "repeat": 8,
-          "total_pJ_with_repeat": 22438275.328
+          "total_pJ_with_repeat": 23474378.192
         },
         {
           "M": 128,
@@ -1247,14 +1306,15 @@
           "cycles": 32768,
           "util_pct": 50.0,
           "real_macs": 16777216,
+          "capacity_ok": true,
           "e_mac_pJ": 5227059.085,
           "e_weight_sram_pJ": 194538.701,
-          "e_act_sram_pJ": 1295486.157,
+          "e_act_sram_pJ": 1806879.949,
           "e_weights_spad_pJ": 282914.193,
           "e_psum_spad_pJ": 2009274.62,
-          "total_pJ": 9009272.757,
+          "total_pJ": 9520666.549,
           "repeat": 8,
-          "total_pJ_with_repeat": 72074182.056
+          "total_pJ_with_repeat": 76165332.392
         },
         {
           "M": 2048,
@@ -1264,14 +1324,15 @@
           "cycles": 32768,
           "util_pct": 100.0,
           "real_macs": 33554432,
+          "capacity_ok": true,
           "e_mac_pJ": 10454118.171,
           "e_weight_sram_pJ": 24317.338,
-          "e_act_sram_pJ": 1174541.107,
+          "e_act_sram_pJ": 2411089.101,
           "e_weights_spad_pJ": 565828.387,
           "e_psum_spad_pJ": 4018549.241,
-          "total_pJ": 16237354.243,
+          "total_pJ": 17473902.236,
           "repeat": 8,
-          "total_pJ_with_repeat": 129898833.944
+          "total_pJ_with_repeat": 139791217.888
         },
         {
           "M": 1,
@@ -1281,14 +1342,15 @@
           "cycles": 4,
           "util_pct": 31.25,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 269.854,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2743.319,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2743.319
         }
       ]
     },
@@ -1297,26 +1359,27 @@
       "label": "Corner 1",
       "family": "Pure S5",
       "params_band": "188K",
+      "chip_tier": "512KB",
       "accuracy": 0.6089,
       "array_x": 64,
       "array_y": 64,
       "n_pe": 4096,
       "total_cycles": 208898,
       "latency_ms": 0.2089,
-      "energy_mJ": 0.25947,
-      "power_mW": 1242.107,
+      "energy_mJ": 0.2711,
+      "power_mW": 1297.777,
       "throughput_ips": 4787.025,
       "total_real_macs": 441451776,
-      "pj_per_real_mac": 0.5878,
-      "acc_per_mJ": 2.34667,
-      "acc_x_throughput_per_W": 2346.673,
-      "edp_mJ_ms": 0.0542,
+      "pj_per_real_mac": 0.6141,
+      "acc_per_mJ": 2.24601,
+      "acc_x_throughput_per_W": 2246.009,
+      "edp_mJ_ms": 0.05663,
       "state_sram_reads": 131072,
       "state_sram_writes": 131072,
       "per_component_pJ": {
         "mac": 137537390.97300002,
         "weight_sram": 7981786.112,
-        "act_sram": 14893930.549000002,
+        "act_sram": 23446310.84,
         "weights_spad": 7444201.294,
         "psum_spad": 52869191.742,
         "elemwise_structural": 0.0,
@@ -1326,7 +1389,7 @@
         "elemwise_unknown": 163983.977,
         "elemwise_reduction": 81.005,
         "state_sram": 1327088.271,
-        "leakage": 14262.931
+        "leakage": 3091202.77
       },
       "per_gemm": [
         {
@@ -1337,14 +1400,15 @@
           "cycles": 4096,
           "util_pct": 31.25,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 278299.955,
+          "e_act_sram_pJ": 557937.05,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2631864.508,
+          "total_pJ": 2911501.602,
           "repeat": 1,
-          "total_pJ_with_repeat": 2631864.508
+          "total_pJ_with_repeat": 2911501.602
         },
         {
           "M": 8,
@@ -1354,14 +1418,15 @@
           "cycles": 1024,
           "util_pct": 100.0,
           "real_macs": 4194304,
+          "capacity_ok": true,
           "e_mac_pJ": 1306764.771,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 86055.526,
+          "e_act_sram_pJ": 150693.069,
           "e_weights_spad_pJ": 70728.548,
           "e_psum_spad_pJ": 502318.655,
-          "total_pJ": 2744022.304,
+          "total_pJ": 2808659.847,
           "repeat": 8,
-          "total_pJ_with_repeat": 21952178.432
+          "total_pJ_with_repeat": 22469278.776
         },
         {
           "M": 128,
@@ -1371,14 +1436,15 @@
           "cycles": 16384,
           "util_pct": 25.0,
           "real_macs": 16777216,
+          "capacity_ok": true,
           "e_mac_pJ": 5227059.085,
           "e_weight_sram_pJ": 194538.701,
-          "e_act_sram_pJ": 1052437.709,
+          "e_act_sram_pJ": 1304330.24,
           "e_weights_spad_pJ": 282914.193,
           "e_psum_spad_pJ": 2009274.62,
-          "total_pJ": 8766224.309,
+          "total_pJ": 9018116.84,
           "repeat": 8,
-          "total_pJ_with_repeat": 70129794.472
+          "total_pJ_with_repeat": 72144934.72
         },
         {
           "M": 2048,
@@ -1388,14 +1454,15 @@
           "cycles": 8192,
           "util_pct": 100.0,
           "real_macs": 33554432,
+          "capacity_ok": true,
           "e_mac_pJ": 10454118.171,
           "e_weight_sram_pJ": 24317.338,
-          "e_act_sram_pJ": 688444.211,
+          "e_act_sram_pJ": 1405989.683,
           "e_weights_spad_pJ": 565828.387,
           "e_psum_spad_pJ": 4018549.241,
-          "total_pJ": 15751257.347,
+          "total_pJ": 16468802.819,
           "repeat": 8,
-          "total_pJ_with_repeat": 126010058.776
+          "total_pJ_with_repeat": 131750422.552
         },
         {
           "M": 1,
@@ -1405,14 +1472,15 @@
           "cycles": 2,
           "util_pct": 15.62,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 269.854,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2743.319,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2743.319
         }
       ]
     }
@@ -1423,26 +1491,27 @@
       "label": "Corner 2",
       "family": "Pure S5",
       "params_band": "188K",
+      "chip_tier": "384KB",
       "accuracy": 0.5991,
       "array_x": 8,
       "array_y": 8,
       "n_pe": 64,
       "total_cycles": 7995424,
       "latency_ms": 7.9954,
-      "energy_mJ": 0.34761,
-      "power_mW": 43.476,
+      "energy_mJ": 0.4074,
+      "power_mW": 50.954,
       "throughput_ips": 125.072,
       "total_real_macs": 508560640,
-      "pj_per_real_mac": 0.6835,
-      "acc_per_mJ": 1.72349,
-      "acc_x_throughput_per_W": 1723.488,
-      "edp_mJ_ms": 2.77928,
+      "pj_per_real_mac": 0.8011,
+      "acc_per_mJ": 1.47055,
+      "acc_x_throughput_per_W": 1470.551,
+      "edp_mJ_ms": 3.25732,
       "state_sram_reads": 262144,
       "state_sram_writes": 262144,
       "per_component_pJ": {
         "mac": 158445627.317,
         "weight_sram": 9465143.704,
-        "act_sram": 68146301.185,
+        "act_sram": 125867534.635,
         "weights_spad": 8575858.078000002,
         "psum_spad": 60906290.230000004,
         "elemwise_structural": 0.0,
@@ -1451,7 +1520,7 @@
         "elemwise_moderate": 20148216.718,
         "elemwise_reduction": 81.005,
         "state_sram": 2654176.543,
-        "leakage": 545903.652
+        "leakage": 2613949.172
       },
       "per_gemm": [
         {
@@ -1462,14 +1531,15 @@
           "cycles": 131072,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 809968.435,
+          "e_act_sram_pJ": 1533129.523,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 3163532.988,
+          "total_pJ": 3886694.076,
           "repeat": 1,
-          "total_pJ_with_repeat": 3163532.988
+          "total_pJ_with_repeat": 3886694.076
         },
         {
           "M": 16,
@@ -1479,14 +1549,15 @@
           "cycles": 131072,
           "util_pct": 100.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 1022780.621,
+          "e_act_sram_pJ": 1961056.666,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 5560559.374,
+          "total_pJ": 6498835.418,
           "repeat": 8,
-          "total_pJ_with_repeat": 44484474.992
+          "total_pJ_with_repeat": 51990683.344
         },
         {
           "M": 128,
@@ -1496,14 +1567,15 @@
           "cycles": 524288,
           "util_pct": 100.0,
           "real_macs": 33554432,
+          "capacity_ok": true,
           "e_mac_pJ": 10454118.171,
           "e_weight_sram_pJ": 389077.402,
-          "e_act_sram_pJ": 4698164.429,
+          "e_act_sram_pJ": 8344515.379,
           "e_weights_spad_pJ": 565828.387,
           "e_psum_spad_pJ": 4018549.241,
-          "total_pJ": 20125737.628,
+          "total_pJ": 23772088.579,
           "repeat": 8,
-          "total_pJ_with_repeat": 161005901.024
+          "total_pJ_with_repeat": 190176708.632
         },
         {
           "M": 2048,
@@ -1513,14 +1585,15 @@
           "cycles": 163840,
           "util_pct": 100.0,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 1278475.776,
+          "e_act_sram_pJ": 2503434.24,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5985604.881,
+          "total_pJ": 7210563.345,
           "repeat": 8,
-          "total_pJ_with_repeat": 47884839.048
+          "total_pJ_with_repeat": 57684506.76
         },
         {
           "M": 2048,
@@ -1530,14 +1603,15 @@
           "cycles": 163840,
           "util_pct": 100.0,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 1417589.555,
+          "e_act_sram_pJ": 2732733.235,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 6124718.66,
+          "total_pJ": 7439862.34,
           "repeat": 8,
-          "total_pJ_with_repeat": 48997749.28
+          "total_pJ_with_repeat": 59518898.72
         },
         {
           "M": 1,
@@ -1547,14 +1621,15 @@
           "cycles": 32,
           "util_pct": 62.5,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 249.702,
+          "e_act_sram_pJ": 488.952,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2723.167,
+          "total_pJ": 2962.417,
           "repeat": 1,
-          "total_pJ_with_repeat": 2723.167
+          "total_pJ_with_repeat": 2962.417
         }
       ]
     },
@@ -1563,26 +1638,27 @@
       "label": "Corner 2",
       "family": "Pure S5",
       "params_band": "188K",
+      "chip_tier": "384KB",
       "accuracy": 0.5991,
       "array_x": 16,
       "array_y": 16,
       "n_pe": 256,
       "total_cycles": 2392072,
       "latency_ms": 2.3921,
-      "energy_mJ": 0.32067,
-      "power_mW": 134.057,
+      "energy_mJ": 0.35479,
+      "power_mW": 148.319,
       "throughput_ips": 418.048,
       "total_real_macs": 508560640,
-      "pj_per_real_mac": 0.6306,
-      "acc_per_mJ": 1.86826,
-      "acc_x_throughput_per_W": 1868.256,
-      "edp_mJ_ms": 0.76707,
+      "pj_per_real_mac": 0.6976,
+      "acc_per_mJ": 1.68861,
+      "acc_x_throughput_per_W": 1688.606,
+      "edp_mJ_ms": 0.84868,
       "state_sram_reads": 262144,
       "state_sram_writes": 262144,
       "per_component_pJ": {
         "mac": 158445627.317,
         "weight_sram": 9465143.704,
-        "act_sram": 41593139.565000005,
+        "act_sram": 73444618.121,
         "weights_spad": 8575858.078000002,
         "psum_spad": 60906290.230000004,
         "elemwise_structural": 0.0,
@@ -1591,7 +1667,7 @@
         "elemwise_moderate": 20148216.718,
         "elemwise_reduction": 81.005,
         "state_sram": 2654176.543,
-        "leakage": 163323.526
+        "leakage": 2428305.081
       },
       "per_gemm": [
         {
@@ -1602,14 +1678,15 @@
           "cycles": 32768,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 506157.875,
+          "e_act_sram_pJ": 933327.667,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2859722.428,
+          "total_pJ": 3286892.22,
           "repeat": 1,
-          "total_pJ_with_repeat": 2859722.428
+          "total_pJ_with_repeat": 3286892.22
         },
         {
           "M": 16,
@@ -1619,14 +1696,15 @@
           "cycles": 32768,
           "util_pct": 100.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 536683.725,
+          "e_act_sram_pJ": 1001373.696,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 5074462.478,
+          "total_pJ": 5539152.449,
           "repeat": 8,
-          "total_pJ_with_repeat": 40595699.824
+          "total_pJ_with_repeat": 44313219.592
         },
         {
           "M": 128,
@@ -1636,14 +1714,15 @@
           "cycles": 131072,
           "util_pct": 100.0,
           "real_macs": 33554432,
+          "capacity_ok": true,
           "e_mac_pJ": 10454118.171,
           "e_weight_sram_pJ": 389077.402,
-          "e_act_sram_pJ": 2753776.845,
+          "e_act_sram_pJ": 4505783.501,
           "e_weights_spad_pJ": 565828.387,
           "e_psum_spad_pJ": 4018549.241,
-          "total_pJ": 18181350.044,
+          "total_pJ": 19933356.7,
           "repeat": 8,
-          "total_pJ_with_repeat": 145450800.352
+          "total_pJ_with_repeat": 159466853.6
         },
         {
           "M": 2048,
@@ -1653,14 +1732,15 @@
           "cycles": 65536,
           "util_pct": 62.5,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 1035427.328,
+          "e_act_sram_pJ": 2023592.755,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5742556.433,
+          "total_pJ": 6730721.86,
           "repeat": 8,
-          "total_pJ_with_repeat": 45940451.464
+          "total_pJ_with_repeat": 53845774.88
         },
         {
           "M": 2048,
@@ -1670,14 +1750,15 @@
           "cycles": 65536,
           "util_pct": 62.5,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 809968.435,
+          "e_act_sram_pJ": 1533129.523,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5517097.54,
+          "total_pJ": 6240258.628,
           "repeat": 8,
-          "total_pJ_with_repeat": 44136780.32
+          "total_pJ_with_repeat": 49922069.024
         },
         {
           "M": 1,
@@ -1687,14 +1768,15 @@
           "cycles": 8,
           "util_pct": 62.5,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 254.654,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2728.119,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2728.119
         }
       ]
     },
@@ -1703,26 +1785,27 @@
       "label": "Corner 2",
       "family": "Pure S5",
       "params_band": "188K",
+      "chip_tier": "384KB",
       "accuracy": 0.5991,
       "array_x": 32,
       "array_y": 32,
       "n_pe": 1024,
       "total_cycles": 598020,
       "latency_ms": 0.598,
-      "energy_mJ": 0.30436,
-      "power_mW": 508.942,
+      "energy_mJ": 0.32265,
+      "power_mW": 539.523,
       "throughput_ips": 1672.185,
       "total_real_macs": 508560640,
-      "pj_per_real_mac": 0.5985,
-      "acc_per_mJ": 1.96841,
-      "acc_x_throughput_per_W": 1968.407,
-      "edp_mJ_ms": 0.18201,
+      "pj_per_real_mac": 0.6344,
+      "acc_per_mJ": 1.85684,
+      "acc_x_throughput_per_W": 1856.837,
+      "edp_mJ_ms": 0.19295,
       "state_sram_reads": 262144,
       "state_sram_writes": 262144,
       "per_component_pJ": {
         "mac": 158445627.317,
         "weight_sram": 9465143.704,
-        "act_sram": 25400036.717,
+        "act_sram": 41475179.201000005,
         "weights_spad": 8575858.078000002,
         "psum_spad": 60906290.230000004,
         "elemwise_structural": 0.0,
@@ -1731,7 +1814,7 @@
         "elemwise_moderate": 20148216.718,
         "elemwise_reduction": 81.005,
         "state_sram": 2654176.543,
-        "leakage": 40831.018
+        "leakage": 2253347.232
       },
       "per_gemm": [
         {
@@ -1742,14 +1825,15 @@
           "cycles": 8192,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 354252.595,
+          "e_act_sram_pJ": 633426.739,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2707817.148,
+          "total_pJ": 2986991.292,
           "repeat": 1,
-          "total_pJ_with_repeat": 2707817.148
+          "total_pJ_with_repeat": 2986991.292
         },
         {
           "M": 16,
@@ -1759,14 +1843,15 @@
           "cycles": 8192,
           "util_pct": 100.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 293635.277,
+          "e_act_sram_pJ": 521532.211,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 4831414.03,
+          "total_pJ": 5059310.964,
           "repeat": 8,
-          "total_pJ_with_repeat": 38651312.24
+          "total_pJ_with_repeat": 40474487.712
         },
         {
           "M": 128,
@@ -1776,14 +1861,15 @@
           "cycles": 32768,
           "util_pct": 100.0,
           "real_macs": 33554432,
+          "capacity_ok": true,
           "e_mac_pJ": 10454118.171,
           "e_weight_sram_pJ": 389077.402,
-          "e_act_sram_pJ": 1781583.053,
+          "e_act_sram_pJ": 2586417.562,
           "e_weights_spad_pJ": 565828.387,
           "e_psum_spad_pJ": 4018549.241,
-          "total_pJ": 17209156.252,
+          "total_pJ": 18013990.761,
           "repeat": 8,
-          "total_pJ_with_repeat": 137673250.016
+          "total_pJ_with_repeat": 144111926.088
         },
         {
           "M": 2048,
@@ -1793,14 +1879,15 @@
           "cycles": 16384,
           "util_pct": 62.5,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 549330.432,
+          "e_act_sram_pJ": 1063909.786,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5256459.537,
+          "total_pJ": 5771038.89,
           "repeat": 8,
-          "total_pJ_with_repeat": 42051676.296
+          "total_pJ_with_repeat": 46168311.12
         },
         {
           "M": 2048,
@@ -1810,14 +1897,15 @@
           "cycles": 16384,
           "util_pct": 62.5,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 506157.875,
+          "e_act_sram_pJ": 933327.667,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5213286.98,
+          "total_pJ": 5640456.772,
           "repeat": 8,
-          "total_pJ_with_repeat": 41706295.84
+          "total_pJ_with_repeat": 45123654.176
         },
         {
           "M": 1,
@@ -1827,14 +1915,15 @@
           "cycles": 4,
           "util_pct": 31.25,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 254.654,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2728.119,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2728.119
         }
       ]
     },
@@ -1843,26 +1932,27 @@
       "label": "Corner 2",
       "family": "Pure S5",
       "params_band": "188K",
+      "chip_tier": "384KB",
       "accuracy": 0.5991,
       "array_x": 64,
       "array_y": 64,
       "n_pe": 4096,
       "total_cycles": 217090,
       "latency_ms": 0.2171,
-      "energy_mJ": 0.29624,
-      "power_mW": 1364.573,
+      "energy_mJ": 0.30762,
+      "power_mW": 1416.997,
       "throughput_ips": 4606.384,
       "total_real_macs": 508560640,
-      "pj_per_real_mac": 0.5825,
-      "acc_per_mJ": 2.02238,
-      "acc_x_throughput_per_W": 2022.38,
-      "edp_mJ_ms": 0.06431,
+      "pj_per_real_mac": 0.6049,
+      "acc_per_mJ": 1.94756,
+      "acc_x_throughput_per_W": 1947.559,
+      "edp_mJ_ms": 0.06678,
       "state_sram_reads": 262144,
       "state_sram_writes": 262144,
       "per_component_pJ": {
         "mac": 158445627.317,
         "weight_sram": 9465143.704,
-        "act_sram": 17303485.292999998,
+        "act_sram": 25490459.737,
         "weights_spad": 8575858.078000002,
         "psum_spad": 60906290.230000004,
         "elemwise_structural": 0.0,
@@ -1871,7 +1961,7 @@
         "elemwise_moderate": 20148216.718,
         "elemwise_reduction": 81.005,
         "state_sram": 2654176.543,
-        "leakage": 14822.256
+        "leakage": 3208476.706
       },
       "per_gemm": [
         {
@@ -1882,14 +1972,15 @@
           "cycles": 4096,
           "util_pct": 31.25,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 278299.955,
+          "e_act_sram_pJ": 483476.275,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2631864.508,
+          "total_pJ": 2837040.828,
           "repeat": 1,
-          "total_pJ_with_repeat": 2631864.508
+          "total_pJ_with_repeat": 2837040.828
         },
         {
           "M": 16,
@@ -1899,14 +1990,15 @@
           "cycles": 2048,
           "util_pct": 100.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 172111.053,
+          "e_act_sram_pJ": 281611.469,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 4709889.806,
+          "total_pJ": 4819390.222,
           "repeat": 8,
-          "total_pJ_with_repeat": 37679118.448
+          "total_pJ_with_repeat": 38555121.776
         },
         {
           "M": 128,
@@ -1916,14 +2008,15 @@
           "cycles": 16384,
           "util_pct": 50.0,
           "real_macs": 33554432,
+          "capacity_ok": true,
           "e_mac_pJ": 10454118.171,
           "e_weight_sram_pJ": 389077.402,
-          "e_act_sram_pJ": 1295486.157,
+          "e_act_sram_pJ": 1626734.592,
           "e_weights_spad_pJ": 565828.387,
           "e_psum_spad_pJ": 4018549.241,
-          "total_pJ": 16723059.356,
+          "total_pJ": 17054307.792,
           "repeat": 8,
-          "total_pJ_with_repeat": 133784474.848
+          "total_pJ_with_repeat": 136434462.336
         },
         {
           "M": 2048,
@@ -1933,14 +2026,15 @@
           "cycles": 4096,
           "util_pct": 62.5,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 306281.984,
+          "e_act_sram_pJ": 584068.301,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5013411.089,
+          "total_pJ": 5291197.406,
           "repeat": 8,
-          "total_pJ_with_repeat": 40107288.712
+          "total_pJ_with_repeat": 42329579.248
         },
         {
           "M": 2048,
@@ -1950,14 +2044,15 @@
           "cycles": 4096,
           "util_pct": 62.5,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 354252.595,
+          "e_act_sram_pJ": 633426.739,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5061381.7,
+          "total_pJ": 5340555.844,
           "repeat": 8,
-          "total_pJ_with_repeat": 40491053.6
+          "total_pJ_with_repeat": 42724446.752
         },
         {
           "M": 1,
@@ -1967,14 +2062,15 @@
           "cycles": 2,
           "util_pct": 15.62,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 254.654,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2728.119,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2728.119
         }
       ]
     }
@@ -1985,26 +2081,27 @@
       "label": "Corner 3'",
       "family": "Mambino",
       "params_band": "188K",
+      "chip_tier": "384KB",
       "accuracy": 0.6138,
       "array_x": 8,
       "array_y": 8,
       "n_pe": 64,
       "total_cycles": 7471136,
       "latency_ms": 7.4711,
-      "energy_mJ": 0.35022,
-      "power_mW": 46.877,
+      "energy_mJ": 0.40491,
+      "power_mW": 54.197,
       "throughput_ips": 133.848,
       "total_real_macs": 475006208,
-      "pj_per_real_mac": 0.7373,
-      "acc_per_mJ": 1.7526,
-      "acc_x_throughput_per_W": 1752.604,
-      "edp_mJ_ms": 2.61655,
+      "pj_per_real_mac": 0.8524,
+      "acc_per_mJ": 1.51588,
+      "acc_x_throughput_per_W": 1515.884,
+      "edp_mJ_ms": 3.02516,
       "state_sram_reads": 196608,
       "state_sram_writes": 196608,
       "per_component_pJ": {
         "mac": 147991509.13300002,
         "weight_sram": 21137465.744,
-        "act_sram": 70934987.40900001,
+        "act_sram": 123693246.771,
         "weights_spad": 8010029.678,
         "psum_spad": 56887740.98200001,
         "elemwise_structural": 0.0,
@@ -2013,7 +2110,7 @@
         "elemwise_moderate": 23587873.294,
         "elemwise_reduction": 85.99,
         "state_sram": 1990632.407,
-        "leakage": 510106.834
+        "leakage": 2442543.355
       },
       "per_gemm": [
         {
@@ -2024,14 +2121,15 @@
           "cycles": 131072,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 809968.435,
+          "e_act_sram_pJ": 1533129.523,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 3163532.988,
+          "total_pJ": 3886694.076,
           "repeat": 1,
-          "total_pJ_with_repeat": 3163532.988
+          "total_pJ_with_repeat": 3886694.076
         },
         {
           "M": 8,
@@ -2041,14 +2139,15 @@
           "cycles": 65536,
           "util_pct": 100.0,
           "real_macs": 4194304,
+          "capacity_ok": true,
           "e_mac_pJ": 1306764.771,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 511390.31,
+          "e_act_sram_pJ": 980528.333,
           "e_weights_spad_pJ": 70728.548,
           "e_psum_spad_pJ": 502318.655,
-          "total_pJ": 3169357.088,
+          "total_pJ": 3638495.111,
           "repeat": 24,
-          "total_pJ_with_repeat": 76064570.112
+          "total_pJ_with_repeat": 87323882.664
         },
         {
           "M": 128,
@@ -2058,14 +2157,15 @@
           "cycles": 131072,
           "util_pct": 100.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 97269.35,
-          "e_act_sram_pJ": 1781583.053,
+          "e_act_sram_pJ": 2586417.562,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 5638476.353,
+          "total_pJ": 6443310.862,
           "repeat": 8,
-          "total_pJ_with_repeat": 45107810.824
+          "total_pJ_with_repeat": 51546486.896
         },
         {
           "M": 128,
@@ -2075,14 +2175,15 @@
           "cycles": 262144,
           "util_pct": 100.0,
           "real_macs": 16777216,
+          "capacity_ok": true,
           "e_mac_pJ": 5227059.085,
           "e_weight_sram_pJ": 194538.701,
-          "e_act_sram_pJ": 2753776.845,
+          "e_act_sram_pJ": 4505783.501,
           "e_weights_spad_pJ": 282914.193,
           "e_psum_spad_pJ": 2009274.62,
-          "total_pJ": 10467563.445,
+          "total_pJ": 12219570.101,
           "repeat": 8,
-          "total_pJ_with_repeat": 83740507.56
+          "total_pJ_with_repeat": 97756560.808
         },
         {
           "M": 2048,
@@ -2092,14 +2193,15 @@
           "cycles": 163840,
           "util_pct": 100.0,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 1278475.776,
+          "e_act_sram_pJ": 2503434.24,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5985604.881,
+          "total_pJ": 7210563.345,
           "repeat": 8,
-          "total_pJ_with_repeat": 47884839.048
+          "total_pJ_with_repeat": 57684506.76
         },
         {
           "M": 2048,
@@ -2109,14 +2211,15 @@
           "cycles": 163840,
           "util_pct": 100.0,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 1417589.555,
+          "e_act_sram_pJ": 2732733.235,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 6124718.66,
+          "total_pJ": 7439862.34,
           "repeat": 8,
-          "total_pJ_with_repeat": 48997749.28
+          "total_pJ_with_repeat": 59518898.72
         },
         {
           "M": 1,
@@ -2126,14 +2229,15 @@
           "cycles": 32,
           "util_pct": 62.5,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 249.702,
+          "e_act_sram_pJ": 488.952,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2723.167,
+          "total_pJ": 2962.417,
           "repeat": 1,
-          "total_pJ_with_repeat": 2723.167
+          "total_pJ_with_repeat": 2962.417
         }
       ]
     },
@@ -2142,26 +2246,27 @@
       "label": "Corner 3'",
       "family": "Mambino",
       "params_band": "188K",
+      "chip_tier": "384KB",
       "accuracy": 0.6138,
       "array_x": 16,
       "array_y": 16,
       "n_pe": 256,
       "total_cycles": 2523144,
       "latency_ms": 2.5231,
-      "energy_mJ": 0.32528,
-      "power_mW": 128.917,
+      "energy_mJ": 0.35645,
+      "power_mW": 141.271,
       "throughput_ips": 396.331,
       "total_real_macs": 475006208,
-      "pj_per_real_mac": 0.6848,
-      "acc_per_mJ": 1.88702,
-      "acc_x_throughput_per_W": 1887.018,
-      "edp_mJ_ms": 0.82072,
+      "pj_per_real_mac": 0.7504,
+      "acc_per_mJ": 1.722,
+      "acc_x_throughput_per_W": 1721.995,
+      "edp_mJ_ms": 0.89937,
       "state_sram_reads": 196608,
       "state_sram_writes": 196608,
       "per_component_pJ": {
         "mac": 147991509.13300002,
         "weight_sram": 21137465.744,
-        "act_sram": 46326213.373,
+        "act_sram": 75109062.129,
         "weights_spad": 8010029.678,
         "psum_spad": 56887740.98200001,
         "elemwise_structural": 0.0,
@@ -2170,7 +2275,7 @@
         "elemwise_moderate": 23587873.294,
         "elemwise_reduction": 85.99,
         "state_sram": 1990632.407,
-        "leakage": 172272.731
+        "leakage": 2561362.449
       },
       "per_gemm": [
         {
@@ -2181,14 +2286,15 @@
           "cycles": 32768,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 506157.875,
+          "e_act_sram_pJ": 933327.667,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2859722.428,
+          "total_pJ": 3286892.22,
           "repeat": 1,
-          "total_pJ_with_repeat": 2859722.428
+          "total_pJ_with_repeat": 3286892.22
         },
         {
           "M": 8,
@@ -2198,14 +2304,15 @@
           "cycles": 16384,
           "util_pct": 100.0,
           "real_macs": 4194304,
+          "capacity_ok": true,
           "e_mac_pJ": 1306764.771,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 268341.862,
+          "e_act_sram_pJ": 500686.848,
           "e_weights_spad_pJ": 70728.548,
           "e_psum_spad_pJ": 502318.655,
-          "total_pJ": 2926308.64,
+          "total_pJ": 3158653.626,
           "repeat": 24,
-          "total_pJ_with_repeat": 70231407.36
+          "total_pJ_with_repeat": 75807687.024
         },
         {
           "M": 128,
@@ -2215,14 +2322,15 @@
           "cycles": 65536,
           "util_pct": 50.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 97269.35,
-          "e_act_sram_pJ": 1295486.157,
+          "e_act_sram_pJ": 1626734.592,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 5152379.457,
+          "total_pJ": 5483627.892,
           "repeat": 8,
-          "total_pJ_with_repeat": 41219035.656
+          "total_pJ_with_repeat": 43869023.136
         },
         {
           "M": 128,
@@ -2232,14 +2340,15 @@
           "cycles": 65536,
           "util_pct": 100.0,
           "real_macs": 16777216,
+          "capacity_ok": true,
           "e_mac_pJ": 5227059.085,
           "e_weight_sram_pJ": 194538.701,
-          "e_act_sram_pJ": 1781583.053,
+          "e_act_sram_pJ": 2586417.562,
           "e_weights_spad_pJ": 282914.193,
           "e_psum_spad_pJ": 2009274.62,
-          "total_pJ": 9495369.653,
+          "total_pJ": 10300204.161,
           "repeat": 8,
-          "total_pJ_with_repeat": 75962957.224
+          "total_pJ_with_repeat": 82401633.288
         },
         {
           "M": 2048,
@@ -2249,14 +2358,15 @@
           "cycles": 65536,
           "util_pct": 62.5,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 1035427.328,
+          "e_act_sram_pJ": 2023592.755,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5742556.433,
+          "total_pJ": 6730721.86,
           "repeat": 8,
-          "total_pJ_with_repeat": 45940451.464
+          "total_pJ_with_repeat": 53845774.88
         },
         {
           "M": 2048,
@@ -2266,14 +2376,15 @@
           "cycles": 65536,
           "util_pct": 62.5,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 809968.435,
+          "e_act_sram_pJ": 1533129.523,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5517097.54,
+          "total_pJ": 6240258.628,
           "repeat": 8,
-          "total_pJ_with_repeat": 44136780.32
+          "total_pJ_with_repeat": 49922069.024
         },
         {
           "M": 1,
@@ -2283,14 +2394,15 @@
           "cycles": 8,
           "util_pct": 62.5,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 254.654,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2728.119,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2728.119
         }
       ]
     },
@@ -2299,26 +2411,27 @@
       "label": "Corner 3'",
       "family": "Mambino",
       "params_band": "188K",
+      "chip_tier": "384KB",
       "accuracy": 0.6138,
       "array_x": 32,
       "array_y": 32,
       "n_pe": 1024,
       "total_cycles": 892932,
       "latency_ms": 0.8929,
-      "energy_mJ": 0.30994,
-      "power_mW": 347.107,
+      "energy_mJ": 0.3272,
+      "power_mW": 366.433,
       "throughput_ips": 1119.906,
       "total_real_macs": 475006208,
-      "pj_per_real_mac": 0.6525,
-      "acc_per_mJ": 1.98037,
-      "acc_x_throughput_per_W": 1980.365,
-      "edp_mJ_ms": 0.27676,
+      "pj_per_real_mac": 0.6888,
+      "acc_per_mJ": 1.87592,
+      "acc_x_throughput_per_W": 1875.916,
+      "edp_mJ_ms": 0.29217,
       "state_sram_reads": 196608,
       "state_sram_writes": 196608,
       "per_component_pJ": {
         "mac": 147991509.13300002,
         "weight_sram": 21137465.744,
-        "act_sram": 31105304.317,
+        "act_sram": 45058989.153000005,
         "weights_spad": 8010029.678,
         "psum_spad": 56887740.98200001,
         "elemwise_structural": 0.0,
@@ -2327,7 +2440,7 @@
         "elemwise_moderate": 23587873.294,
         "elemwise_reduction": 85.99,
         "state_sram": 1990632.407,
-        "leakage": 60966.728
+        "leakage": 3364579.529
       },
       "per_gemm": [
         {
@@ -2338,14 +2451,15 @@
           "cycles": 8192,
           "util_pct": 62.5,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 354252.595,
+          "e_act_sram_pJ": 633426.739,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2707817.148,
+          "total_pJ": 2986991.292,
           "repeat": 1,
-          "total_pJ_with_repeat": 2707817.148
+          "total_pJ_with_repeat": 2986991.292
         },
         {
           "M": 8,
@@ -2355,14 +2469,15 @@
           "cycles": 4096,
           "util_pct": 100.0,
           "real_macs": 4194304,
+          "capacity_ok": true,
           "e_mac_pJ": 1306764.771,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 146817.638,
+          "e_act_sram_pJ": 260766.106,
           "e_weights_spad_pJ": 70728.548,
           "e_psum_spad_pJ": 502318.655,
-          "total_pJ": 2804784.416,
+          "total_pJ": 2918732.884,
           "repeat": 24,
-          "total_pJ_with_repeat": 67314825.984
+          "total_pJ_with_repeat": 70049589.216
         },
         {
           "M": 128,
@@ -2372,14 +2487,15 @@
           "cycles": 32768,
           "util_pct": 25.0,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 97269.35,
-          "e_act_sram_pJ": 1052437.709,
+          "e_act_sram_pJ": 1146893.107,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 4909331.009,
+          "total_pJ": 5003786.407,
           "repeat": 8,
-          "total_pJ_with_repeat": 39274648.072
+          "total_pJ_with_repeat": 40030291.256
         },
         {
           "M": 128,
@@ -2389,14 +2505,15 @@
           "cycles": 32768,
           "util_pct": 50.0,
           "real_macs": 16777216,
+          "capacity_ok": true,
           "e_mac_pJ": 5227059.085,
           "e_weight_sram_pJ": 194538.701,
-          "e_act_sram_pJ": 1295486.157,
+          "e_act_sram_pJ": 1626734.592,
           "e_weights_spad_pJ": 282914.193,
           "e_psum_spad_pJ": 2009274.62,
-          "total_pJ": 9009272.757,
+          "total_pJ": 9340521.192,
           "repeat": 8,
-          "total_pJ_with_repeat": 72074182.056
+          "total_pJ_with_repeat": 74724169.536
         },
         {
           "M": 2048,
@@ -2406,14 +2523,15 @@
           "cycles": 16384,
           "util_pct": 62.5,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 549330.432,
+          "e_act_sram_pJ": 1063909.786,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5256459.537,
+          "total_pJ": 5771038.89,
           "repeat": 8,
-          "total_pJ_with_repeat": 42051676.296
+          "total_pJ_with_repeat": 46168311.12
         },
         {
           "M": 2048,
@@ -2423,14 +2541,15 @@
           "cycles": 16384,
           "util_pct": 62.5,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 506157.875,
+          "e_act_sram_pJ": 933327.667,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5213286.98,
+          "total_pJ": 5640456.772,
           "repeat": 8,
-          "total_pJ_with_repeat": 41706295.84
+          "total_pJ_with_repeat": 45123654.176
         },
         {
           "M": 1,
@@ -2440,14 +2559,15 @@
           "cycles": 4,
           "util_pct": 31.25,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 254.654,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2728.119,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2728.119
         }
       ]
     },
@@ -2456,26 +2576,27 @@
       "label": "Corner 3'",
       "family": "Mambino",
       "params_band": "188K",
+      "chip_tier": "384KB",
       "accuracy": 0.6138,
       "array_x": 64,
       "array_y": 64,
       "n_pe": 4096,
       "total_cycles": 356354,
       "latency_ms": 0.3564,
-      "energy_mJ": 0.3023,
-      "power_mW": 848.302,
+      "energy_mJ": 0.31408,
+      "power_mW": 881.363,
       "throughput_ips": 2806.198,
       "total_real_macs": 475006208,
-      "pj_per_real_mac": 0.6364,
-      "acc_per_mJ": 2.03046,
-      "acc_x_throughput_per_W": 2030.462,
-      "edp_mJ_ms": 0.10772,
+      "pj_per_real_mac": 0.6612,
+      "acc_per_mJ": 1.9543,
+      "acc_x_throughput_per_W": 1954.296,
+      "edp_mJ_ms": 0.11192,
       "state_sram_reads": 196608,
       "state_sram_writes": 196608,
       "per_component_pJ": {
         "mac": 147991509.13300002,
         "weight_sram": 21137465.744,
-        "act_sram": 23494849.788999997,
+        "act_sram": 30033952.641000003,
         "weights_spad": 8010029.678,
         "psum_spad": 56887740.98200001,
         "elemwise_structural": 0.0,
@@ -2484,7 +2605,7 @@
         "elemwise_moderate": 23587873.294,
         "elemwise_reduction": 85.99,
         "state_sram": 1990632.407,
-        "leakage": 24330.786
+        "leakage": 5266725.819
       },
       "per_gemm": [
         {
@@ -2495,14 +2616,15 @@
           "cycles": 4096,
           "util_pct": 31.25,
           "real_macs": 5242880,
+          "capacity_ok": true,
           "e_mac_pJ": 1633455.964,
           "e_weight_sram_pJ": 3799.584,
-          "e_act_sram_pJ": 278299.955,
+          "e_act_sram_pJ": 483476.275,
           "e_weights_spad_pJ": 88410.685,
           "e_psum_spad_pJ": 627898.319,
-          "total_pJ": 2631864.508,
+          "total_pJ": 2837040.828,
           "repeat": 1,
-          "total_pJ_with_repeat": 2631864.508
+          "total_pJ_with_repeat": 2837040.828
         },
         {
           "M": 8,
@@ -2512,14 +2634,15 @@
           "cycles": 1024,
           "util_pct": 100.0,
           "real_macs": 4194304,
+          "capacity_ok": true,
           "e_mac_pJ": 1306764.771,
           "e_weight_sram_pJ": 778154.803,
-          "e_act_sram_pJ": 86055.526,
+          "e_act_sram_pJ": 140805.734,
           "e_weights_spad_pJ": 70728.548,
           "e_psum_spad_pJ": 502318.655,
-          "total_pJ": 2744022.304,
+          "total_pJ": 2798772.512,
           "repeat": 24,
-          "total_pJ_with_repeat": 65856535.296
+          "total_pJ_with_repeat": 67170540.288
         },
         {
           "M": 128,
@@ -2529,14 +2652,15 @@
           "cycles": 16384,
           "util_pct": 12.5,
           "real_macs": 8388608,
+          "capacity_ok": true,
           "e_mac_pJ": 2613529.543,
           "e_weight_sram_pJ": 97269.35,
-          "e_act_sram_pJ": 930913.485,
+          "e_act_sram_pJ": 906972.365,
           "e_weights_spad_pJ": 141457.097,
           "e_psum_spad_pJ": 1004637.31,
-          "total_pJ": 4787806.785,
+          "total_pJ": 4763865.665,
           "repeat": 8,
-          "total_pJ_with_repeat": 38302454.28
+          "total_pJ_with_repeat": 38110925.32
         },
         {
           "M": 128,
@@ -2546,14 +2670,15 @@
           "cycles": 16384,
           "util_pct": 25.0,
           "real_macs": 16777216,
+          "capacity_ok": true,
           "e_mac_pJ": 5227059.085,
           "e_weight_sram_pJ": 194538.701,
-          "e_act_sram_pJ": 1052437.709,
+          "e_act_sram_pJ": 1146893.107,
           "e_weights_spad_pJ": 282914.193,
           "e_psum_spad_pJ": 2009274.62,
-          "total_pJ": 8766224.309,
+          "total_pJ": 8860679.707,
           "repeat": 8,
-          "total_pJ_with_repeat": 70129794.472
+          "total_pJ_with_repeat": 70885437.656
         },
         {
           "M": 2048,
@@ -2563,14 +2688,15 @@
           "cycles": 4096,
           "util_pct": 62.5,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 306281.984,
+          "e_act_sram_pJ": 584068.301,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5013411.089,
+          "total_pJ": 5291197.406,
           "repeat": 8,
-          "total_pJ_with_repeat": 40107288.712
+          "total_pJ_with_repeat": 42329579.248
         },
         {
           "M": 2048,
@@ -2580,14 +2706,15 @@
           "cycles": 4096,
           "util_pct": 62.5,
           "real_macs": 10485760,
+          "capacity_ok": true,
           "e_mac_pJ": 3266911.928,
           "e_weight_sram_pJ": 7599.168,
-          "e_act_sram_pJ": 354252.595,
+          "e_act_sram_pJ": 633426.739,
           "e_weights_spad_pJ": 176821.371,
           "e_psum_spad_pJ": 1255796.638,
-          "total_pJ": 5061381.7,
+          "total_pJ": 5340555.844,
           "repeat": 8,
-          "total_pJ_with_repeat": 40491053.6
+          "total_pJ_with_repeat": 42724446.752
         },
         {
           "M": 1,
@@ -2597,14 +2724,15 @@
           "cycles": 2,
           "util_pct": 15.62,
           "real_macs": 1280,
+          "capacity_ok": true,
           "e_mac_pJ": 398.793,
           "e_weight_sram_pJ": 1899.792,
-          "e_act_sram_pJ": 131.026,
+          "e_act_sram_pJ": 254.654,
           "e_weights_spad_pJ": 21.585,
           "e_psum_spad_pJ": 153.295,
-          "total_pJ": 2604.491,
+          "total_pJ": 2728.119,
           "repeat": 1,
-          "total_pJ_with_repeat": 2604.491
+          "total_pJ_with_repeat": 2728.119
         }
       ]
     }

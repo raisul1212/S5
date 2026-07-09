@@ -1,0 +1,117 @@
+ERT_summary:
+    version: '0.4'
+    table_summary:
+      - name: mambino_chip.PE[0..1023].weights_spad
+        actions:
+          - name: write
+            energy: 0.0147795
+          - name: read
+            energy: 0.016863
+          - name: leak
+            energy: 4.92325e-06
+          - name: update
+            energy: 0.0147795
+        primitive_estimation(s):
+          - name: storage.storage[1..32]
+            estimator: Library
+          - name: storage.comparator[1..64]
+            estimator: Library
+          - name: address_generators[0]
+            estimator: Neurosim Plug-In
+          - name: address_generators[1]
+            estimator: Neurosim Plug-In
+          - name: storage.storage[1..2048]
+            estimator: Library
+          - name: address_generators[0..1]
+            estimator: Neurosim Plug-In
+      - name: mambino_chip.PE[0..1023].psum_spad
+        actions:
+          - name: write
+            energy: 0.055714
+          - name: read
+            energy: 0.0640481
+          - name: leak
+            energy: 1.88877e-05
+          - name: update
+            energy: 0.055714
+        primitive_estimation(s):
+          - name: storage.storage[1..32]
+            estimator: Library
+          - name: storage.comparator[1..64]
+            estimator: Library
+          - name: address_generators[0]
+            estimator: Neurosim Plug-In
+          - name: address_generators[1]
+            estimator: Neurosim Plug-In
+          - name: storage.storage[1..2048]
+            estimator: Library
+          - name: address_generators[0..1]
+            estimator: Neurosim Plug-In
+      - name: mambino_chip.PE[0..1023].mac
+        actions:
+          - name: compute
+            energy: 0.311557
+          - name: leak
+            energy: 0.00356065
+        primitive_estimation(s):
+          - name: intadder
+            estimator: Library
+          - name: intmultiplier
+            estimator: Library
+      - name: mambino_chip.weight_sram
+        actions:
+          - name: write
+            energy: 8.84066
+          - name: read
+            energy: 11.8737
+          - name: leak
+            energy: 0.0353766
+          - name: update
+            energy: 8.84066
+        primitive_estimation(s):
+          - name: storage
+            estimator: CactiSRAM
+          - name: address_generators[0]
+            estimator: Neurosim Plug-In
+          - name: address_generators[1]
+            estimator: Neurosim Plug-In
+          - name: address_generators[0..1]
+            estimator: Neurosim Plug-In
+      - name: mambino_chip.activation_sram
+        actions:
+          - name: write
+            energy: 12.2342
+          - name: read
+            energy: 15.3366
+          - name: leak
+            energy: 0.070564
+          - name: update
+            energy: 12.2342
+        primitive_estimation(s):
+          - name: storage
+            estimator: CactiSRAM
+          - name: address_generators[0]
+            estimator: Neurosim Plug-In
+          - name: address_generators[1]
+            estimator: Neurosim Plug-In
+          - name: address_generators[0..1]
+            estimator: Neurosim Plug-In
+      - name: mambino_chip.state_sram
+        actions:
+          - name: write
+            energy: 4.44139
+          - name: read
+            energy: 5.68349
+          - name: leak
+            energy: 0.00977305
+          - name: update
+            energy: 4.44139
+        primitive_estimation(s):
+          - name: storage
+            estimator: CactiSRAM
+          - name: address_generators[0]
+            estimator: Neurosim Plug-In
+          - name: address_generators[1]
+            estimator: Neurosim Plug-In
+          - name: address_generators[0..1]
+            estimator: Neurosim Plug-In

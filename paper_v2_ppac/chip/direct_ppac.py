@@ -55,9 +55,20 @@ CHIP = dict(
     freq_hz=1e9,
     line_bytes=8,                # SRAM line = 64 bits = 8 bytes
     weight_sram_bytes=256 * 1024,
-    activation_sram_bytes=128 * 1024,
+    activation_sram_bytes=384 * 1024,   # default; per-config override via CONFIG_TIER
     state_sram_bytes=64 * 1024,
 )
+
+# Per-config chip tier: activation SRAM sized to fit that config's workload.
+# Tier index = suffix on out_accelergy_{tier}_{ax}x{ay}/ dir names.
+CONFIG_TIER = {
+    "config4":  "320KB",   # 106K NoGLU (max footprint 258 KB)
+    "config5":  "320KB",   # 106K NoGLU (max footprint 260 KB)
+    "corner2":  "384KB",   # 188K low-rank half_glu2 (max footprint 336 KB)
+    "corner3p": "384KB",   # 188K low-rank half_glu2 (max footprint 336 KB)
+    "corner1":  "512KB",   # 188K full-rank dense half_glu2 (max footprint 512 KB)
+}
+TIER_TO_BYTES = {"320KB": 320*1024, "384KB": 384*1024, "512KB": 512*1024}
 
 ARRAY_SIZES = [(8, 8), (16, 16), (32, 32), (64, 64)]
 
@@ -88,6 +99,11 @@ ELEMWISE_COST_UNITS_OF_MAC = {
 
 
 # --- Helpers --------------------------------------------------------------
+def gemm_is_complex_output(dtype: str) -> bool:
+    """True when the GEMM emits a complex-valued output (both operands complex)."""
+    return dtype == "complex_complex"
+
+
 def factor_split(dim: int, spatial_max: int) -> tuple[int, int]:
     """Largest divisor of `dim` that is <= spatial_max; return (spatial, temporal)."""
     if dim <= spatial_max:
@@ -123,14 +139,24 @@ def gemm_ppac(g: dict, array_x: int, array_y: int, ert: dict) -> dict:
     util_pct = 100.0 * (C_sp * K_sp) / (array_x * array_y)
     cycles = M * C_tp * K_tp * dtype_scale     # dtype_scale = extra passes for complex
 
-    # Memory bytes moved for one instance (dtype-agnostic at the byte level;
-    # complex just means more passes, hence dtype_scale multiplied on the pass count).
-    # We charge extra passes because complex×complex means we do 4 real passes over
-    # the same K,N-shaped weight matrix (imaginary/real parts).
+    # Memory bytes moved for one instance.
+    # Weights + activations: `dtype_scale` extra passes for complex GEMMs.
+    # Outputs: complex×real emits a REAL output (dtype_scale=2 passes,
+    # 1 real byte written), complex×complex emits a COMPLEX output
+    # (dtype_scale=4 passes, 2 real bytes written -> output_scale = dtype_scale/2).
+    output_scale = 2 if gemm_is_complex_output(g["dtype"]) else 1
     weight_bytes_read  = K * N * dtype_scale
     act_read_bytes  = M * K * K_tp * dtype_scale   # re-streamed per N-tile
-    act_write_bytes = M * N * dtype_scale
+    act_write_bytes = M * N * output_scale
     real_macs = M * N * K * dtype_scale
+
+    # Buffer capacity check against this config's chip tier.
+    # (Weight SRAM stays at 256 KB across all tiers; activation SRAM varies.)
+    act_budget_bytes = TIER_TO_BYTES.get(getattr(gemm_ppac, "_tier", "384KB"), 384*1024)
+    capacity_ok = (
+        K * N <= CHIP["weight_sram_bytes"]
+        and (M * K + M * N) <= act_budget_bytes
+    )
 
     def lines(b): return math.ceil(b / CHIP["line_bytes"])
 
@@ -146,6 +172,7 @@ def gemm_ppac(g: dict, array_x: int, array_y: int, ert: dict) -> dict:
         M=M, N=N, K=K, dtype=g["dtype"],
         cycles=cycles, util_pct=round(util_pct, 2),
         real_macs=real_macs,
+        capacity_ok=capacity_ok,
         e_mac_pJ=round(e_mac, 3),
         e_weight_sram_pJ=round(e_weight_sram, 3),
         e_act_sram_pJ=round(e_act_sram, 3),
@@ -196,7 +223,9 @@ def config_ppac(config: str, workload_dir: Path, chip_dir: Path,
     gemms = yaml.safe_load(open(workload_dir / f"workload_{config}_gemms.yaml"))["gemms"]
     elemw = yaml.safe_load(open(workload_dir / f"workload_{config}_elemwise.yaml"))
     manif = yaml.safe_load(open(workload_dir / f"workload_{config}_manifest.yaml"))
-    ert = parse_ert(chip_dir / f"out_accelergy_{array_x}x{array_y}" / "ERT_summary.yaml")
+    tier = CONFIG_TIER[config]
+    ert = parse_ert(chip_dir / f"out_accelergy_{tier}_{array_x}x{array_y}" / "ERT_summary.yaml")
+    gemm_ppac._tier = tier  # noqa: set for capacity check to read config's tier
 
     per_gemm_results = []
     tot_cycles = 0
@@ -226,12 +255,18 @@ def config_ppac(config: str, workload_dir: Path, chip_dir: Path,
     tot_pJ += e_state
     comp_pJ["state_sram"] = round(e_state, 3)
 
-    # Leakage: per-cycle × total cycles, using ERT leak values summed
-    leak_pJ_per_cyc = sum(
-        c.get("leak", 0.0) for c in (ert["mac"], ert["weight_sram"],
-                                      ert["activation_sram"], ert["state_sram"],
-                                      ert["weights_spad"], ert["psum_spad"])
-    )
+    # Leakage: per-cycle × total cycles. The SRAM leaks are chip-level (single instance),
+    # but the mac + weights_spad + psum_spad leaks are PE-level (n_pe instances).
+    # parse_ert dedupes the PE[0..N] entries to a single per-PE value, so multiply
+    # those three components by n_pe.
+    n_pe = array_x * array_y
+    per_pe_leak = (ert["mac"].get("leak", 0.0)
+                 + ert["weights_spad"].get("leak", 0.0)
+                 + ert["psum_spad"].get("leak", 0.0))
+    chip_leak = (ert["weight_sram"].get("leak", 0.0)
+               + ert["activation_sram"].get("leak", 0.0)
+               + ert["state_sram"].get("leak", 0.0))
+    leak_pJ_per_cyc = chip_leak + per_pe_leak * n_pe
     e_leak = leak_pJ_per_cyc * tot_cycles
     tot_pJ += e_leak
     comp_pJ["leakage"] = round(e_leak, 3)
@@ -245,6 +280,7 @@ def config_ppac(config: str, workload_dir: Path, chip_dir: Path,
 
     return dict(
         config=config, label=LABEL[config], family=FAMILY[config], params_band=BAND[config],
+        chip_tier=tier,
         accuracy=acc, array_x=array_x, array_y=array_y, n_pe=array_x * array_y,
         total_cycles=tot_cycles,
         latency_ms=round(latency_s * 1e3, 4),

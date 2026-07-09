@@ -1,0 +1,81 @@
+ERT:
+    version: '0.4'
+    tables:
+      - name: mambino_chip.PE[0..1023].weights_spad
+        actions:
+          - name: write
+            arguments: {}
+            energy: 0.0147795
+          - name: read
+            arguments: {}
+            energy: 0.016863
+          - name: leak
+            arguments: {}
+            energy: 4.92325e-06
+          - name: update
+            arguments: {}
+            energy: 0.0147795
+      - name: mambino_chip.PE[0..1023].psum_spad
+        actions:
+          - name: write
+            arguments: {}
+            energy: 0.055714
+          - name: read
+            arguments: {}
+            energy: 0.0640481
+          - name: leak
+            arguments: {}
+            energy: 1.88877e-05
+          - name: update
+            arguments: {}
+            energy: 0.055714
+      - name: mambino_chip.PE[0..1023].mac
+        actions:
+          - name: compute
+            arguments: {}
+            energy: 0.311557
+          - name: leak
+            arguments: {}
+            energy: 0.00356065
+      - name: mambino_chip.weight_sram
+        actions:
+          - name: write
+            arguments: {}
+            energy: 8.84066
+          - name: read
+            arguments: {}
+            energy: 11.8737
+          - name: leak
+            arguments: {}
+            energy: 0.0353766
+          - name: update
+            arguments: {}
+            energy: 8.84066
+      - name: mambino_chip.activation_sram
+        actions:
+          - name: write
+            arguments: {}
+            energy: 12.2342
+          - name: read
+            arguments: {}
+            energy: 15.3366
+          - name: leak
+            arguments: {}
+            energy: 0.070564
+          - name: update
+            arguments: {}
+            energy: 12.2342
+      - name: mambino_chip.state_sram
+        actions:
+          - name: write
+            arguments: {}
+            energy: 4.44139
+          - name: read
+            arguments: {}
+            energy: 5.68349
+          - name: leak
+            arguments: {}
+            energy: 0.00977305
+          - name: update
+            arguments: {}
+            energy: 4.44139

@@ -1,0 +1,15 @@
+ART:
+    version: '0.4'
+    tables:
+      - name: mambino_chip.PE[0..63].weights_spad
+        area: 50.0645
+      - name: mambino_chip.PE[0..63].psum_spad
+        area: 191.916
+      - name: mambino_chip.PE[0..63].mac
+        area: 400.819
+      - name: mambino_chip.weight_sram
+        area: 225332.0
+      - name: mambino_chip.activation_sram
+        area: 442219.0
+      - name: mambino_chip.state_sram
+        area: 58637.6

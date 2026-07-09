@@ -1,0 +1,10 @@
+energy_estimation:
+    version: '0.4'
+    components:
+      - name: mambino_chip.weight_sram
+        energy: 20.7497366
+      - name: mambino_chip.activation_sram
+        energy: 22.814147000000002
+      - name: mambino_chip.state_sram
+        energy: 10.13465305
+    Total: 53.698536649999994

@@ -43,7 +43,10 @@ CHIP_PARAMS = dict(
     # === On-chip buffer sizes (bytes) ===
     # width in bits = 64 (line = 8 bytes at INT8)
     weight_sram_bytes=256 * 1024,      # 256 KB
-    activation_sram_bytes=128 * 1024,  # 128 KB
+    activation_sram_bytes=384 * 1024,  # 384 KB DEFAULT — sized to fit the deployable
+                                       # Mambino / S5-low-rank variants (Config 4, Config 5,
+                                       # Corner 2, Corner 3'). Corner 1 (S5 full-rank gate)
+                                       # requires 512 KB and gets its own chip variant.
     state_sram_bytes=64 * 1024,        # 64 KB
 
     sram_line_bits=64,
