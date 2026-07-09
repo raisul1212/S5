@@ -1,0 +1,11 @@
+Layer,M,N,K,dtype_marker
+gemm_01_real_real,1,10,128,real_real
+gemm_02_complex_real,8,2048,128,complex_real
+gemm_03_complex_real,16,2048,128,complex_real
+gemm_04_complex_complex,128,2048,8,complex_complex
+gemm_05_complex_complex,128,2048,16,complex_complex
+gemm_06_complex_complex,128,2048,32,complex_complex
+gemm_07_real_real,2048,40,128,real_real
+gemm_08_real_real,2048,128,20,real_real
+gemm_09_real_real,2048,128,40,real_real
+gemm_10_real_real,2048,128,128,real_real
