@@ -1,0 +1,628 @@
+<title>Mambino v2 chip PPAC — pipeline block diagram</title>
+<style>
+  :root {
+    --ink: #0f1216; --ink-soft: #3a3f47; --muted: #5d6570;
+    --ground: #f7f5f0; --surface: #ffffff; --surface-alt: #faf7f0;
+    --rule: #d7d3ca; --rule-soft: #e8e3d8;
+
+    --c-extract: #1c7488;   --c-extract-bg: #d4e6ec;
+    --c-spec: #b47c14;      --c-spec-bg: #f2e6c9;
+    --c-energy: #a24728;    --c-energy-bg: #f0d9cf;
+    --c-dataflow: #2a6b46;  --c-dataflow-bg: #d5e6dc;
+    --c-crosscheck: #5b4a9a;--c-crosscheck-bg: #e2dcf1;
+    --c-neutral-bg: #efece5;
+    --c-invariant: #4a7c3a;
+
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", "Menlo", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #e9e5df; --ink-soft: #b8b2a9; --muted: #8a8f97;
+      --ground: #17191c; --surface: #1e2027; --surface-alt: #23252c;
+      --rule: #33363c; --rule-soft: #262930;
+      --c-extract-bg: #1c3a41; --c-spec-bg: #3d3520; --c-energy-bg: #3a2620;
+      --c-dataflow-bg: #22322a; --c-crosscheck-bg: #2b2740; --c-neutral-bg: #262830;
+      --c-invariant: #7cb26a;
+    }
+  }
+  :root[data-theme="light"] {
+    --ink: #0f1216; --ink-soft: #3a3f47; --muted: #5d6570;
+    --ground: #f7f5f0; --surface: #ffffff; --surface-alt: #faf7f0;
+    --rule: #d7d3ca; --rule-soft: #e8e3d8;
+    --c-extract-bg: #d4e6ec; --c-spec-bg: #f2e6c9; --c-energy-bg: #f0d9cf;
+    --c-dataflow-bg: #d5e6dc; --c-crosscheck-bg: #e2dcf1; --c-neutral-bg: #efece5;
+    --c-invariant: #4a7c3a;
+  }
+  :root[data-theme="dark"] {
+    --ink: #e9e5df; --ink-soft: #b8b2a9; --muted: #8a8f97;
+    --ground: #17191c; --surface: #1e2027; --surface-alt: #23252c;
+    --rule: #33363c; --rule-soft: #262930;
+    --c-extract-bg: #1c3a41; --c-spec-bg: #3d3520; --c-energy-bg: #3a2620;
+    --c-dataflow-bg: #22322a; --c-crosscheck-bg: #2b2740; --c-neutral-bg: #262830;
+    --c-invariant: #7cb26a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); line-height: 1.5;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+  main { max-width: 1080px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  header { border-bottom: 1px solid var(--rule); padding-bottom: 20px; margin-bottom: 32px; }
+  header .eyebrow {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  header h1 {
+    font-size: 24px; font-weight: 600; margin: 0 0 8px;
+    letter-spacing: -0.01em; text-wrap: balance;
+  }
+  header .subtitle {
+    color: var(--ink-soft); font-size: 14px; margin: 0; max-width: 68ch;
+  }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 10px 18px;
+    padding: 12px 16px; margin: 0 0 24px;
+    background: var(--surface-alt); border: 1px solid var(--rule-soft);
+    border-radius: 4px; font-size: 11.5px; color: var(--ink-soft);
+  }
+  .legend-swatch {
+    display: inline-block; width: 12px; height: 12px; border-radius: 2px;
+    vertical-align: middle; margin-right: 6px; border: 1.5px solid transparent;
+  }
+
+  .phase {
+    margin: 0 0 28px;
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 4px; overflow: hidden;
+  }
+  .phase-header {
+    display: flex; align-items: baseline; gap: 12px;
+    padding: 14px 20px 12px; border-bottom: 1px solid var(--rule-soft);
+    background: var(--surface-alt);
+  }
+  .phase-num {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.05em;
+    color: var(--muted); padding: 3px 8px;
+    border: 1px solid var(--rule); border-radius: 3px; background: var(--surface);
+    font-variant-numeric: tabular-nums;
+  }
+  .phase-title {
+    font-size: 15px; font-weight: 600; margin: 0; color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .phase-summary {
+    font-size: 12px; color: var(--muted); margin-left: auto;
+    text-align: right; max-width: 40ch;
+  }
+  .phase-body { padding: 22px 20px 24px; }
+
+  svg { display: block; width: 100%; height: auto; }
+
+  /* SVG token classes */
+  .box-title  { font-family: var(--sans); font-size: 12.5px; font-weight: 600; }
+  .box-body   { font-family: var(--mono); font-size: 10.5px; font-variant-numeric: tabular-nums; }
+  .box-annot  { font-family: var(--sans); font-size: 10.5px; font-style: italic; }
+  .arrow      { stroke-width: 1.5; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+  .arrow-head { }
+
+  .callout {
+    margin-top: 14px; padding: 10px 14px 10px 12px;
+    background: var(--surface-alt); border-left: 3px solid var(--c-invariant);
+    font-size: 12px; color: var(--ink-soft);
+    border-radius: 0 3px 3px 0;
+  }
+  .callout.caveat { border-left-color: var(--c-energy); }
+  .callout-title {
+    font-weight: 600; color: var(--ink); margin-right: 4px;
+    text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.06em;
+  }
+  .callout code {
+    font-family: var(--mono); font-size: 11px; color: var(--ink);
+    background: var(--surface); padding: 1px 5px; border-radius: 2px;
+    border: 1px solid var(--rule-soft);
+  }
+
+  footer {
+    margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule);
+    color: var(--muted); font-size: 12px; line-height: 1.7;
+  }
+  footer code {
+    font-family: var(--mono); font-size: 11px; color: var(--ink-soft);
+    background: var(--surface-alt); padding: 1px 5px; border-radius: 2px;
+  }
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">Mambino paper · v2 chip PPAC · pipeline block diagram (v2)</p>
+    <h1>From training checkpoint to per-config chip energy — every number traceable</h1>
+    <p class="subtitle">
+      Open-source pipeline. Every stage's input is a previous stage's output; nothing is
+      transcribed by hand. Reviewers can reproduce end-to-end from the training checkpoint.
+    </p>
+  </header>
+
+  <div class="legend">
+    <span><span class="legend-swatch" style="background: var(--c-extract-bg); border-color: var(--c-extract);"></span>JAXPR extraction</span>
+    <span><span class="legend-swatch" style="background: var(--c-spec-bg); border-color: var(--c-spec);"></span>Chip spec (Python source of truth)</span>
+    <span><span class="legend-swatch" style="background: var(--c-energy-bg); border-color: var(--c-energy);"></span>Energy model (Accelergy + CACTI + NeuroSim)</span>
+    <span><span class="legend-swatch" style="background: var(--c-dataflow-bg); border-color: var(--c-dataflow);"></span>Dataflow model (Timeloop)</span>
+    <span><span class="legend-swatch" style="background: var(--c-crosscheck-bg); border-color: var(--c-crosscheck);"></span>Cross-check (SCALE-Sim)</span>
+    <span><span class="legend-swatch" style="background: var(--c-neutral-bg); border-color: var(--ink-soft);"></span>Input / output artifact</span>
+  </div>
+
+  <!-- =========================================================
+       Reusable SVG defs: arrowheads, styles
+       ========================================================= -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
+              markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+      </marker>
+    </defs>
+  </svg>
+
+  <!-- ============================== PHASE 1 ============================== -->
+  <section class="phase">
+    <div class="phase-header">
+      <span class="phase-num">Phase 1</span>
+      <h2 class="phase-title">Extract workload from trained checkpoint</h2>
+      <span class="phase-summary">JAX/Flax model rebuilt from training code; JAXPR walked; per-op records emitted.</span>
+    </div>
+    <div class="phase-body">
+      <!--
+        Grid: 4 columns × 3 rows.
+        Columns at x = 20, 260, 500, 740 (all boxes width 220).
+        Row 1 top = 20; Row 2 top = 110; invariant row top = 240.
+      -->
+      <svg viewBox="0 0 980 340" role="img" aria-label="Phase 1: JAXPR extraction">
+        <!-- Column 1: input artifacts -->
+        <g>
+          <rect x="20" y="20" width="220" height="70" rx="4"
+                fill="var(--c-neutral-bg)" stroke="var(--ink-soft)" stroke-width="1.2"/>
+          <text class="box-title" x="32" y="44" fill="var(--ink)">Trained checkpoint</text>
+          <text class="box-body" x="32" y="62" fill="var(--ink-soft)">checkpoints/&lt;cfg&gt;/best.pkl</text>
+          <text class="box-body" x="32" y="78" fill="var(--muted)">↳ PURR 10.4231/9ADT-WP13</text>
+
+          <rect x="20" y="110" width="220" height="70" rx="4"
+                fill="var(--c-neutral-bg)" stroke="var(--ink-soft)" stroke-width="1.2"/>
+          <text class="box-title" x="32" y="134" fill="var(--ink)">Training code (SHA)</text>
+          <text class="box-body" x="32" y="152" fill="var(--ink-soft)">s5/mambino_ssm.py</text>
+          <text class="box-body" x="32" y="168" fill="var(--muted)">↳ git tag mambino-paper-v1</text>
+        </g>
+
+        <!-- Column 2: model rebuild -->
+        <rect x="260" y="65" width="220" height="80" rx="4"
+              fill="var(--c-extract-bg)" stroke="var(--c-extract)" stroke-width="1.4"/>
+        <text class="box-title" x="272" y="88" fill="var(--c-extract)">Rebuild model + forward</text>
+        <text class="box-body" x="272" y="106" fill="var(--ink-soft)">create_train_state(...)</text>
+        <text class="box-body" x="272" y="122" fill="var(--ink-soft)">load_checkpoint_msgpack()</text>
+        <text class="box-body" x="272" y="138" fill="var(--ink-soft)">forward = model.apply</text>
+
+        <!-- Column 3: JAXPR -->
+        <rect x="500" y="65" width="220" height="80" rx="4"
+              fill="var(--c-extract-bg)" stroke="var(--c-extract)" stroke-width="1.4"/>
+        <text class="box-title" x="512" y="88" fill="var(--c-extract)">jax.make_jaxpr(fn)</text>
+        <text class="box-body" x="512" y="106" fill="var(--ink-soft)">on real (params, x, integ)</text>
+        <text class="box-body" x="512" y="122" fill="var(--ink-soft)">compiled JAXPR</text>
+        <text class="box-annot" x="512" y="138" fill="var(--muted)">= actual inference graph</text>
+
+        <!-- Column 4: dual walkers -->
+        <rect x="740" y="20" width="220" height="80" rx="4"
+              fill="var(--c-extract-bg)" stroke="var(--c-extract)" stroke-width="1.4"/>
+        <text class="box-title" x="752" y="42" fill="var(--c-extract)">walker</text>
+        <text class="box-body" x="752" y="60" fill="var(--ink-soft)">flop_counter_jaxpr.py</text>
+        <text class="box-body" x="752" y="76" fill="var(--ink-soft)">walk_jaxpr() → totals</text>
+        <text class="box-annot" x="752" y="93" fill="var(--muted)">independent aggregate</text>
+
+        <rect x="740" y="110" width="220" height="80" rx="4"
+              fill="var(--c-extract-bg)" stroke="var(--c-extract)" stroke-width="1.4"/>
+        <text class="box-title" x="752" y="132" fill="var(--c-extract)">emitter</text>
+        <text class="box-body" x="752" y="150" fill="var(--ink-soft)">extract_workload_from_</text>
+        <text class="box-body" x="752" y="166" fill="var(--ink-soft)">jaxpr.py → per-op records</text>
+        <text class="box-annot" x="752" y="183" fill="var(--muted)">per-GEMM + elemwise class</text>
+
+        <!-- Arrows -->
+        <g stroke="var(--ink-soft)" color="var(--ink-soft)">
+          <!-- checkpoint (right edge 240,55) → rebuild (left edge 260,105): straight -->
+          <path class="arrow" d="M 240 55 L 260 105" marker-end="url(#arrowhead)"/>
+          <!-- training code (right edge 240,145) → rebuild (left edge 260,105) -->
+          <path class="arrow" d="M 240 145 L 260 105" marker-end="url(#arrowhead)"/>
+          <!-- rebuild (480,105) → jaxpr (500,105) -->
+          <path class="arrow" d="M 480 105 L 500 105" marker-end="url(#arrowhead)"/>
+          <!-- jaxpr (720,105) → walker (740,60): up -->
+          <path class="arrow" d="M 720 105 L 730 105 L 730 60 L 740 60" marker-end="url(#arrowhead)"/>
+          <!-- jaxpr (720,105) → emitter (740,150): down -->
+          <path class="arrow" d="M 720 105 L 730 105 L 730 150 L 740 150" marker-end="url(#arrowhead)"/>
+        </g>
+
+        <!-- Invariant callout -->
+        <g>
+          <rect x="220" y="230" width="540" height="90" rx="6"
+                fill="var(--surface-alt)" stroke="var(--c-invariant)" stroke-width="2"/>
+          <text class="box-title" x="234" y="254" fill="var(--c-invariant)">HARD INVARIANT CHECK</text>
+          <text class="box-body" x="234" y="274" fill="var(--ink-soft)">Σ emitter.dot_general == walker.dot_general</text>
+          <text class="box-body" x="234" y="290" fill="var(--ink-soft)">Σ emitter.elementwise == walker.elementwise</text>
+          <text class="box-annot" x="234" y="308" fill="var(--muted)">fail → script exits non-zero, workload not usable</text>
+        </g>
+
+        <!-- Arrows into invariant -->
+        <g stroke="var(--c-invariant)" color="var(--c-invariant)">
+          <path class="arrow" stroke-dasharray="4 3"
+                d="M 850 100 L 850 210 L 480 210 L 480 230" marker-end="url(#arrowhead)"/>
+          <path class="arrow" stroke-dasharray="4 3"
+                d="M 850 190 L 870 190 L 870 220 L 500 220 L 500 230" marker-end="url(#arrowhead)"/>
+        </g>
+      </svg>
+
+      <div class="callout">
+        <span class="callout-title">Invariant status</span>
+        All 5 configs pass. Corner 1 (188K): walker = emitter = <strong>882,903,552</strong>
+        dot_general FLOPs, <strong>65,766,556</strong> elementwise FLOPs, bit-for-bit.
+        Emitted files: <code>workload_&lt;cfg&gt;_{gemms.csv, gemms.yaml, elemwise.yaml, manifest.yaml}</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== PHASE 2 ============================== -->
+  <section class="phase">
+    <div class="phase-header">
+      <span class="phase-num">Phase 2</span>
+      <h2 class="phase-title">Chip specification — single Python source of truth</h2>
+      <span class="phase-summary">One dict → three consistent formats. Prevents silent drift between tools.</span>
+    </div>
+    <div class="phase-body">
+      <svg viewBox="0 0 980 210" role="img" aria-label="Phase 2: chip spec source of truth">
+        <!-- CHIP_PARAMS box (left) -->
+        <rect x="20" y="20" width="280" height="170" rx="4"
+              fill="var(--c-spec-bg)" stroke="var(--c-spec)" stroke-width="1.4"/>
+        <text class="box-title" x="34" y="44" fill="var(--c-spec)">CHIP_PARAMS</text>
+        <text class="box-body" x="34" y="62" fill="var(--ink-soft)">build_chip_specs.py</text>
+        <text class="box-annot" x="34" y="84" fill="var(--muted)">16×16 systolic WS array</text>
+        <text class="box-annot" x="34" y="102" fill="var(--muted)">22 nm INT8, 1 GHz</text>
+        <text class="box-annot" x="34" y="120" fill="var(--muted)">256 KB weight SRAM</text>
+        <text class="box-annot" x="34" y="138" fill="var(--muted)">128 KB activation SRAM</text>
+        <text class="box-annot" x="34" y="156" fill="var(--muted)">64 KB state SRAM</text>
+        <text class="box-annot" x="34" y="174" fill="var(--muted)">no off-chip DRAM</text>
+
+        <!-- Three output boxes on right, evenly spaced -->
+        <rect x="500" y="20" width="440" height="45" rx="4"
+              fill="var(--c-energy-bg)" stroke="var(--c-energy)" stroke-width="1.4"/>
+        <text class="box-title" x="514" y="40" fill="var(--c-energy)">arch_accelergy.yaml</text>
+        <text class="box-body" x="514" y="57" fill="var(--ink-soft)">subtree/local schema → fed to Accelergy</text>
+
+        <rect x="500" y="80" width="440" height="45" rx="4"
+              fill="var(--c-dataflow-bg)" stroke="var(--c-dataflow)" stroke-width="1.4"/>
+        <text class="box-title" x="514" y="100" fill="var(--c-dataflow)">arch_timeloop.yaml</text>
+        <text class="box-body" x="514" y="117" fill="var(--ink-soft)">nodes/!Container schema → future timeloop-mapper</text>
+
+        <rect x="500" y="140" width="440" height="50" rx="4"
+              fill="var(--c-dataflow-bg)" stroke="var(--c-dataflow)" stroke-width="1.4" stroke-dasharray="3 3"/>
+        <text class="box-title" x="514" y="160" fill="var(--c-dataflow)">arch_mambino.cfg</text>
+        <text class="box-body" x="514" y="177" fill="var(--ink-soft)">libconfig format → currently drives timeloop-model</text>
+
+        <!-- Arrows: CHIP_PARAMS → each of the 3 boxes -->
+        <g stroke="var(--ink-soft)" color="var(--ink-soft)">
+          <path class="arrow" d="M 300 42 L 500 42" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M 300 102 L 500 102" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M 300 165 L 500 165" marker-end="url(#arrowhead)"/>
+        </g>
+      </svg>
+
+      <div class="callout caveat">
+        <span class="callout-title">Tooling caveat</span>
+        Timeloop's YAML parser triggers <code>std::bad_alloc</code> on our
+        <code>nodes:</code> arch. <code>arch_mambino.cfg</code> (libconfig, same chip
+        params) is the working substitute. Documented in
+        <code>paper_v2_ppac/chip/README.md</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== PHASE 3 ============================== -->
+  <section class="phase">
+    <div class="phase-header">
+      <span class="phase-num">Phase 3</span>
+      <h2 class="phase-title">Per-access energy modeling — Accelergy 0.4</h2>
+      <span class="phase-summary">CACTI 7 + NeuroSim primitives produce validated per-component energies at 22 nm INT8.</span>
+    </div>
+    <div class="phase-body">
+      <svg viewBox="0 0 980 340" role="img" aria-label="Phase 3: Accelergy energy modeling">
+        <!-- Column 1: inputs, vertical stack -->
+        <rect x="20" y="20" width="220" height="55" rx="4"
+              fill="var(--c-energy-bg)" stroke="var(--c-energy)" stroke-width="1.2"/>
+        <text class="box-title" x="32" y="42" fill="var(--c-energy)">arch_accelergy.yaml</text>
+        <text class="box-body" x="32" y="60" fill="var(--muted)">from Phase 2</text>
+
+        <rect x="20" y="90" width="220" height="55" rx="4"
+              fill="var(--c-energy-bg)" stroke="var(--c-energy)" stroke-width="1.2"/>
+        <text class="box-title" x="32" y="112" fill="var(--c-energy)">components/*.yaml</text>
+        <text class="box-body" x="32" y="130" fill="var(--muted)">smartbuffer_SRAM, RF, intmac</text>
+
+        <rect x="20" y="160" width="220" height="55" rx="4"
+              fill="var(--c-neutral-bg)" stroke="var(--ink-soft)" stroke-width="1.2"/>
+        <text class="box-title" x="32" y="182" fill="var(--ink)">action counts</text>
+        <text class="box-body" x="32" y="200" fill="var(--muted)">from Timeloop (Phase 4)</text>
+
+        <!-- Middle: Accelergy engine -->
+        <rect x="360" y="45" width="280" height="150" rx="4"
+              fill="var(--c-energy-bg)" stroke="var(--c-energy)" stroke-width="1.6"/>
+        <text class="box-title" x="374" y="70" fill="var(--c-energy)">Accelergy 0.4</text>
+        <text class="box-body" x="374" y="90" fill="var(--ink-soft)">↳ CACTI 7 plug-in (SRAM)</text>
+        <text class="box-body" x="374" y="108" fill="var(--ink-soft)">↳ NeuroSim plug-in (MAC, FF)</text>
+        <text class="box-body" x="374" y="126" fill="var(--ink-soft)">↳ Aladdin plug-in (adder)</text>
+        <text class="box-annot" x="374" y="150" fill="var(--muted)">technology: 22 nm</text>
+        <text class="box-annot" x="374" y="168" fill="var(--muted)">datawidth: INT8 / INT32 accum</text>
+        <text class="box-annot" x="374" y="186" fill="var(--muted)">frequency: 1 GHz</text>
+
+        <!-- Right: outputs -->
+        <rect x="760" y="60" width="200" height="55" rx="4"
+              fill="var(--c-energy-bg)" stroke="var(--c-energy)" stroke-width="1.4"/>
+        <text class="box-title" x="774" y="82" fill="var(--c-energy)">ERT.yaml</text>
+        <text class="box-body" x="774" y="100" fill="var(--muted)">pJ per access, per component</text>
+
+        <rect x="760" y="130" width="200" height="55" rx="4"
+              fill="var(--c-energy-bg)" stroke="var(--c-energy)" stroke-width="1.4"/>
+        <text class="box-title" x="774" y="152" fill="var(--c-energy)">ART.yaml</text>
+        <text class="box-body" x="774" y="170" fill="var(--muted)">mm² per component</text>
+
+        <!-- Arrows in -->
+        <g stroke="var(--ink-soft)" color="var(--ink-soft)">
+          <path class="arrow" d="M 240 47 L 300 47 L 300 90 L 360 90" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M 240 117 L 360 117" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M 240 187 L 300 187 L 300 150 L 360 150" marker-end="url(#arrowhead)"/>
+        </g>
+
+        <!-- Arrows out -->
+        <g stroke="var(--ink-soft)" color="var(--ink-soft)">
+          <path class="arrow" d="M 640 90 L 700 90 L 700 87 L 760 87" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M 640 150 L 700 150 L 700 157 L 760 157" marker-end="url(#arrowhead)"/>
+        </g>
+
+        <!-- Validated anchor callout at bottom -->
+        <g>
+          <rect x="20" y="245" width="940" height="80" rx="6"
+                fill="var(--surface-alt)" stroke="var(--c-invariant)" stroke-width="2"/>
+          <text class="box-title" x="34" y="268" fill="var(--c-invariant)">ANCHOR — every per-access value in the published 22 nm INT8 range</text>
+          <text class="box-body" x="34" y="288" fill="var(--ink-soft)">weight_sram 256 KB: 12.74 pJ/access · activation_sram 128 KB: 8.02 pJ · state_sram 64 KB: 5.05 pJ</text>
+          <text class="box-body" x="34" y="304" fill="var(--ink-soft)">weight_reg (INT8 FF): 0.020 pJ · psum_reg (INT32 FF): 0.041 pJ · mac (intadder INT8): 8.6 fJ</text>
+          <text class="box-annot" x="34" y="320" fill="var(--muted)">All values in CACTI / NeuroSim / Horowitz-scaled published bands. Chip anchor established.</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============================== PHASE 4 ============================== -->
+  <section class="phase">
+    <div class="phase-header">
+      <span class="phase-num">Phase 4</span>
+      <h2 class="phase-title">Dataflow model — timeloop-model per GEMM</h2>
+      <span class="phase-summary">Explicit WS mapping → cycles + per-component energy. No mapper search (fixed dataflow has one legal mapping).</span>
+    </div>
+    <div class="phase-body">
+      <svg viewBox="0 0 980 310" role="img" aria-label="Phase 4: Timeloop dataflow model">
+        <!-- Column 1: four inputs -->
+        <rect x="20" y="20" width="220" height="42" rx="4"
+              fill="var(--c-dataflow-bg)" stroke="var(--c-dataflow)" stroke-width="1.2"/>
+        <text class="box-title" x="32" y="45" fill="var(--c-dataflow)">arch_mambino.cfg</text>
+
+        <rect x="20" y="76" width="220" height="42" rx="4"
+              fill="var(--c-dataflow-bg)" stroke="var(--c-dataflow)" stroke-width="1.2"/>
+        <text class="box-title" x="32" y="93" fill="var(--c-dataflow)">problem.yaml</text>
+        <text class="box-body" x="32" y="110" fill="var(--muted)">M, N, K from workload</text>
+
+        <rect x="20" y="132" width="220" height="42" rx="4"
+              fill="var(--c-dataflow-bg)" stroke="var(--c-dataflow)" stroke-width="1.2"/>
+        <text class="box-title" x="32" y="149" fill="var(--c-dataflow)">mapping.yaml</text>
+        <text class="box-body" x="32" y="166" fill="var(--muted)">explicit WS mapping</text>
+
+        <rect x="20" y="188" width="220" height="42" rx="4"
+              fill="var(--c-energy-bg)" stroke="var(--c-energy)" stroke-width="1.2"/>
+        <text class="box-title" x="32" y="205" fill="var(--c-energy)">ERT + ART</text>
+        <text class="box-body" x="32" y="222" fill="var(--muted)">from Phase 3</text>
+
+        <!-- Middle: timeloop-model -->
+        <rect x="360" y="60" width="280" height="140" rx="4"
+              fill="var(--c-dataflow-bg)" stroke="var(--c-dataflow)" stroke-width="1.6"/>
+        <text class="box-title" x="374" y="86" fill="var(--c-dataflow)">timeloop-model</text>
+        <text class="box-body" x="374" y="106" fill="var(--ink-soft)">reads Accelergy ERT/ART</text>
+        <text class="box-body" x="374" y="122" fill="var(--ink-soft)">applies explicit mapping</text>
+        <text class="box-body" x="374" y="138" fill="var(--ink-soft)">walks loop-nest analytically</text>
+        <text class="box-body" x="374" y="154" fill="var(--ink-soft)">emits per-level access counts</text>
+        <text class="box-body" x="374" y="170" fill="var(--ink-soft)">multiplies × ERT per-access</text>
+        <text class="box-annot" x="374" y="188" fill="var(--muted)">no mapper search — fixed WS mapping</text>
+
+        <!-- Right: stats output -->
+        <rect x="760" y="80" width="200" height="100" rx="4"
+              fill="var(--c-neutral-bg)" stroke="var(--ink-soft)" stroke-width="1.4"/>
+        <text class="box-title" x="774" y="102" fill="var(--ink)">timeloop-model.stats.txt</text>
+        <text class="box-body" x="774" y="122" fill="var(--ink-soft)">Cycles: 8192</text>
+        <text class="box-body" x="774" y="138" fill="var(--ink-soft)">Utilization: 100%</text>
+        <text class="box-body" x="774" y="154" fill="var(--ink-soft)">Energy: 11.77 μJ</text>
+        <text class="box-body" x="774" y="170" fill="var(--ink-soft)">5.61 pJ/MAC</text>
+
+        <!-- Arrows: 4 inputs → timeloop -->
+        <g stroke="var(--ink-soft)" color="var(--ink-soft)">
+          <path class="arrow" d="M 240 41 L 300 41 L 300 100 L 360 100" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M 240 97 L 300 97 L 300 120 L 360 120" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M 240 153 L 300 153 L 300 140 L 360 140" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M 240 209 L 300 209 L 300 160 L 360 160" marker-end="url(#arrowhead)"/>
+          <!-- output arrow -->
+          <path class="arrow" d="M 640 130 L 760 130" marker-end="url(#arrowhead)"/>
+        </g>
+
+        <!-- Canonical validation callout -->
+        <g>
+          <rect x="20" y="248" width="940" height="55" rx="6"
+                fill="var(--surface-alt)" stroke="var(--c-invariant)" stroke-width="2"/>
+          <text class="box-title" x="34" y="270" fill="var(--c-invariant)">CANONICAL VALIDATION</text>
+          <text class="box-body" x="34" y="288" fill="var(--ink-soft)">128×128×128 GEMM on 16×16 WS chip. Deterministic — same inputs → utilization 1.00, pJ/Compute 5.613.</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============================== PHASE 5 ============================== -->
+  <section class="phase">
+    <div class="phase-header">
+      <span class="phase-num">Phase 5</span>
+      <h2 class="phase-title">Aggregate per-config chip PPAC</h2>
+      <span class="phase-summary">Sum per-GEMM energy × repeat count from the workload manifest to get per-config totals.</span>
+    </div>
+    <div class="phase-body">
+      <svg viewBox="0 0 980 240" role="img" aria-label="Phase 5: aggregation">
+        <!-- Left: workload block -->
+        <rect x="20" y="20" width="260" height="200" rx="4"
+              fill="var(--c-extract-bg)" stroke="var(--c-extract)" stroke-width="1.4"/>
+        <text class="box-title" x="34" y="42" fill="var(--c-extract)">Per-config workloads</text>
+        <text class="box-body" x="34" y="60" fill="var(--muted)">workload_*_gemms.yaml</text>
+        <text class="box-body" x="34" y="86" fill="var(--ink-soft)">Config 4  (Mambino 106K)</text>
+        <text class="box-body" x="34" y="104" fill="var(--ink-soft)">Config 5  (Pure S5 106K)</text>
+        <text class="box-body" x="34" y="122" fill="var(--ink-soft)">Corner 1  (Pure S5 188K)</text>
+        <text class="box-body" x="34" y="140" fill="var(--ink-soft)">Corner 2  (Pure S5 P=16)</text>
+        <text class="box-body" x="34" y="158" fill="var(--ink-soft)">Corner 3′ (Mambino 188K)</text>
+        <text class="box-annot" x="34" y="184" fill="var(--muted)">~25 unique (cfg × shape) combos</text>
+        <text class="box-annot" x="34" y="202" fill="var(--muted)">each with a repeat count</text>
+
+        <!-- Middle: aggregation logic -->
+        <rect x="360" y="60" width="260" height="120" rx="4"
+              fill="var(--c-dataflow-bg)" stroke="var(--c-dataflow)" stroke-width="1.4"/>
+        <text class="box-title" x="374" y="82" fill="var(--c-dataflow)">Loop &amp; sum</text>
+        <text class="box-body" x="374" y="104" fill="var(--ink-soft)">for shape, repeat in workload:</text>
+        <text class="box-body" x="374" y="120" fill="var(--ink-soft)">    energy_j = timeloop_model(</text>
+        <text class="box-body" x="374" y="136" fill="var(--ink-soft)">        arch, shape, mapping)</text>
+        <text class="box-body" x="374" y="152" fill="var(--ink-soft)">    total += energy_j × repeat</text>
+        <text class="box-annot" x="374" y="170" fill="var(--muted)">deterministic, seconds each</text>
+
+        <!-- Right: per-config energies -->
+        <rect x="700" y="20" width="260" height="200" rx="4"
+              fill="var(--c-neutral-bg)" stroke="var(--ink-soft)" stroke-width="1.4"/>
+        <text class="box-title" x="714" y="42" fill="var(--ink)">Per-config chip energy</text>
+        <text class="box-body" x="714" y="68" fill="var(--ink-soft)">Config 4  ≈ 1.72 mJ</text>
+        <text class="box-body" x="714" y="86" fill="var(--ink-soft)">Config 5  ≈ 1.91 mJ</text>
+        <text class="box-body" x="714" y="104" fill="var(--ink-soft)">Corner 1  ≈ 2.47 mJ</text>
+        <text class="box-body" x="714" y="122" fill="var(--ink-soft)">Corner 2  ≈ 2.85 mJ</text>
+        <text class="box-body" x="714" y="140" fill="var(--ink-soft)">Corner 3′ ≈ 2.66 mJ</text>
+        <text class="box-annot" x="714" y="170" fill="var(--muted)">v7.1 was 87–93× higher</text>
+        <text class="box-annot" x="714" y="188" fill="var(--muted)">(the "1 read/MAC" model bug)</text>
+        <text class="box-annot" x="714" y="212" fill="var(--muted)">final numbers require Phase 4 loop</text>
+
+        <!-- Arrows -->
+        <g stroke="var(--ink-soft)" color="var(--ink-soft)">
+          <path class="arrow" d="M 280 120 L 360 120" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M 620 120 L 700 120" marker-end="url(#arrowhead)"/>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============================== PHASE 6 ============================== -->
+  <section class="phase">
+    <div class="phase-header">
+      <span class="phase-num">Phase 6</span>
+      <h2 class="phase-title">Independent cross-check — SCALE-Sim on same workloads</h2>
+      <span class="phase-summary">Same JAXPR-extracted GEMMs, a different tool, a different energy model. Cross-tool agreement establishes robustness.</span>
+    </div>
+    <div class="phase-body">
+      <svg viewBox="0 0 980 170" role="img" aria-label="Phase 6: SCALE-Sim cross-check">
+        <!-- Input -->
+        <rect x="20" y="45" width="220" height="70" rx="4"
+              fill="var(--c-extract-bg)" stroke="var(--c-extract)" stroke-width="1.4"/>
+        <text class="box-title" x="32" y="70" fill="var(--c-extract)">workload_*_gemms.csv</text>
+        <text class="box-body" x="32" y="88" fill="var(--muted)">SCALE-Sim GEMM format</text>
+        <text class="box-annot" x="32" y="106" fill="var(--muted)">same JAXPR extraction as Phase 4</text>
+
+        <!-- SCALE-Sim engine -->
+        <rect x="360" y="20" width="240" height="120" rx="4"
+              fill="var(--c-crosscheck-bg)" stroke="var(--c-crosscheck)" stroke-width="1.6"/>
+        <text class="box-title" x="374" y="44" fill="var(--c-crosscheck)">SCALE-Sim v2.0.2</text>
+        <text class="box-body" x="374" y="64" fill="var(--ink-soft)">16×16 WS array</text>
+        <text class="box-body" x="374" y="80" fill="var(--ink-soft)">cycle-accurate systolic sim</text>
+        <text class="box-body" x="374" y="96" fill="var(--ink-soft)">CACTI-based per-access energy</text>
+        <text class="box-annot" x="374" y="120" fill="var(--muted)">independent of Timeloop</text>
+
+        <!-- Outputs -->
+        <rect x="720" y="45" width="240" height="70" rx="4"
+              fill="var(--c-crosscheck-bg)" stroke="var(--c-crosscheck)" stroke-width="1.4"/>
+        <text class="box-title" x="734" y="70" fill="var(--c-crosscheck)">SCALE-Sim outputs</text>
+        <text class="box-body" x="734" y="88" fill="var(--muted)">COMPUTE_REPORT.csv (cycles, util)</text>
+        <text class="box-body" x="734" y="104" fill="var(--muted)">DETAILED_ACCESS_REPORT.csv</text>
+
+        <!-- Arrows -->
+        <g stroke="var(--ink-soft)" color="var(--ink-soft)">
+          <path class="arrow" d="M 240 80 L 360 80" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M 600 80 L 720 80" marker-end="url(#arrowhead)"/>
+        </g>
+      </svg>
+
+      <div class="callout">
+        <span class="callout-title">Cross-tool contract</span>
+        Cycle counts must agree within ~20% (accounts for analytical vs cycle-accurate
+        modeling differences). Memory-traffic access counts must agree within an order
+        of magnitude. Bigger disagreement flags a bug in one of the tools.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== PHASE 7 ============================== -->
+  <section class="phase">
+    <div class="phase-header">
+      <span class="phase-num">Phase 7</span>
+      <h2 class="phase-title">Paper artifacts — rewrite §6/§7/§8, redo Fig 4, tag <code style="font-family: var(--mono); font-size: 13px;">mambino-paper-v2</code></h2>
+      <span class="phase-summary">Every number in the paper's chip section traces back through this pipeline to a training checkpoint.</span>
+    </div>
+    <div class="phase-body">
+      <svg viewBox="0 0 980 200" role="img" aria-label="Phase 7: paper artifacts">
+        <!-- Two input boxes on left -->
+        <rect x="20" y="30" width="260" height="60" rx="4"
+              fill="var(--c-neutral-bg)" stroke="var(--ink-soft)" stroke-width="1.2"/>
+        <text class="box-title" x="32" y="54" fill="var(--ink)">Per-config PPAC (Phase 5)</text>
+        <text class="box-body" x="32" y="74" fill="var(--muted)">energy per inference, mm² area</text>
+
+        <rect x="20" y="110" width="260" height="60" rx="4"
+              fill="var(--c-crosscheck-bg)" stroke="var(--c-crosscheck)" stroke-width="1.2"/>
+        <text class="box-title" x="32" y="134" fill="var(--c-crosscheck)">SCALE-Sim cross-check (Phase 6)</text>
+        <text class="box-body" x="32" y="154" fill="var(--muted)">cycle + BW agreement %</text>
+
+        <!-- Big paper artifact box on right -->
+        <rect x="400" y="15" width="560" height="170" rx="4"
+              fill="var(--c-neutral-bg)" stroke="var(--ink-soft)" stroke-width="1.4"/>
+        <text class="box-title" x="414" y="40" fill="var(--ink)">Paper artifacts (rewritten)</text>
+        <text class="box-body" x="414" y="62" fill="var(--ink-soft)">→ LOCKED_master_ppac_document.md §6 digital PPAC</text>
+        <text class="box-body" x="414" y="80" fill="var(--ink-soft)">→ §7 Appendix A (deferred to companion state-cell paper)</text>
+        <text class="box-body" x="414" y="98" fill="var(--ink-soft)">→ §8 accuracy-per-mJ table</text>
+        <text class="box-body" x="414" y="116" fill="var(--ink-soft)">→ Fig 4 chip Pareto (per-config real numbers)</text>
+        <text class="box-body" x="414" y="134" fill="var(--ink-soft)">→ DISCUSSION_PARAGRAPHS.md paragraph 3</text>
+        <text class="box-annot" x="414" y="164" fill="var(--muted)">git tag mambino-paper-v2 — supersedes v7.1 chip claims; §1–5 (accuracy) unchanged</text>
+
+        <!-- Arrows -->
+        <g stroke="var(--ink-soft)" color="var(--ink-soft)">
+          <path class="arrow" d="M 280 60 L 340 60 L 340 80 L 400 80" marker-end="url(#arrowhead)"/>
+          <path class="arrow" d="M 280 140 L 340 140 L 340 120 L 400 120" marker-end="url(#arrowhead)"/>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      <strong>Traceability contract.</strong>
+      Every number in the paper's §6/§7/§8 traces:
+      paper number → <code>timeloop-model.stats.txt</code> →
+      <code>arch_mambino.cfg + mapping.yaml + ERT.yaml</code> →
+      <code>workload_&lt;cfg&gt;_gemms.yaml</code> → JAXPR walker totals →
+      training checkpoint on PURR <code>10.4231/9ADT-WP13</code> → git tag
+      <code>mambino-paper-v1</code>.
+    </p>
+    <p>
+      <strong>Currently at:</strong> commit <code>b7b3ed5</code>. Phase 1–4 complete,
+      canonical GEMM validated. Phase 5–7 are mechanical follow-up. See
+      <code>paper_v2_ppac/chip/README.md</code>.
+    </p>
+  </footer>
+</main>
