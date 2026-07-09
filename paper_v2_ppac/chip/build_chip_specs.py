@@ -283,24 +283,38 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out_dir", default=".",
                     help="Directory to write arch_accelergy.yaml + arch_timeloop.yaml")
+    ap.add_argument("--array_x", type=int, default=None,
+                    help="Override CHIP_PARAMS.array_x (columns of PE array)")
+    ap.add_argument("--array_y", type=int, default=None,
+                    help="Override CHIP_PARAMS.array_y (rows of PE array)")
+    ap.add_argument("--tag", default="",
+                    help="Suffix appended to output filenames, e.g. '_16x16'")
     args = ap.parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
 
-    p = CHIP_PARAMS
+    p = dict(CHIP_PARAMS)
+    if args.array_x is not None:
+        p["array_x"] = args.array_x
+    if args.array_y is not None:
+        p["array_y"] = args.array_y
+
+    tag = args.tag or (f"_{p['array_x']}x{p['array_y']}" if args.array_x else "")
     print(f"[build] chip: {p['array_x']}x{p['array_y']} WS array = "
           f"{p['array_x']*p['array_y']} PEs at {p['technology']} INT8")
     print(f"[build] buffers: {p['weight_sram_bytes']//1024} KB weight, "
           f"{p['activation_sram_bytes']//1024} KB activation, "
-          f"{p['state_sram_bytes']//1024} KB state")
+          f"{p['state_sram_bytes']//1024} KB state (fixed for array sweep)")
 
-    with open(os.path.join(args.out_dir, "arch_accelergy.yaml"), "w") as f:
+    acc_path = os.path.join(args.out_dir, f"arch_accelergy{tag}.yaml")
+    with open(acc_path, "w") as f:
         yaml.safe_dump(build_accelergy_yaml(p), f, sort_keys=False,
                        default_flow_style=False)
-    print(f"[build] wrote arch_accelergy.yaml (subtree/local)")
+    print(f"[build] wrote {os.path.basename(acc_path)} (subtree/local)")
 
-    with open(os.path.join(args.out_dir, "arch_timeloop.yaml"), "w") as f:
+    tl_path = os.path.join(args.out_dir, f"arch_timeloop{tag}.yaml")
+    with open(tl_path, "w") as f:
         f.write(build_timeloop_yaml_text(p))
-    print(f"[build] wrote arch_timeloop.yaml (nodes/!Container)")
+    print(f"[build] wrote {os.path.basename(tl_path)} (nodes/!Container)")
 
 
 if __name__ == "__main__":
