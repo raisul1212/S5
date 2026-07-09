@@ -1,0 +1,21 @@
+config,label,family,params_band,array_x,array_y,n_pe,total_energy_mJ,MACs_mJ,PsumSpad_mJ,WeightSpad_mJ,GlobalBuffer_mJ
+config4,Config 4,Mambino,106K,8,8,64,4.0468,0.0,1.1982,0.2899,2.4807
+config4,Config 4,Mambino,106K,16,16,256,3.2054,0.0,1.1982,0.2899,1.6394
+config4,Config 4,Mambino,106K,32,32,1024,2.784,0.0,1.1982,0.2899,1.2188
+config4,Config 4,Mambino,106K,64,64,4096,2.5736,0.0,1.1982,0.2899,1.0081
+config5,Config 5,Pure S5,106K,8,8,64,4.2164,0.0,1.3291,0.3278,2.4733
+config5,Config 5,Pure S5,106K,16,16,256,3.0995,0.0,1.3291,0.3278,1.3582
+config5,Config 5,Pure S5,106K,32,32,1024,2.596,0.0,1.3291,0.3278,0.8544
+config5,Config 5,Pure S5,106K,64,64,4096,2.3443,0.0,1.3291,0.3278,0.6024
+corner1,Corner 1,Pure S5,188K,8,8,64,5.439,0.0,1.7217,0.4241,3.1819
+corner1,Corner 1,Pure S5,188K,16,16,256,4.0476,0.0,1.7217,0.4241,1.7904
+corner1,Corner 1,Pure S5,188K,32,32,1024,3.3515,0.0,1.7217,0.4241,1.0939
+corner1,Corner 1,Pure S5,188K,64,64,4096,3.0038,0.0,1.7217,0.4241,0.7457
+corner2,Corner 2,Pure S5,188K,8,8,64,6.2466,0.0,1.9834,0.4897,3.6452
+corner2,Corner 2,Pure S5,188K,16,16,256,4.6624,0.0,1.9834,0.4897,2.062
+corner2,Corner 2,Pure S5,188K,32,32,1024,3.8428,0.0,1.9834,0.4897,1.2419
+corner2,Corner 2,Pure S5,188K,64,64,4096,3.4331,0.0,1.9834,0.4897,0.8323
+corner3p,Corner 3',Mambino,188K,8,8,64,6.077,0.0,1.8525,0.4518,3.6525
+corner3p,Corner 3',Mambino,188K,16,16,256,4.7684,0.0,1.8525,0.4518,2.3432
+corner3p,Corner 3',Mambino,188K,32,32,1024,4.0308,0.0,1.8525,0.4518,1.6063
+corner3p,Corner 3',Mambino,188K,64,64,4096,3.6624,0.0,1.8525,0.4518,1.238
