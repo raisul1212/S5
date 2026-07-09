@@ -54,6 +54,14 @@ than Config 5 at the same 106K parameter budget.
 
 ## Paragraph 3 — Digital chip efficiency headline
 
+> ### ⚠️ PARAGRAPH 3 IS SUPERSEDED — DO NOT PASTE INTO PAPER
+> Backing chip PPAC (master doc §6/§8) is under revision. The efficiency-per-mJ ratios
+> quoted below come from a "1 SRAM read per MAC" model that reduces every energy
+> component to `MACs × constant`. Full redo pending — SCALE-Sim v2 + Timeloop + Accelergy
+> with a 64×64 systolic, weight-stationary, INT8 edge inference chip. Preserved below for
+> historical reference; rewrite will follow master doc v8.
+
+
 Combining the accuracy and PPAC results across both iso-params
 comparisons, Mambino dominates digital chip efficiency per accuracy
 point. Under the digital PPAC model (Accelergy 0.4 with CACTI SRAM and

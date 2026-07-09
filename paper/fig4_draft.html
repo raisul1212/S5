@@ -1,0 +1,361 @@
+<title>Mambino paper — Fig 4 (chip efficiency Pareto, draft)</title>
+<style>
+  :root {
+    --ink: #0f1216;
+    --ink-soft: #3a3f47;
+    --muted: #5d6570;
+    --ground: #f7f5f0;
+    --surface: #ffffff;
+    --rule: #d7d3ca;
+    --rule-soft: #e8e3d8;
+
+    --mambino:     #1c7488;
+    --mambino-bg:  #d4e6ec;
+    --pures5:      #8a7a5c;
+    --pures5-bg:   #ece5d4;
+    --pures5-alt:  #a24728;
+    --pures5-alt-bg: #f0d9cf;
+
+    --frontier:    #2a6b46;
+    --band-106k:   #eae4d3;
+    --band-188k:   #dfd8c4;
+
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", "Menlo", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #e9e5df; --ink-soft: #b8b2a9; --muted: #8a8f97;
+      --ground: #17191c; --surface: #1e2027;
+      --rule: #33363c; --rule-soft: #262930;
+      --mambino-bg:  #1c3a41;
+      --pures5-bg:   #2e2a20;
+      --pures5-alt-bg: #3a2620;
+      --frontier:    #79b295;
+      --band-106k:   #24261e;
+      --band-188k:   #2a2c22;
+    }
+  }
+  :root[data-theme="light"] {
+    --ink: #0f1216; --ink-soft: #3a3f47; --muted: #5d6570;
+    --ground: #f7f5f0; --surface: #ffffff; --rule: #d7d3ca; --rule-soft: #e8e3d8;
+    --mambino-bg: #d4e6ec; --pures5-bg: #ece5d4; --pures5-alt-bg: #f0d9cf;
+    --frontier: #2a6b46; --band-106k: #eae4d3; --band-188k: #dfd8c4;
+  }
+  :root[data-theme="dark"] {
+    --ink: #e9e5df; --ink-soft: #b8b2a9; --muted: #8a8f97;
+    --ground: #17191c; --surface: #1e2027; --rule: #33363c; --rule-soft: #262930;
+    --mambino-bg: #1c3a41; --pures5-bg: #2e2a20; --pures5-alt-bg: #3a2620;
+    --frontier: #79b295; --band-106k: #24261e; --band-188k: #2a2c22;
+  }
+
+  body { margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); line-height: 1.5;
+    font-feature-settings: "kern" 1, "liga" 1; }
+  main { max-width: 960px; margin: 0 auto; padding: 48px 32px 64px; }
+  header { border-bottom: 1px solid var(--rule); padding-bottom: 20px; margin-bottom: 32px; }
+  header .eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px; }
+  header h1 { font-size: 22px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em;
+    text-wrap: balance; }
+  header .subtitle { color: var(--ink-soft); font-size: 14px; margin: 0; max-width: 68ch; }
+
+  figure { background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 4px; padding: 32px 28px 22px; margin: 0 0 28px; }
+  figure h2 { font-size: 14px; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.005em; }
+  figure .panel-subtitle { color: var(--muted); font-size: 12.5px; margin: 0 0 18px; max-width: 60ch; }
+  figure svg { display: block; width: 100%; height: auto; }
+
+  .caption { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--rule-soft);
+    color: var(--ink-soft); font-size: 12px; line-height: 1.55; }
+  .caption code { font-family: var(--mono); font-size: 11px; color: var(--ink); }
+  .caption em { color: var(--muted); font-style: normal; }
+
+  footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule);
+    color: var(--muted); font-size: 12px; line-height: 1.55; }
+  footer a { color: var(--ink-soft); text-decoration-color: var(--rule); }
+
+  .axis text { font-family: var(--sans); font-size: 11px; fill: var(--muted);
+    font-variant-numeric: tabular-nums; }
+  .axis line, .axis path { stroke: var(--rule); stroke-width: 1; fill: none; }
+  .gridline { stroke: var(--rule-soft); stroke-width: 1; stroke-dasharray: 2 3; }
+  .axis-title { font-family: var(--sans); font-size: 11px; fill: var(--ink-soft);
+    text-transform: uppercase; letter-spacing: 0.1em; }
+  .band-label { font-family: var(--sans); font-size: 10.5px; fill: var(--muted);
+    letter-spacing: 0.02em; }
+  .point-label { font-family: var(--sans); font-size: 11.5px; fill: var(--ink);
+    font-weight: 500; }
+  .point-sub { font-family: var(--mono); font-size: 10px; fill: var(--muted);
+    font-variant-numeric: tabular-nums; }
+  .frontier-line { stroke: var(--frontier); stroke-width: 1.6; fill: none;
+    stroke-dasharray: 5 4; }
+  .frontier-label { font-family: var(--sans); font-size: 10.5px; fill: var(--frontier);
+    font-weight: 500; letter-spacing: 0.02em; }
+  .frontier-star { fill: var(--frontier); }
+
+  .legend { display: flex; gap: 18px; align-items: center; margin-bottom: 10px;
+    font-size: 11.5px; color: var(--ink-soft); flex-wrap: wrap; }
+  .legend-swatch { display: inline-block; width: 12px; height: 12px;
+    border-radius: 50%; vertical-align: middle; margin-right: 6px;
+    border: 1.5px solid transparent; }
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">Mambino paper · Figure 4 · working draft</p>
+    <h1>Accuracy vs energy per inference — chip efficiency Pareto at 22 nm digital</h1>
+    <div style="background: #f0d9cf; border: 2px solid #a24728; padding: 12px 16px; margin: 12px 0 20px; border-radius: 4px; color: #4a1e10; font-size: 13px; line-height: 1.55;">
+      <strong>⚠ SUPERSEDED — DO NOT USE.</strong>
+      The chip PPAC methodology backing this figure (Accelergy with "1 SRAM read per MAC"
+      action counts) is under revision. Every energy component in the plot below reduces
+      to `MACs × per-access-CACTI-constant`, so the plotted Pareto reflects MAC-count
+      ordering, not a real chip claim. A v2 chip PPAC is being computed using SCALE-Sim v2
+      + Timeloop + Accelergy with a defined edge inference architecture (64×64 systolic
+      array, weight-stationary, INT8; 256/128/64 KB on-chip buffers, no off-chip DRAM).
+      Wait for <code>fig4_v2_draft.html</code> before using any chip claim.
+    </div>
+    <p class="subtitle">
+      <em>Historical reference only.</em> Mean test accuracy on LRA-ListOps (n = 8 seeds)
+      plotted against total digital chip energy per inference under two chip topology choices.
+      Config 4 (Mambino, 106 K params) sits alone on the frontier in both topologies —
+      but this ordering is trivially driven by MAC count and does not reflect a real
+      dataflow-based chip PPAC.
+    </p>
+  </header>
+
+  <figure id="panel-A">
+    <h2>A. Pipelined chip (4.2 MB activation SRAM, throughput-optimized)</h2>
+    <p class="panel-subtitle">
+      Pipelined topology holds all 8 layers' forward + backward activation streams
+      concurrently. Energies from §6a of the master PPAC document.
+    </p>
+    <div class="legend">
+      <span><span class="legend-swatch" style="background: var(--mambino-bg); border-color: var(--mambino);"></span>Mambino</span>
+      <span><span class="legend-swatch" style="background: var(--pures5-bg); border-color: var(--pures5);"></span>Pure S5 (full gate)</span>
+      <span><span class="legend-swatch" style="background: var(--pures5-alt-bg); border-color: var(--pures5-alt);"></span>Pure S5 (P=16, r=40)</span>
+      <span style="color: var(--frontier); font-weight: 500;">— — Pareto frontier</span>
+    </div>
+    <svg id="svg-A" viewBox="0 0 900 400" role="img" aria-label="Panel A: pipelined chip Pareto"></svg>
+  </figure>
+
+  <figure id="panel-B">
+    <h2>B. Sequential chip (512 KB activation SRAM, latency-optimized)</h2>
+    <p class="panel-subtitle">
+      Sequential topology processes one layer at a time with 8× smaller activation
+      SRAM. Energies from §6b of the master PPAC document.
+    </p>
+    <div class="legend">
+      <span><span class="legend-swatch" style="background: var(--mambino-bg); border-color: var(--mambino);"></span>Mambino</span>
+      <span><span class="legend-swatch" style="background: var(--pures5-bg); border-color: var(--pures5);"></span>Pure S5 (full gate)</span>
+      <span><span class="legend-swatch" style="background: var(--pures5-alt-bg); border-color: var(--pures5-alt);"></span>Pure S5 (P=16, r=40)</span>
+      <span style="color: var(--frontier); font-weight: 500;">— — Pareto frontier</span>
+    </div>
+    <svg id="svg-B" viewBox="0 0 900 400" role="img" aria-label="Panel B: sequential chip Pareto"></svg>
+  </figure>
+
+  <div class="caption">
+    <strong>Fig 4.</strong> Accuracy vs digital chip energy per inference. Each point
+    is one architectural configuration; y-axis is the n = 8 mean test-at-peak-validation
+    accuracy from Fig 3, x-axis is total chip energy per LRA-ListOps (L = 2048) inference
+    from Accelergy digital PPAC. The dashed Pareto frontier passes through points that
+    are not dominated on either axis — <strong>Config 4 (Mambino, 106 K)</strong> is the
+    frontier's minimum-energy vertex in both topologies. Corner 3′ (Mambino, 188 K) is
+    the frontier's high-accuracy vertex. The 106 K and 188 K parameter bands are shaded
+    for visual grouping. Data source: [<code>paper/figure_data/fig4_acc_per_mJ.csv</code>]
+    under git tag <code>mambino-paper-v1</code>; energies from Accelergy YAMLs archived
+    at PURR DOI 10.4231/9ADT-WP13.
+  </div>
+
+  <footer>
+    Working draft. Frozen data pulled from
+    <code>LOCKED_master_ppac_document.md §6a, §6b, §8a, §8b</code>.
+    Style tokens match Figs 1, 2, and 3. Edit values in the embedded
+    <code>DATA</code> object at the bottom of this document to iterate.
+  </footer>
+</main>
+
+<script>
+  // ── Data — matches paper/figure_data/fig4_acc_per_mJ.csv ─────────────────
+  // (config, mean_test_peakval, energy_mJ, family, params, band)
+  const DATA_ALL = [
+    // pipelined
+    { topo: "pipelined",  key: "config4",  label: "Config 4",   sub: "Mambino, 106K",           family: "mambino",     params: 105738, band: "106K", acc: 0.5993, mJ: 150.57 },
+    { topo: "pipelined",  key: "config5",  label: "Config 5",   sub: "Pure S5, 106K",           family: "pures5",      params: 105738, band: "106K", acc: 0.5917, mJ: 166.80 },
+    { topo: "pipelined",  key: "corner1",  label: "Corner 1",   sub: "Pure S5, full gate, 188K",family: "pures5",      params: 188490, band: "188K", acc: 0.6089, mJ: 229.89 },
+    { topo: "pipelined",  key: "corner2",  label: "Corner 2",   sub: "Pure S5, P=16 r=40, 188K",family: "pures5_alt",  params: 188682, band: "188K", acc: 0.5991, mJ: 264.54 },
+    { topo: "pipelined",  key: "corner3p", label: "Corner 3′",  sub: "Mambino, 188K",           family: "mambino",     params: 188682, band: "188K", acc: 0.6138, mJ: 247.22 },
+    // sequential
+    { topo: "sequential", key: "config4",  label: "Config 4",   sub: "Mambino, 106K",           family: "mambino",     params: 105738, band: "106K", acc: 0.5993, mJ:  48.47 },
+    { topo: "sequential", key: "config5",  label: "Config 5",   sub: "Pure S5, 106K",           family: "pures5",      params: 105738, band: "106K", acc: 0.5917, mJ:  53.69 },
+    { topo: "sequential", key: "corner1",  label: "Corner 1",   sub: "Pure S5, full gate, 188K",family: "pures5",      params: 188490, band: "188K", acc: 0.6089, mJ:  83.74 },
+    { topo: "sequential", key: "corner2",  label: "Corner 2",   sub: "Pure S5, P=16 r=40, 188K",family: "pures5_alt",  params: 188682, band: "188K", acc: 0.5991, mJ:  96.37 },
+    { topo: "sequential", key: "corner3p", label: "Corner 3′",  sub: "Mambino, 188K",           family: "mambino",     params: 188682, band: "188K", acc: 0.6138, mJ:  90.06 },
+  ];
+
+  const CONFIG = {
+    yRange: [0.575, 0.625],
+    yTicks: [0.58, 0.59, 0.60, 0.61, 0.62],
+    panels: {
+      A: { topo: "pipelined",  xRange: [130, 280],  xTicks: [140, 160, 180, 200, 220, 240, 260, 280], margins: { top: 40, right: 30, bottom: 70, left: 76 } },
+      B: { topo: "sequential", xRange: [ 40, 105],  xTicks: [ 45, 55, 65, 75, 85, 95, 105 ],           margins: { top: 40, right: 30, bottom: 70, left: 76 } },
+    },
+  };
+
+  const familyColor = {
+    mambino:    { fill: "var(--mambino-bg)",    stroke: "var(--mambino)" },
+    pures5:     { fill: "var(--pures5-bg)",     stroke: "var(--pures5)" },
+    pures5_alt: { fill: "var(--pures5-alt-bg)", stroke: "var(--pures5-alt)" },
+  };
+
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs = {}, children = []) => {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    for (const c of [].concat(children)) if (c) e.appendChild(c);
+    return e;
+  };
+  const txt = (s, attrs = {}) => {
+    const t = el("text", attrs); t.textContent = s; return t;
+  };
+
+  // Pareto frontier: subset of points such that no other point has BOTH
+  // lower mJ AND higher acc. Sort ascending by mJ, then walk keeping running max acc.
+  function paretoFrontier(pts) {
+    const sorted = pts.slice().sort((a, b) => a.mJ - b.mJ);
+    const front = [];
+    let bestAcc = -Infinity;
+    for (const p of sorted) {
+      if (p.acc > bestAcc) { front.push(p); bestAcc = p.acc; }
+    }
+    return front;
+  }
+
+  function drawPanel(svgId, panelCfg) {
+    const svg = document.getElementById(svgId);
+    const vb = svg.viewBox.baseVal;
+    const W = vb.width, H = vb.height;
+    const m = panelCfg.margins;
+    const plotW = W - m.left - m.right;
+    const plotH = H - m.top - m.bottom;
+
+    const [xMin, xMax] = panelCfg.xRange;
+    const [yMin, yMax] = CONFIG.yRange;
+    const x = (v) => m.left + (v - xMin) / (xMax - xMin) * plotW;
+    const y = (v) => m.top + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+
+    const points = DATA_ALL.filter((d) => d.topo === panelCfg.topo);
+
+    // ── Iso-param band shading ──
+    // 106K params ~= config4, config5 (same params 105738)
+    // 188K params ~= corner1, corner2, corner3p
+    // Draw two subtle shaded regions across the y-axis for grouping.
+    // Since points span x-range, shading full-plot bands isn't right; instead
+    // draw a light horizontal band at each band's mean-acc region.
+    // Actually simpler: skip band shading (visual noise for a Pareto plot).
+
+    // ── Axes + gridlines ──
+    const axis = el("g", { class: "axis" });
+    // Y-axis line
+    axis.appendChild(el("line", { x1: m.left, y1: m.top, x2: m.left, y2: m.top + plotH }));
+    // Y ticks + gridlines
+    for (const yt of CONFIG.yTicks) {
+      const yy = y(yt);
+      axis.appendChild(el("line", { class: "gridline", x1: m.left, y1: yy, x2: m.left + plotW, y2: yy }));
+      axis.appendChild(txt(yt.toFixed(2), { x: m.left - 8, y: yy + 3.5, "text-anchor": "end" }));
+    }
+    // X-axis line
+    axis.appendChild(el("line", { x1: m.left, y1: m.top + plotH, x2: m.left + plotW, y2: m.top + plotH }));
+    // X ticks + gridlines
+    for (const xt of panelCfg.xTicks) {
+      const xx = x(xt);
+      axis.appendChild(el("line", { class: "gridline", x1: xx, y1: m.top, x2: xx, y2: m.top + plotH }));
+      axis.appendChild(el("line", { x1: xx, y1: m.top + plotH, x2: xx, y2: m.top + plotH + 4, stroke: "var(--rule)" }));
+      axis.appendChild(txt(String(xt), { x: xx, y: m.top + plotH + 16, "text-anchor": "middle" }));
+    }
+    // Axis titles
+    axis.appendChild(txt("energy per inference (mJ)", {
+      class: "axis-title", x: m.left + plotW / 2, y: m.top + plotH + 44, "text-anchor": "middle",
+    }));
+    axis.appendChild(txt("test accuracy @ peak val", {
+      class: "axis-title",
+      transform: `translate(${m.left - 52}, ${m.top + plotH / 2}) rotate(-90)`,
+      "text-anchor": "middle",
+    }));
+    svg.appendChild(axis);
+
+    // ── Pareto frontier line ──
+    // Frontier points at "lower-left" corner: LOW energy AND HIGH accuracy dominate.
+    // So we sort by ascending mJ, keep points whose acc exceeds all previous.
+    const frontier = paretoFrontier(points);
+    if (frontier.length >= 2) {
+      const d = frontier.map((p, i) => `${i === 0 ? "M" : "L"} ${x(p.mJ)} ${y(p.acc)}`).join(" ");
+      svg.appendChild(el("path", { class: "frontier-line", d }));
+      // Frontier label
+      const first = frontier[0], last = frontier[frontier.length - 1];
+      svg.appendChild(txt("Pareto frontier", {
+        class: "frontier-label",
+        x: (x(first.mJ) + x(last.mJ)) / 2,
+        y: (y(first.acc) + y(last.acc)) / 2 - 12,
+        "text-anchor": "middle",
+      }));
+    }
+
+    // ── Data points ──
+    points.forEach((p) => {
+      const c = familyColor[p.family];
+      const cx = x(p.mJ), cy = y(p.acc);
+      const isFront = frontier.includes(p);
+      // Larger halo behind frontier points
+      if (isFront) {
+        svg.appendChild(el("circle", {
+          cx, cy, r: 12, fill: "var(--frontier)", "fill-opacity": 0.10,
+        }));
+      }
+      svg.appendChild(el("circle", {
+        cx, cy, r: 6.5, fill: c.fill, stroke: c.stroke, "stroke-width": 1.6,
+      }));
+
+      // Label placement — offset so labels don't collide with points/gridlines
+      const labelOffset = labelPlacement(p, points, panelCfg);
+      svg.appendChild(txt(p.label, {
+        class: "point-label", x: cx + labelOffset.dx, y: cy + labelOffset.dy,
+        "text-anchor": labelOffset.anchor,
+      }));
+      svg.appendChild(txt(p.sub, {
+        class: "point-sub", x: cx + labelOffset.dx, y: cy + labelOffset.dy + 13,
+        "text-anchor": labelOffset.anchor,
+      }));
+      // Point coordinate annotation
+      svg.appendChild(txt(`(${p.mJ.toFixed(1)} mJ, ${p.acc.toFixed(4)})`, {
+        class: "point-sub", x: cx + labelOffset.dx, y: cy + labelOffset.dy + 25,
+        "text-anchor": labelOffset.anchor,
+      }));
+    });
+  }
+
+  // Simple label placer: pick a corner for each point to reduce visual overlap.
+  function labelPlacement(p, all, panelCfg) {
+    // Default: label to the right and slightly above.
+    // For rightmost points, flip to left. For low-acc points, place labels below.
+    const meanMJ = all.reduce((s, q) => s + q.mJ, 0) / all.length;
+    const isRight = p.mJ > meanMJ * 1.0;
+    const meanAcc = all.reduce((s, q) => s + q.acc, 0) / all.length;
+    const isHigh = p.acc > meanAcc;
+    // Per-config manual overrides for the 5-point spread we know.
+    const overrides = {
+      config4:  { dx: 12, dy: -6, anchor: "start" },   // frontier bottom-left → label right
+      config5:  { dx: 12, dy:  4, anchor: "start" },   // slightly higher energy, lower acc → right & down
+      corner1:  { dx:-12, dy: -6, anchor: "end"   },   // mid, high acc → label left
+      corner2:  { dx: 12, dy:  4, anchor: "start" },   // rightmost, lowest → right & down
+      corner3p: { dx: 12, dy: -6, anchor: "start" },   // right of Corner 1, top acc → right & up
+    };
+    return overrides[p.key] || {
+      dx: isRight ? -12 : 12,
+      dy: isHigh ? -6 : 14,
+      anchor: isRight ? "end" : "start",
+    };
+  }
+
+  drawPanel("svg-A", CONFIG.panels.A);
+  drawPanel("svg-B", CONFIG.panels.B);
+</script>

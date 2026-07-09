@@ -5,6 +5,21 @@ Every number in these CSVs traces back to
 and the Accelergy output YAMLs (`../../accelergy/v6_out_digital_*/energy_estimation.yaml`).
 Generated at git tag `mambino-paper-v1`.
 
+> ## ⚠ CHIP-DATA CSVs ARE SUPERSEDED
+>
+> The following CSVs contain chip PPAC numbers that are **under revision** — do not use
+> in the paper submission:
+> - `fig4_acc_per_mJ.csv` (energy_mJ column and acc_per_mJ columns)
+> - `fig5_energy_breakdown.csv` (per-component energy)
+>
+> The chip PPAC pipeline is being redone with SCALE-Sim v2 + Timeloop + Accelergy for a
+> defined edge inference architecture (64×64 systolic, weight-stationary, INT8;
+> 256/128/64 KB on-chip buffers, no off-chip DRAM). New CSVs will land at git tag
+> `mambino-paper-v2`.
+>
+> **Accuracy CSVs (`fig3_*.csv`, `fig7_lambda_pc_ablation.csv`, `fig_external_sota.csv`)
+> are UNAFFECTED and remain valid.**
+
 ## Files
 
 | File | Rows | Purpose |

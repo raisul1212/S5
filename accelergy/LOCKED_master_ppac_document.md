@@ -6,6 +6,34 @@
 Locked 2026-07-08 (v7.1 — added §5f λ_pc ablation on Config 4 seed=42, §5g external-SOTA context; open-items §12 refreshed).
 All numbers from executed code + published methodologies.
 
+---
+
+> ## ⚠️ CHIP PPAC UNDER REVISION (as of 2026-07-08 late) — DO NOT CITE §6 / §7 / §8 / Fig 4
+>
+> Sections **§6 (digital PPAC), §7 (mixed-signal PPAC — Appendix A), §8 (acc/mJ)**, and
+> the companion **Fig 4 (chip Pareto)** are **SUPERSEDED**. The v7.1 chip PPAC methodology
+> uses hand-authored Accelergy action counts under a "1 SRAM read per MAC" worst-case model,
+> which reduces every energy component to `MACs × per-access-CACTI-constant` — so all
+> per-config ratios collapse to trivial MAC-count ratios and the chip claim has no
+> independent signal beyond MAC counting.
+>
+> The chip PPAC is being redone with cross-validated open-source tooling:
+> - **SCALE-Sim v2** (systolic-array cycles + memory bandwidth + energy)
+> - **Timeloop** (dataflow mapping search)
+> - **Accelergy 0.4** (per-access energy backend, shared with both above)
+>
+> Locked chip parameters (2026-07-08):
+> - Edge inference class, ~1 mm² die target
+> - **64×64 systolic MAC array**, weight-stationary, INT8
+> - 256 KB weight SRAM, 128 KB activation SRAM, 64 KB state SRAM, **no off-chip DRAM**
+>
+> **Sections §5 (training + accuracy + significance tests) and §1–4 (registry, args, model
+> shapes, FLOP counts) remain valid.** Only the chip PPAC downstream of MAC counting is
+> under revision. Numbers below §6 are preserved for historical reference. **DO NOT USE
+> IN THE PAPER SUBMISSION.** Wait for master doc v8 with `mambino-paper-v2` git tag.
+
+---
+
 **v7 scope decision:** The Mambino paper claim is the **architecture** (predictor + `W̄_ε`
 feedback) and its **digital chip implementation** at 22 nm using standard components (SRAM +
 INT8 MAC + register file). The analog 3T + 1C state cell is a separate, more fundamental
@@ -320,6 +348,12 @@ Mambino at 0.6138 is at the top of that family under matched conditions.
 
 ## 6. Digital PPAC (Accelergy 0.4 + CACTI + NeuroSim, 22nm INT8, 1 GHz clock)
 
+> ### ⚠️ §6 IS SUPERSEDED — DO NOT CITE
+> Hand-authored "1 SRAM read per MAC" action-count model. Ratios between configs collapse
+> to MAC-count ratios; there is no independent chip signal here. Being redone with
+> SCALE-Sim v2 + Timeloop + Accelergy. Preserved below for historical reference.
+
+
 Primitives: SRAM → CACTI. MAC (intadder) + register file (flip_flop) → NeuroSim.
 Action counts: 1 SRAM read per MAC (worst-case, no line buffering). Ratios between configs are invariant to this assumption.
 
@@ -360,6 +394,11 @@ Rankings within each topology are preserved: **Config 4 < Config 5 < Corner 1 < 
 
 ## Appendix A. Reference mixed-signal PIM PPAC (out of Mambino paper scope; kept as context)
 
+> ### ⚠️ APPENDIX A IS SUPERSEDED — DO NOT CITE
+> Same "1 read per MAC" methodological problem as §6, applied to a generic RRAM crossbar.
+> Being redone alongside §6 with the new tool stack. Preserved below for historical reference.
+
+
 **SCOPE NOTE.** This section is **NOT part of the Mambino paper's main claims** as of v7. It is
 kept in the master document as a reference PPAC surface for a generic 22 nm RRAM crossbar
 running the same LRA-ListOps workload, so the digital numbers in §6 can be contextualised
@@ -393,6 +432,12 @@ Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(
 **Note on the same-area cluster (Config 4 = Corner 1 = Corner 3' at 5.01 mm² pipelined, 1.00 mm² sequential):** All three share P=8 (so identical 256 KB streaming state SRAM), identical activation SRAM (4.2 MB pipelined / 512 KB sequential), and no weight SRAM in the mixed-signal chip (weights are on-array in the PIM crossbar). Config 5 stands slightly larger because P=16 doubles its streaming state SRAM to 512 KB. The energy ranking is still Config 4 < Config 5 < Corner 1 < Corner 3' — driven by MAC count, not state footprint.
 
 ## 8. Accuracy-per-mJ — chip efficiency metric
+
+> ### ⚠️ §8 IS SUPERSEDED — DO NOT CITE
+> §8 numerators use §5 accuracies (valid) but denominators use §6 chip energies
+> (superseded — see §6 warning). The whole §8 table needs to be regenerated once
+> §6 is redone. Preserved below for historical reference.
+
 
 **§8 is the Mambino paper's primary chip-efficiency table.** Digital PPAC is the paper's claim;
 mixed-signal reference numbers (Appendix A) are not part of the main-paper acc/mJ tables. If a
