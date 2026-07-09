@@ -1,0 +1,9 @@
+mapper:
+  version: 0.4
+  optimization-metrics: [ energy, delay ]
+  num-threads: 2
+  timeout: 3000
+  victory-condition: 100
+  algorithm: random-pruned
+  live-status: False
+  diagnostics: False

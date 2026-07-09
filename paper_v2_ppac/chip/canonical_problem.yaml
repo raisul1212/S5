@@ -1,0 +1,23 @@
+# Canonical 128x128x128 GEMM problem for Timeloop
+problem:
+  shape:
+    name: "gemm"
+    dimensions: [ M, N, K ]
+    data-spaces:
+      - name: A
+        projection:
+          - [ [M] ]
+          - [ [K] ]
+      - name: B
+        projection:
+          - [ [N] ]
+          - [ [K] ]
+      - name: Z
+        projection:
+          - [ [M] ]
+          - [ [N] ]
+        read-write: True
+  instance:
+    M: 128
+    N: 128
+    K: 128

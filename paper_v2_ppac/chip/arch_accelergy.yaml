@@ -1,0 +1,76 @@
+architecture:
+  version: 0.4
+  subtree:
+  - name: mambino_chip
+    attributes:
+      technology: 22
+      global_cycle_seconds: 1.0e-09
+    local:
+    - name: weight_sram
+      class: smartbuffer_SRAM
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-09
+        depth: 32768
+        width: 64
+        n_banks: 8
+        datawidth: 8
+        read_bandwidth: 16
+        write_bandwidth: 16
+    - name: activation_sram
+      class: smartbuffer_SRAM
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-09
+        depth: 16384
+        width: 64
+        n_banks: 8
+        datawidth: 8
+        read_bandwidth: 16
+        write_bandwidth: 16
+    - name: state_sram
+      class: smartbuffer_SRAM
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-09
+        depth: 8192
+        width: 64
+        n_banks: 4
+        datawidth: 8
+        read_bandwidth: 16
+        write_bandwidth: 16
+    subtree:
+    - name: PE[0..255]
+      attributes:
+        technology: 22
+        global_cycle_seconds: 1.0e-09
+        meshX: 16
+      local:
+      - name: weights_spad
+        class: smartbuffer_RF
+        attributes:
+          technology: 22
+          global_cycle_seconds: 1.0e-09
+          depth: 1
+          width: 8
+          datawidth: 8
+          read_bandwidth: 2
+          write_bandwidth: 2
+      - name: psum_spad
+        class: smartbuffer_RF
+        attributes:
+          technology: 22
+          global_cycle_seconds: 1.0e-09
+          depth: 1
+          width: 32
+          datawidth: 32
+          read_bandwidth: 2
+          write_bandwidth: 2
+          update_fifo_depth: 2
+      - name: mac
+        class: intmac
+        attributes:
+          technology: 22
+          global_cycle_seconds: 1.0e-09
+          multiplier_width: 8
+          adder_width: 32

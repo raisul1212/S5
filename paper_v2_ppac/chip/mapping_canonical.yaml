@@ -1,0 +1,52 @@
+# Explicit mapping for canonical 128x128x128 GEMM on 16x16 WS array.
+# Total M=128 = M_tile(8) * PE_spatial_M(16); N=128 = N_tile(8) * PE_column_spatial_N(16); K=128 = K_temporal(128)
+mapping:
+  # ===== Dataspace bypass rules (which dataspaces live at which level) =====
+  - target: psum_spad
+    type: datatype
+    keep: [Z]
+    bypass: [A, B]
+  - target: weights_spad
+    type: datatype
+    keep: [A]
+    bypass: [B, Z]
+  - target: activation_sram
+    type: datatype
+    keep: [B, Z]
+    bypass: [A]
+  - target: weight_sram
+    type: datatype
+    keep: [A]
+    bypass: [B, Z]
+
+  # ===== Spatial mappings =====
+  - target: PE_column
+    type: spatial
+    factors: K=1 M=1 N=16
+    permutation: KMN
+  - target: PE
+    type: spatial
+    factors: K=1 N=1 M=16
+    permutation: KNM
+
+  # ===== Temporal loop nesting =====
+  # psum_spad: single-element output accumulator, no temporal loop
+  - target: psum_spad
+    type: temporal
+    factors: K=1 M=1 N=1
+    permutation: KMN
+  # weights_spad: single-weight register, no temporal loop
+  - target: weights_spad
+    type: temporal
+    factors: K=1 M=1 N=1
+    permutation: KMN
+  # activation_sram: outer tiles + K reduction (Z bypasses upward, streams from here)
+  - target: activation_sram
+    type: temporal
+    factors: K=128 M=1 N=1
+    permutation: KMN
+  # weight_sram: M tile x N tile at outermost
+  - target: weight_sram
+    type: temporal
+    factors: K=1 M=8 N=8
+    permutation: MNK

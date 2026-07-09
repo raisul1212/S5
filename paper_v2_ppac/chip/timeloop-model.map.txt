@@ -1,0 +1,12 @@
+GlobalBuffer [ Weights:16384 (16384) Inputs:16384 (16384) Outputs:16384 (16384) ] 
+---------------------------------------------------------------------------------
+| for K in [0:8)
+|   for Q in [0:8)
+|     for C in [0:128)
+|       for K in [0:16) (Spatial-Y)
+|         for Q in [0:16) (Spatial-X)
+
+WeightSpad [ Outputs:1 (1) ] 
+PsumSpad [ Weights:1 (1) ] 
+--------------------------
+|           << Compute >>

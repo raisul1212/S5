@@ -1,0 +1,142 @@
+architecture:
+    version: '0.4'
+    local:
+      - name: mambino_chip.PE[0..255].weights_spad
+        class: smartbuffer_RF
+        attributes:
+            technology: 22
+            global_cycle_seconds: 1e-09
+            depth: 1
+            width: 8
+            datawidth: 8
+            read_bandwidth: 2
+            write_bandwidth: 2
+            action_latency_cycles: 1
+            cycle_seconds: 1e-09
+            n_instances: 1
+            meshX: 16
+            memory_width: 32
+            memory_depth: 64
+            widthscale: 0.25
+            depthscale: 0.015625
+            real_depth: 1
+            area_scale: 0.00390625
+            dynamic_energy_scale: 0.009752582413293843
+            static_energy_scale: 0.00390625
+            n_rdwr_ports: 1
+        area_scale: 1.0
+        energy_scale: 1.0
+      - name: mambino_chip.PE[0..255].psum_spad
+        class: smartbuffer_RF
+        attributes:
+            technology: 22
+            global_cycle_seconds: 1e-09
+            depth: 1
+            width: 32
+            datawidth: 32
+            read_bandwidth: 2
+            write_bandwidth: 2
+            update_fifo_depth: 2
+            action_latency_cycles: 1
+            cycle_seconds: 1e-09
+            n_instances: 1
+            meshX: 16
+            memory_width: 32
+            memory_depth: 64
+            widthscale: 1.0
+            depthscale: 0.015625
+            real_depth: 1
+            area_scale: 0.015625
+            dynamic_energy_scale: 0.03901032965317537
+            static_energy_scale: 0.015625
+            n_rdwr_ports: 1
+        area_scale: 1.0
+        energy_scale: 1.0
+      - name: mambino_chip.PE[0..255].mac
+        class: intmac
+        attributes:
+            technology: 22
+            global_cycle_seconds: 1e-09
+            multiplier_width: 8
+            adder_width: 32
+            action_latency_cycles: 1
+            cycle_seconds: 1e-09
+            n_instances: 1
+            meshX: 16
+        area_scale: 1.0
+        energy_scale: 1.0
+      - name: mambino_chip.weight_sram
+        class: smartbuffer_SRAM
+        attributes:
+            technology: 22
+            global_cycle_seconds: 1e-09
+            depth: 32768
+            width: 64
+            n_banks: 8
+            datawidth: 8
+            read_bandwidth: 16
+            write_bandwidth: 16
+            action_latency_cycles: 1
+            cycle_seconds: 1e-09
+            n_instances: 1
+            memory_width: 64
+            memory_depth: 32768
+            widthscale: 1.0
+            depthscale: 1.0
+            real_depth: 32768
+            area_scale: 1.0
+            dynamic_energy_scale: 1.0
+            static_energy_scale: 1.0
+            n_rdwr_ports: 1
+        area_scale: 1.0
+        energy_scale: 1.0
+      - name: mambino_chip.activation_sram
+        class: smartbuffer_SRAM
+        attributes:
+            technology: 22
+            global_cycle_seconds: 1e-09
+            depth: 16384
+            width: 64
+            n_banks: 8
+            datawidth: 8
+            read_bandwidth: 16
+            write_bandwidth: 16
+            action_latency_cycles: 1
+            cycle_seconds: 1e-09
+            n_instances: 1
+            memory_width: 64
+            memory_depth: 16384
+            widthscale: 1.0
+            depthscale: 1.0
+            real_depth: 16384
+            area_scale: 1.0
+            dynamic_energy_scale: 1.0
+            static_energy_scale: 1.0
+            n_rdwr_ports: 1
+        area_scale: 1.0
+        energy_scale: 1.0
+      - name: mambino_chip.state_sram
+        class: smartbuffer_SRAM
+        attributes:
+            technology: 22
+            global_cycle_seconds: 1e-09
+            depth: 8192
+            width: 64
+            n_banks: 4
+            datawidth: 8
+            read_bandwidth: 16
+            write_bandwidth: 16
+            action_latency_cycles: 1
+            cycle_seconds: 1e-09
+            n_instances: 1
+            memory_width: 64
+            memory_depth: 8192
+            widthscale: 1.0
+            depthscale: 1.0
+            real_depth: 8192
+            area_scale: 1.0
+            dynamic_energy_scale: 1.0
+            static_energy_scale: 1.0
+            n_rdwr_ports: 1
+        area_scale: 1.0
+        energy_scale: 1.0
