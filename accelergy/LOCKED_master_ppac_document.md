@@ -86,7 +86,11 @@ at both α=0.05 two-tailed and α=0.05 one-tailed.
 | Config 4 | `chip-mamb-gelu` | 11181833 | COMPLETED | `bin/gilbreth_chip_mambino_gelu.sh` | `checkpoints/chip_mamb_gelu_11181833/` |
 | Config 5 | `tr-pure-s5-gelu-p16` | 11187128 | COMPLETED | `bin/train_pure_s5_gelu_p16.sh` | `checkpoints/train_pure_s5_gelu_p16_11187128/` |
 | Corner 1 | `chip-pure-s5` | 11181830 | COMPLETED | `bin/gilbreth_chip_pure_s5.sh` | `checkpoints/chip_pure_s5_11181830/` |
+| **Corner 2** | `corner2_seed42` | 11224675 | COMPLETED | `bin/train_corner2.sh` | `checkpoints/corner2_seed42_11224675/` |
 | Corner 3' | `chip-mamb-iso` | 11181831 | COMPLETED | `bin/gilbreth_chip_mambino_iso.sh` | `checkpoints/chip_mamb_iso_11181831/` |
+
+Corner 2 8-seed sweep jobs: 11224675 (seed=42), 11224697 (6554595), 11224698 (12345),
+11224699 (271828), 11224700 (314159), 11224701 (1), 11224702 (2), 11224703 (3).
 
 ## 2. Training args (differences from shared base)
 
@@ -97,6 +101,7 @@ Shared base (all 4): `--n_layers=8 --d_model=128 --blocks=8 --bidirectional=True
 | Config 4 | True | gelu | 16 | N/A (gelu ignores) | `--lambda_pc=0.0` |
 | Config 5 | False | gelu | 32 | N/A (gelu ignores) | — |
 | Corner 1 | False | half_glu2 | 16 | 0 (full-rank) | — |
+| **Corner 2** | False | half_glu2 | **32** | **40** (low-rank) | — |
 | Corner 3' | True | half_glu2 | 16 | 40 (low-rank) | `--lambda_pc=0.0` |
 
 **Note on `glu_rank`:** The `glu_rank` argument only takes effect when `activation_fn` is `half_glu1` or `half_glu2` (see [`s5/layers.py:61-73`](https://github.com/raisul1212/S5/blob/mambino-ssm/s5/layers.py#L61-L73)). For gelu configs (Config 4, Config 5), the gate branch is not instantiated and the argument is a no-op. For half_glu2 configs: `glu_rank=0` means **full-rank** (standard `Dense(H, H)` gate); `glu_rank=40` means **rank-40 factorization** (`Dense(H, 40) @ Dense(40, H)`, ~68% fewer gate params). The low-rank factorization in Corner 3' is what allows Mambino (predictor + `W_ε` on top) to be iso-params with Corner 1.
@@ -116,6 +121,7 @@ Number of state trajectories materialized in forward pass (verified against code
 | Config 4 (Mambino) | 8 | 16 | 3 |
 | Config 5 (Pure S5) | 16 | 32 | 2 |
 | Corner 1 (Pure S5) | 8 | 16 | 2 |
+| **Corner 2** (Pure S5) | **16** | **32** | 2 |
 | Corner 3' (Mambino) | 8 | 16 | 3 |
 
 ## 4. JAXPR-verified FLOP counts (workload = LRA-ListOps L=2048, batch=1)
@@ -127,7 +133,8 @@ Computed by [`flop_counter_jaxpr.py`](https://github.com/raisul1212/S5/blob/mamb
 | Config 4 | 105,738 | 682,095,196 | 614,468,096 | **307,234,048** |
 | Config 5 | 105,738 | 745,208,540 | 681,576,960 | **340,788,480** |
 | Corner 1 | 188,490 | 948,670,108 | 882,903,552 | **441,451,776** |
-| Corner 3' | 188,682 | 1,231,549,020 | 950,012,416 | **475,006,208** |
+| **Corner 2** | **188,682** | **1,093,335,772** | **1,017,121,280** | **508,560,640** |
+| Corner 3' | 188,682 | 1,030,222,428 | 950,012,416 | **475,006,208** |
 
 **Canonical MAC basis for all downstream PPAC: `Real-MAC equivalent = dot_general FLOPs / 2`.**
 Rationale: complex arithmetic is already correctly weighted in dot_general; total FLOPs includes elementwise ops (norms, GELU, gates) that don't hit the MAC unit and would inflate per-MAC SRAM traffic.
@@ -346,16 +353,185 @@ The gap to external SOTA — 63.77% (S7) vs our 0.6138 (Corner 3') — is ~2.4 p
 architecture-novelty SOTA-chase. The chip-friendly S5 family sits in the low-62% range;
 Mambino at 0.6138 is at the top of that family under matched conditions.
 
-## 6. Digital PPAC (Accelergy 0.4 + CACTI + NeuroSim, 22nm INT8, 1 GHz clock)
+## 6. Digital PPAC v4 — multi-array direct-instrumentation (LOCKED 2026-07-10)
 
-> ### ⚠️ §6 IS SUPERSEDED — DO NOT CITE
-> Hand-authored "1 SRAM read per MAC" action-count model. Ratios between configs collapse
-> to MAC-count ratios; there is no independent chip signal here. Being redone with
-> SCALE-Sim v2 + Timeloop + Accelergy. Preserved below for historical reference.
+**§6 is the paper's chip PPAC ground truth.** All numbers reproducible from
+[`paper_v2_ppac/chip/multi_array_ppac_v4.py`](https://github.com/raisul1212/S5/blob/mambino-ssm/paper_v2_ppac/chip/multi_array_ppac_v4.py)
+against JAXPR-extracted workloads at
+[`paper_v2_ppac/workloads/`](https://github.com/raisul1212/S5/tree/mambino-ssm/paper_v2_ppac/workloads).
+Fable-audited (v4 audit, 2026-07-10): H1 fill/drain + H2 operand-role + H3 elemwise
+memory + H4 psum spill + F1 M-chunking + F2 wc_rep + F3 structural class all
+applied. Comparison directions robust to ±30% sensitivity on elemwise coefficients
+and SRAM per-access energy.
 
+### 6.0. Chip design rule
 
-Primitives: SRAM → CACTI. MAC (intadder) + register file (flip_flop) → NeuroSim.
-Action counts: 1 SRAM read per MAC (worst-case, no line buffering). Ratios between configs are invariant to this assumption.
+Multi-array systolic accelerator: **each unique GEMM shape gets a dedicated
+weight-stationary array**, sized under the **max-utilization + no-overprovision**
+rule (smallest standard rectangle from {8, 16, 32, 64}² with 100% array utilization,
+whose total cycles fit under a per-config bottleneck target). Blocks execute serially
+per inference (per-sample latency = Σ block cycles); pipeline steady-state throughput
+= 1 / max(block cycles). Per-config chip tiers: activation SRAM sized to fit each
+config's worst-case matmul footprint without off-chip DRAM (320 KB Config 4/5,
+384 KB Corner 2/3', 512 KB Corner 1). Weight SRAM held at 256 KB; state SRAM at 64 KB.
+
+Utilization relaxation: Corner 2 and Corner 3' have K=40 low-rank gate blocks that
+cannot hit 100% util at any standard {8,16,32,64} array (40 has no divisor in that
+set). These blocks are allowed ≥ 62.5% util. Corner 1 has no K=40 shape and is
+unaffected.
+
+Predictor s(t−1) overlap: Mambino's predictor SSM matmul (same shape as main SSM's
+B̄·x) shares the main SSM array via a one-timestep shift. For LATENCY, the main
+SSM matmul's 24 JAXPR instances (2 main trajectories + 1 predictor × 8 layers)
+collapse to 16 wall-clock instances. For ENERGY, all 24 instances are charged
+in full (overlap hides time, not joules).
+
+Cycle model (H1): per-tile cycles = `stream_cyc + (ay + ax − 2)` where
+`stream_cyc` is the streaming-dim length (N if A-stationary, M if B-stationary).
+Total per-instance cycles = per_tile × n_outer_tiles × n_inner_tiles × dtype_scale.
+Depth-1 spads force weight preload per tile boundary.
+
+Operand-role assignment (H2): for each GEMM the smaller matrix is the parameter
+(stationary weight); the larger is the streaming activation. For SSM matmuls
+(shape M×2048×K with small M and moderate K) this makes the A[M×K] matrix
+stationary — the small B̄ or Ā parameter, not the L=2048 activation sequence.
+Gate and dense matmuls (large M, moderate N, K) use B stationary.
+
+Elemwise energy (H3): per scalar op charges compute (2 activation SRAM reads +
+1 write at INT8) plus a class-specific per-op compute multiplier (trivial 1×,
+moderate 3×, transcendental 10×, reduction 2×). Structural ops (reshape,
+squeeze, broadcast, convert, slice) are compiler-level addressing rather than
+SRAM round-trips; only ~30% are treated as materializing (pad, concatenate,
+transpose). This assumes no operator fusion — a conservative upper bound.
+
+Psum spill (H4): when the outer accumulation-K tile count exceeds 1, the
+running M×N INT32 partial sum spills through activation SRAM at
+`(C_tp − 1) × M × N × 4 × 2` bytes per instance. If the resident M×N INT32
+psum exceeds 75% of the activation SRAM budget, the block M-chunks (F1) so
+each chunk's psum fits — preserving the "no off-chip DRAM" invariant.
+
+Area model: PE = 3000 μm² each (INT8 MAC + spads at 22 nm), SRAM density
+0.7 Mb/mm² (22 nm HD-SRAM). ERTs per config tier are CACTI 7 for SRAMs +
+NeuroSim for MAC + smartbuffer_RF for spads (generated by
+[`gen_ert_all_variants.sh`](https://github.com/raisul1212/S5/blob/mambino-ssm/paper_v2_ppac/chip/gen_ert_all_variants.sh)).
+
+### 6a. ATP-optimal design point per config
+
+Each config designed at its own Area × Latency Product minimum (the natural
+chip-designer Pareto tip). Numbers from `multi_array_sweep_v4.json`.
+
+| Config | Total PEs | **Area (mm²)** | Latency (ms) | Throughput (/s) | **Energy (μJ)** | **Power (mW)** | acc/mJ | Accuracy |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **Config 4** Mambino gelu 106K   | 2,368 | **14.59** | 0.460 | 6,847 | 442  | 960     | 1.36 | 0.5993 |
+| Config 5 Pure S5 gelu 106K       | 3,648 | 18.43     | 0.236 | 6,706 | 411  | 1,743   | 1.44 | 0.5917 |
+| Corner 1 Pure S5 dense 188K      | 6,208 | 28.36     | 0.300 | 7,089 | 549  | 1,829   | 1.11 | 0.6089 |
+| Corner 2 Pure S5 low-rank P=16 188K | 7,360 | 30.32  | 0.426 | 6,844 | 608  | 1,429   | 0.99 | 0.5991 |
+| **Corner 3′** Mambino low-rank 188K ★ | **3,200** | **17.84** | 0.902 | 5,623 | 721  | **800** | 0.85 | **0.6138** |
+
+**Headline chip pitch:** at ATP-optimal, Corner 3' (Mambino low-rank) vs Corner 1
+(published-S5 dense) delivers **−37% die area, −56% peak power, +0.49 pp accuracy**.
+Downsides: +31% energy per inference, −21% steady-state throughput, 3.0× per-sample
+latency. Corner 3' is Pareto-favorable on the customer-facing edge-inference axes
+(area, power, accuracy); Corner 1 wins on datacenter-facing axes (energy per
+inference, throughput per second, acc/mJ).
+
+### 6b. Area breakdown per config (mm²)
+
+| Config | PE array | Weight SRAM (256 KB) | Act SRAM (per-tier) | State SRAM (64 KB) | Total | SRAM share |
+|---|---:|---:|---:|---:|---:|---:|
+| Config 4  |  7.10 | 3.00 | 3.74 (320 KB) | 0.75 | 14.59 | 51.3% |
+| Config 5  | 10.94 | 3.00 | 3.74 (320 KB) | 0.75 | 18.43 | 40.6% |
+| Corner 1  | 18.62 | 3.00 | 5.99 (512 KB) | 0.75 | 28.36 | 34.4% |
+| Corner 2  | 22.08 | 3.00 | 4.49 (384 KB) | 0.75 | 30.32 | 27.1% |
+| Corner 3' |  9.60 | 3.00 | 4.49 (384 KB) | 0.75 | 17.84 | 46.2% |
+
+SRAM area savings Corner 3' vs Corner 1: **8.24 mm² vs 9.74 mm² = −15%** (from
+smaller activation SRAM tier). Total area savings dominated by PE (−48%) but
+SRAM contributes.
+
+### 6c. Energy breakdown per config (μJ per inference, ATP-optimal)
+
+| Config | PE MAC | Weight SRAM | Act SRAM | Per-PE spads | Elementwise | State SRAM | SRAM leakage | **Total** |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Config 4  |  96 (22%) | 0.8 (0%)   |  51 (11%) | 42 (10%) | **251 (57%)** | 2 | 0.04 | **442** |
+| Config 5  | 106 (26%) | 1.0 (0%)   |  32 (8%)  | 47 (11%) | **223 (54%)** | 3 | 0.02 | **411** |
+| Corner 1  | 138 (25%) | 0.9 (0%)   |  72 (13%) | 60 (11%) | **277 (50%)** | 1 | 0.03 | **549** |
+| Corner 2  | 158 (26%) | 1.2 (0%)   |  95 (16%) | 69 (11%) | **281 (46%)** | 3 | 0.04 | **608** |
+| Corner 3' | 148 (21%) | 1.0 (0%)   | **193 (27%)** | 65 (9%) | **312 (43%)** | 2 | 0.09 | **721** |
+
+**Elementwise ops dominate energy at 43–57% across every config** — the biggest
+qualitative surprise vs classical NN-chip intuition. MAC compute is only 21–26%
+of total. This holds because elemwise ops (mul/div/exp/tanh/sigmoid) round-trip
+through activation SRAM at ~2 pJ/byte, and there are ~11–14% as many elemwise
+scalar ops as real MACs across the workloads. SRAM leakage is negligible at
+these SRAM sizes and clock frequencies.
+
+Corner 3''s activation SRAM energy is unusually high (27% vs 13% for Corner 1)
+because of psum spill on the K=40 low-rank gate matmuls (C_tp = 5, ~8 MB spill
+traffic per gate UP instance × 8 layers).
+
+### 6d. Mechanism attribution — the Corner 2 finding
+
+Corner 2 (Pure S5 with low-rank r=40 gate + P=16 to iso-params against Corner 3')
+tests whether the "just switch to low-rank + bump P" strategy is a chip win:
+
+|  | Corner 1 (dense H×H, P=8) | Corner 2 (low-rank r=40, **P=16**) | Corner 3' (low-rank r=40, P=8, **+ predictor**) |
+|---|---:|---:|---:|
+| Die area | 28.36 mm² | 30.32 mm² **(+7% BIGGER)** | 17.84 mm² (−37%) |
+| Peak power | 1,829 mW | 1,429 mW (−22%) | 800 mW (−56%) |
+| Accuracy | 0.6089 | 0.5991 **(−0.98 pp)** | 0.6138 (+0.49 pp) |
+| SSM main matmul silicon | 512 PE (M=8) | 1,024 PE (M=16) | 512 PE (M=8) |
+| C-projection silicon | 1,024 PE (K=16) | 2,048 PE (K=32) | 1,024 PE (K=16) + 512 PE (predictor K=8) |
+| Gate silicon | 4,096 PE (dense 64×64) | 4,096 PE (2× 32×64 low-rank) | 4,096 PE (2× low-rank on relaxed util) |
+
+**Corner 2 is a double loss vs Corner 1**: +7% silicon AND −0.98 pp accuracy.
+The P=16 doubling costs +1,536 PE across SSM main and C-projection (each 2×
+larger than P=8). Low-rank gate factorization saves zero net silicon under the
+relaxed-util rule (both configs' gates end at 4,096 PE total). Naive cheap-out
+fails on both axes.
+
+**Corner 3' vs Corner 2 at iso-params (same state DOF = 32 real, same low-rank
+gate topology):** Mambino delivers −41% silicon AND +1.47 pp accuracy at the
+cost of +19% energy and 2.1× latency. This is the paper's mechanism attribution:
+the predictor branch (not the low-rank factorization) is what unlocks the chip
+advantage. Splitting state DOF into P=8 main + P=8 predictor (Corner 3')
+instead of consolidating into P=16 main (Corner 2) saves 1,024 PE on the
+combined SSM-related silicon because two smaller matmuls fit on smaller
+dedicated arrays than one big one. Predictor's own SSM matmul rides on the
+main SSM array via s(t−1) overlap — zero extra silicon; only the predictor
+C-projection (K=8) adds a new 512 PE block.
+
+### 6e. Uncertainty and known limitations
+
+- **Energy uncertainty band (Fable v4 sensitivity)**: ±30% swings on elemwise
+  coefficients or SRAM per-access energy shift the energy gap Corner 3'-vs-
+  Corner 1 from +31% to the range +30–36%. Corner 1's acc/mJ lead ranges
+  20–26% under the same sensitivity. Area, throughput, and latency comparisons
+  are energy-model-independent and unaffected.
+- **Elemwise coefficients** (trivial 1× / moderate 3× / transcendental 10× /
+  reduction 2× / structural 30% materializing) are anchored on Horowitz-style
+  ISSCC data but are per-class averages. Real per-kernel costs vary.
+- **Fill/drain formula** `stream + ay + ax − 2` omits an optional weight-preload
+  overlap term that would add ~ay cycles per tile boundary. Under-count is
+  <0.2% of bottleneck cycles and applies symmetrically to both configs.
+- **Elemwise memory assumes no operator fusion.** Real fused GLU or activation
+  chains reduce SRAM round-trips. The paper's chip numbers are a conservative
+  upper bound in this respect.
+- **PE area** 3000 μm² per INT8 MAC + spads at 22 nm is within the ISSCC
+  literature 2–5 k range. NoC/control/instruction-fetch silicon is not modeled;
+  including it scales both configs proportionally.
+- **State SRAM** is sized for the worst-case trajectory bytes across configs.
+  Real per-config sizing would shrink state SRAM area by a few percent.
+- **SCALE-Sim v2 cross-check** was run at fixed 16×16 in an earlier iteration
+  (see [`scalesim_sweep_per_gemm.csv`](https://github.com/raisul1212/S5/blob/mambino-ssm/paper_v2_ppac/chip/scalesim_sweep_per_gemm.csv))
+  and gave 1.27–5.11× cycle counts vs the pre-H1 analytical model. The current
+  v4 model incorporates SCALE-Sim-consistent fill/drain accounting.
+
+### 6f. Historical §6 (v6 hand-authored 1-read-per-MAC model) — DEPRECATED
+
+The tables below are the v6 "1 SRAM read per MAC" numbers preserved for
+historical reference. They **should not be cited** in the paper. All chip
+claims use v4 (§6a-6e).
 
 Reported under **two chip topologies** that differ only in activation SRAM buffering:
 - **Pipelined** — 4.2 MB activation SRAM (holds all 8 layers' fwd + bwd streams concurrently, throughput-optimized).
@@ -431,46 +607,60 @@ Crossbar topology: 128×128 tiles, all columns active. Tile activations = `ceil(
 
 **Note on the same-area cluster (Config 4 = Corner 1 = Corner 3' at 5.01 mm² pipelined, 1.00 mm² sequential):** All three share P=8 (so identical 256 KB streaming state SRAM), identical activation SRAM (4.2 MB pipelined / 512 KB sequential), and no weight SRAM in the mixed-signal chip (weights are on-array in the PIM crossbar). Config 5 stands slightly larger because P=16 doubles its streaming state SRAM to 512 KB. The energy ranking is still Config 4 < Config 5 < Corner 1 < Corner 3' — driven by MAC count, not state footprint.
 
-## 8. Accuracy-per-mJ — chip efficiency metric
+## 8. Accuracy per unit chip cost (v4 LOCKED 2026-07-10)
 
-> ### ⚠️ §8 IS SUPERSEDED — DO NOT CITE
-> §8 numerators use §5 accuracies (valid) but denominators use §6 chip energies
-> (superseded — see §6 warning). The whole §8 table needs to be regenerated once
-> §6 is redone. Preserved below for historical reference.
+**§8 reports accuracy divided by three chip cost axes: energy per inference (acc/mJ),
+die area (acc/mm²), and peak power (acc/mW).** All denominators are the v4 ATP-optimal
+numbers from §6a. Accuracy uses 8-seed mean `test@peakval` from §5a.
 
+### 8a. Per-axis efficiency (v4)
 
-**§8 is the Mambino paper's primary chip-efficiency table.** Digital PPAC is the paper's claim;
-mixed-signal reference numbers (Appendix A) are not part of the main-paper acc/mJ tables. If a
-reviewer wants a mixed-signal comparator, see Appendix A of the master document.
-
-### 8a. Pipelined chip
-
-Using 8-seed mean test@peakval and test_max from §5.
-
-| Config | test@peakval mean | test@peakval / mJ (×10⁻³) | test_max mean | test_max / mJ (×10⁻³) |
+| Config | Accuracy | acc/mJ | acc/mm² (× 10⁻²) | acc/mW (× 10⁻³) |
 |---|---:|---:|---:|---:|
-| **Config 4** Mambino gelu | 0.5993 | **3.98** | 0.6038 | **4.01** |
-| Config 5 Pure S5 gelu | 0.5917 | 3.55 | 0.6034 | 3.62 |
-| Corner 1 Pure S5 half_glu2 | 0.6089 | 2.65 | 0.6159 | 2.68 |
-| **Corner 2** Pure S5 P=16 r=40 | 0.5991 | **2.26** ← worst at 188K | 0.6069 | **2.29** ← worst at 188K |
-| Corner 3' Mambino half_glu2 | 0.6138 | 2.48 | 0.6171 | 2.50 |
+| Config 4 Mambino gelu 106K   | 0.5993 | 1.36 | 4.11 | 0.624 |
+| Config 5 Pure S5 gelu 106K   | 0.5917 | 1.44 | 3.21 | 0.339 |
+| Corner 1 Pure S5 dense 188K  | 0.6089 | **1.11** | 2.15 | 0.333 |
+| Corner 2 Pure S5 P=16 r=40 188K | 0.5991 | **0.99** | 1.98 | 0.419 |
+| **Corner 3′** Mambino low-rank 188K | 0.6138 | **0.85** | **3.44** | **0.767** |
 
-### 8b. Sequential chip
+### 8b. What each axis says
 
-| Config | test@peakval mean | test@peakval / mJ (×10⁻³) | test_max mean | test_max / mJ (×10⁻³) |
-|---|---:|---:|---:|---:|
-| **Config 4** Mambino gelu | 0.5993 | **12.36** | 0.6038 | **12.46** |
-| Config 5 Pure S5 gelu | 0.5917 | 11.02 | 0.6034 | 11.24 |
-| Corner 1 Pure S5 half_glu2 | 0.6089 | 7.27 | 0.6159 | 7.35 |
-| **Corner 2** Pure S5 P=16 r=40 | 0.5991 | **6.22** ← worst at 188K | 0.6069 | **6.30** ← worst at 188K |
-| Corner 3' Mambino half_glu2 | 0.6138 | 6.82 | 0.6171 | 6.85 |
+- **acc/mJ** — **Corner 1 wins at 188K, Config 5 wins at 106K.** This is the
+  datacenter-facing metric (cost per inference in cloud serving). Corner 3' is
+  down 23% vs Corner 1 because it spends more joules per inference (predictor
+  work + K=40 psum spill).
 
-**Config 4 wins acc/mJ under both accuracy definitions and both chip topologies.** At n=8, this
-lead is stable across all four quadrants (digital pipe/seq × test@peakval / test_max).
+- **acc/mm² (per unit die area)** — **Corner 3' wins at 188K by 60%.** Config 4
+  wins at 106K by 28%. This is the edge-fabrication-facing metric (cost per
+  chip die, which scales with area). Mambino's smaller die footprint per unit
+  accuracy is the load-bearing chip claim of the paper.
 
-**Corner 2 is Pareto-dominated at 188K:** in every quadrant it has lower accuracy AND higher
-energy than either Corner 1 or Corner 3'. Doubling P at the cost of gate rank buys Pure S5
-nothing on-chip.
+- **acc/mW (per unit peak power)** — **Corner 3' wins at 188K by 130%.** Config 4
+  wins at 106K by 84%. This is the edge-thermal-facing metric (accuracy per
+  watt of peak power budget). Mambino's low peak power translates directly to
+  battery-life and passive-cooling headroom at the edge.
+
+### 8c. Comparative summary
+
+| Metric | Best at 106K | Best at 188K | Notes |
+|---|---|---|---|
+| Accuracy alone | Config 4 (+0.76 pp) | Corner 3' (+0.49 pp vs Corner 1, +1.47 pp vs Corner 2) | Mambino wins both bands. |
+| acc/mm² (die-area efficiency) | Config 4 | **Corner 3'** | Mambino wins both bands. |
+| acc/mW (peak-power efficiency) | Config 4 | **Corner 3'** | Mambino wins both bands. |
+| acc/mJ (energy-per-inference efficiency) | Config 5 | Corner 1 | Pure S5 wins both bands. |
+
+**The paper's chip pitch is edge-inference-optimized**, so the load-bearing
+metrics are acc/mm² and acc/mW (both Mambino wins). acc/mJ (Pure S5 wins) is
+reported honestly as the datacenter tradeoff. This is the "brain-aligned"
+Pareto: lower peak power and smaller area at the cost of energy per inference
+and per-sample latency — same profile as biological predictive-coding systems.
+
+**Corner 2 is Pareto-dominated at 188K on THREE of four axes:** lower accuracy
+than Corner 1 and Corner 3', worse acc/mm² than both, worse acc/mW than
+Corner 3'. Only acc/mJ (0.99) beats Corner 3' (0.85) — because Corner 3' pays
+more energy per inference for its state-splitting mechanism. The naive
+low-rank+P16 cheap-out does not save silicon and it does not preserve
+accuracy — the mechanism-attribution finding of §6d.
 
 ## 9. Methodology citations
 
