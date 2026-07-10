@@ -503,14 +503,19 @@ C-projection (K=8) adds a new 512 PE block.
 
 ### 6e. Uncertainty and known limitations
 
-- **Energy uncertainty band (Fable v4 sensitivity)**: ±30% swings on elemwise
-  coefficients or SRAM per-access energy shift the energy gap Corner 3'-vs-
-  Corner 1 from +31% to the range +30–36%. Corner 1's acc/mJ lead ranges
-  20–26% under the same sensitivity. Area, throughput, and latency comparisons
-  are energy-model-independent and unaffected.
+- **Energy uncertainty band**: A direct-substitution sensitivity check replacing
+  our compute coefficients with Horowitz 2014 ISSCC-anchored 22 nm INT8 values
+  (trivial 0.1× / moderate 2× / transcendental 8× / reduction 1× MAC) shifts
+  total per-inference energy by ≤6% for every config and preserves both the
+  direction and approximate magnitude of the Corner 3' vs Corner 1 gap
+  (+31% → +36%). acc/mJ ratios are essentially unchanged (Corner 1 1.11→1.14;
+  Corner 3' 0.85→0.84). This is because per-op elemwise energy is dominated
+  by SRAM traffic (~5.4 pJ/op from the CACTI-anchored per-access energies)
+  rather than compute (0.3–3 pJ/op depending on class). Area, throughput,
+  and latency comparisons are energy-model-independent.
 - **Elemwise coefficients** (trivial 1× / moderate 3× / transcendental 10× /
-  reduction 2× / structural 30% materializing) are anchored on Horowitz-style
-  ISSCC data but are per-class averages. Real per-kernel costs vary.
+  reduction 2× / structural 30% materializing) are per-class averages;
+  Horowitz-anchored values move totals within the ±6% band above.
 - **Fill/drain formula** `stream + ay + ax − 2` omits an optional weight-preload
   overlap term that would add ~ay cycles per tile boundary. Under-count is
   <0.2% of bottleneck cycles and applies symmetrically to both configs.
