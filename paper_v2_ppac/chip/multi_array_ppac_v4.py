@@ -296,17 +296,55 @@ def config_ppac(config, target_cyc):
     ssram_area = sram_area_mm2(64 * 1024)
     total_area_mm2 = pe_area_mm2 + wsram_area + asram_area + ssram_area
 
+    # Energy breakdown per component (sum over blocks)
+    e_mac_total = sum(b['e_mac'] for b in blocks)
+    e_wsram_total = sum(b['e_w_sram'] for b in blocks)
+    e_asram_total = sum(b['e_a_sram'] for b in blocks)
+    e_spad_pe_total = sum(b.get('e_p_spad_pJ', b.get('e_p_spad', 0)) +
+                          b.get('e_w_spad_pJ', b.get('e_w_spad', 0)) for b in blocks)
+    # spads not in block dict currently; compute from real_macs
+    e_spad_pe_total = sum(b['real_macs'] * (ert['weights_spad']['read']
+                          + ert['psum_spad']['read'] + ert['psum_spad']['update'])
+                          for b in blocks)
+
+    # SRAM leakage across all cycles
+    leak_pJ_per_cyc = (ert['weight_sram'].get('leak', 0.0)
+                    + ert['activation_sram'].get('leak', 0.0)
+                    + ert['state_sram'].get('leak', 0.0))
+    e_leak = leak_pJ_per_cyc * total_cyc
+
+    total_check = e_mac_total + e_wsram_total + e_asram_total + e_spad_pe_total + e_elem + e_state + e_leak
+
+    latency_ms = latency_s * 1e3
+    power_mW = (total_energy_pJ / 1e9) / latency_ms  # mJ / ms = W = 1000 mW
+
     return dict(config=config, target_cyc=target_cyc,
                 total_pe=total_pe, total_cycles=total_cyc,
                 bottleneck_cycles=bottleneck_cyc,
-                latency_ms=latency_s * 1e3, throughput_ips=throughput,
+                latency_ms=latency_ms, throughput_ips=throughput,
                 energy_mJ=total_energy_pJ / 1e9,
-                pe_area_mm2=pe_area_mm2, sram_area_mm2=wsram_area + asram_area + ssram_area,
+                power_mW=power_mW * 1000,   # W to mW
+                # Area breakdown (mm2)
+                pe_area_mm2=pe_area_mm2,
+                weight_sram_area_mm2=wsram_area,
+                act_sram_area_mm2=asram_area,
+                state_sram_area_mm2=ssram_area,
+                sram_area_mm2=wsram_area + asram_area + ssram_area,
                 total_area_mm2=total_area_mm2,
+                # Energy breakdown (uJ)
+                e_mac_uJ=e_mac_total / 1e6,
+                e_wsram_uJ=e_wsram_total / 1e6,
+                e_asram_uJ=e_asram_total / 1e6,
+                e_spad_uJ=e_spad_pe_total / 1e6,
+                e_elem_uJ=e_elem / 1e6,
+                e_state_uJ=e_state / 1e6,
+                e_leak_uJ=e_leak / 1e6,
+                # Add leakage to total (was omitted before)
+                energy_full_uJ=(total_energy_pJ + e_leak) / 1e6,
                 acc=ACC[config],
                 acc_per_mJ=ACC[config] / (total_energy_pJ / 1e9) if total_energy_pJ > 0 else 0,
-                pe_x_latency=total_pe * latency_s * 1e3,
-                area_x_latency=total_area_mm2 * latency_s * 1e3,
+                pe_x_latency=total_pe * latency_ms,
+                area_x_latency=total_area_mm2 * latency_ms,
                 elem_energy_pJ=e_elem, state_energy_pJ=e_state,
                 blocks=blocks)
 
@@ -338,15 +376,26 @@ def main():
     for cfg in ["config4", "config5", "corner1", "corner2", "corner3p"]:
         best = min(all_results[cfg], key=lambda r: r['area_x_latency'])
         print(f"\n{cfg}: target_cyc = {best['target_cyc']:,}")
-        print(f"  PEs: {best['total_pe']:,}  Area: {best['total_area_mm2']:.2f} mm2  "
-              f"Latency: {best['latency_ms']:.3f} ms  Throughput: {best['throughput_ips']:.0f}/s")
-        print(f"  Energy: {best['energy_mJ']*1000:.2f} uJ  acc/mJ: {best['acc_per_mJ']:.2f}")
-        print(f"  (elem: {best['elem_energy_pJ']/1e6:.2f} uJ, state: {best['state_energy_pJ']/1e6:.2f} uJ)")
-        print(f"  Per-block:")
-        for b in best['blocks']:
-            print(f"    {b['shape']:<35} {b['array']:>7} role={b['role']} "
-                  f"({b['silicon_pe']:>4} PE, C_tp={b['C_tp']:>2}, "
-                  f"spill={b['psum_spill_bytes']/1024:>7.0f} KB, cyc {b['cycles']:>10,})")
+        print(f"  PEs: {best['total_pe']:,}  Latency: {best['latency_ms']:.3f} ms  "
+              f"Throughput: {best['throughput_ips']:.0f}/s")
+        print(f"  AREA BREAKDOWN (mm2):")
+        print(f"     PE array:        {best['pe_area_mm2']:>7.2f}  ({100*best['pe_area_mm2']/best['total_area_mm2']:>5.1f}%)")
+        print(f"     Weight SRAM:     {best['weight_sram_area_mm2']:>7.2f}  ({100*best['weight_sram_area_mm2']/best['total_area_mm2']:>5.1f}%)")
+        print(f"     Act SRAM:        {best['act_sram_area_mm2']:>7.2f}  ({100*best['act_sram_area_mm2']/best['total_area_mm2']:>5.1f}%)")
+        print(f"     State SRAM:      {best['state_sram_area_mm2']:>7.2f}  ({100*best['state_sram_area_mm2']/best['total_area_mm2']:>5.1f}%)")
+        print(f"     TOTAL:           {best['total_area_mm2']:>7.2f}")
+        print(f"  ENERGY BREAKDOWN (uJ):")
+        e_tot = best['energy_full_uJ']
+        print(f"     PE compute (MAC): {best['e_mac_uJ']:>7.2f}  ({100*best['e_mac_uJ']/e_tot:>5.1f}%)")
+        print(f"     Weight SRAM acc:  {best['e_wsram_uJ']:>7.2f}  ({100*best['e_wsram_uJ']/e_tot:>5.1f}%)")
+        print(f"     Act SRAM acc:     {best['e_asram_uJ']:>7.2f}  ({100*best['e_asram_uJ']/e_tot:>5.1f}%)")
+        print(f"     Per-PE spads:     {best['e_spad_uJ']:>7.2f}  ({100*best['e_spad_uJ']/e_tot:>5.1f}%)")
+        print(f"     Elementwise:      {best['e_elem_uJ']:>7.2f}  ({100*best['e_elem_uJ']/e_tot:>5.1f}%)")
+        print(f"     State SRAM:       {best['e_state_uJ']:>7.2f}  ({100*best['e_state_uJ']/e_tot:>5.1f}%)")
+        print(f"     SRAM leakage:     {best['e_leak_uJ']:>7.2f}  ({100*best['e_leak_uJ']/e_tot:>5.1f}%)")
+        print(f"     TOTAL:            {e_tot:>7.2f}")
+        print(f"  POWER: {best['power_mW']:>8.1f} mW  (energy / latency)")
+        print(f"  acc/mJ: {best['acc_per_mJ']:.2f}")
 
     with open(CHIP / "multi_array_sweep_v4.json", "w") as f:
         json.dump({cfg: [{k: v for k, v in r.items() if k != 'blocks'}
