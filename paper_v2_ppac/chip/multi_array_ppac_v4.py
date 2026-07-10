@@ -30,6 +30,15 @@ FREQ_HZ = 1e9
 PE_AREA_UM2 = 3000
 SRAM_MBITS_PER_MM2 = 0.7
 LINE_BYTES = 8
+# NoC + control logic overhead, anchored on Chen et al. (Eyeriss ISSCC 2016) and
+# Sze 2020 review. Mesh NoC ~15% of PE-array area, control + instruction fetch ~5%.
+# Scales linearly with PE count; because Corner 3' has fewer PEs than Corner 1,
+# including NoC widens Mambino's area advantage rather than narrowing it.
+NOC_AREA_FRACTION_OF_PE = 0.15
+CONTROL_AREA_FRACTION_OF_PE = 0.05
+# NoC dynamic energy per MAC (routers, wires, arbitration). Chen et al. report
+# NoC at ~7% of Eyeriss inference energy; Sze 2020 gives 5-10% range.
+NOC_ENERGY_FRACTION_OF_MAC = 0.10
 
 CONFIG_TIER = {"config4": "320KB", "config5": "320KB",
                "corner1": "512KB", "corner2": "384KB", "corner3p": "384KB",
@@ -291,15 +300,19 @@ def config_ppac(config, target_cyc):
     throughput = FREQ_HZ / bottleneck_cyc if bottleneck_cyc else 0
 
     pe_area_mm2 = total_pe * PE_AREA_UM2 / 1e6
+    noc_area_mm2 = pe_area_mm2 * NOC_AREA_FRACTION_OF_PE
+    control_area_mm2 = pe_area_mm2 * CONTROL_AREA_FRACTION_OF_PE
     wsram_area = sram_area_mm2(256 * 1024)
     asram_area = sram_area_mm2(TIER_KB[CONFIG_TIER[config]] * 1024)
     ssram_area = sram_area_mm2(64 * 1024)
-    total_area_mm2 = pe_area_mm2 + wsram_area + asram_area + ssram_area
+    total_area_mm2 = pe_area_mm2 + noc_area_mm2 + control_area_mm2 + wsram_area + asram_area + ssram_area
 
     # Energy breakdown per component (sum over blocks)
     e_mac_total = sum(b['e_mac'] for b in blocks)
     e_wsram_total = sum(b['e_w_sram'] for b in blocks)
     e_asram_total = sum(b['e_a_sram'] for b in blocks)
+    # NoC + control dynamic energy: scaled from MAC energy (Chen ISSCC 2016).
+    e_noc_ctrl_total = e_mac_total * NOC_ENERGY_FRACTION_OF_MAC
     e_spad_pe_total = sum(b.get('e_p_spad_pJ', b.get('e_p_spad', 0)) +
                           b.get('e_w_spad_pJ', b.get('e_w_spad', 0)) for b in blocks)
     # spads not in block dict currently; compute from real_macs
@@ -313,7 +326,10 @@ def config_ppac(config, target_cyc):
                     + ert['state_sram'].get('leak', 0.0))
     e_leak = leak_pJ_per_cyc * total_cyc
 
-    total_check = e_mac_total + e_wsram_total + e_asram_total + e_spad_pe_total + e_elem + e_state + e_leak
+    # Add NoC+control to total energy
+    total_energy_pJ += e_noc_ctrl_total
+
+    total_check = e_mac_total + e_wsram_total + e_asram_total + e_spad_pe_total + e_elem + e_state + e_leak + e_noc_ctrl_total
 
     latency_ms = latency_s * 1e3
     power_mW = (total_energy_pJ / 1e9) / latency_ms  # mJ / ms = W = 1000 mW
@@ -326,6 +342,8 @@ def config_ppac(config, target_cyc):
                 power_mW=power_mW * 1000,   # W to mW
                 # Area breakdown (mm2)
                 pe_area_mm2=pe_area_mm2,
+                noc_area_mm2=noc_area_mm2,
+                control_area_mm2=control_area_mm2,
                 weight_sram_area_mm2=wsram_area,
                 act_sram_area_mm2=asram_area,
                 state_sram_area_mm2=ssram_area,
@@ -339,8 +357,9 @@ def config_ppac(config, target_cyc):
                 e_elem_uJ=e_elem / 1e6,
                 e_state_uJ=e_state / 1e6,
                 e_leak_uJ=e_leak / 1e6,
+                e_noc_ctrl_uJ=e_noc_ctrl_total / 1e6,
                 # Add leakage to total (was omitted before)
-                energy_full_uJ=(total_energy_pJ + e_leak) / 1e6,
+                energy_full_uJ=(total_energy_pJ + e_leak) / 1e6,   # already includes NoC in total_energy_pJ
                 acc=ACC[config],
                 acc_per_mJ=ACC[config] / (total_energy_pJ / 1e9) if total_energy_pJ > 0 else 0,
                 pe_x_latency=total_pe * latency_ms,
@@ -380,6 +399,8 @@ def main():
               f"Throughput: {best['throughput_ips']:.0f}/s")
         print(f"  AREA BREAKDOWN (mm2):")
         print(f"     PE array:        {best['pe_area_mm2']:>7.2f}  ({100*best['pe_area_mm2']/best['total_area_mm2']:>5.1f}%)")
+        print(f"     NoC (mesh):      {best['noc_area_mm2']:>7.2f}  ({100*best['noc_area_mm2']/best['total_area_mm2']:>5.1f}%)")
+        print(f"     Control logic:   {best['control_area_mm2']:>7.2f}  ({100*best['control_area_mm2']/best['total_area_mm2']:>5.1f}%)")
         print(f"     Weight SRAM:     {best['weight_sram_area_mm2']:>7.2f}  ({100*best['weight_sram_area_mm2']/best['total_area_mm2']:>5.1f}%)")
         print(f"     Act SRAM:        {best['act_sram_area_mm2']:>7.2f}  ({100*best['act_sram_area_mm2']/best['total_area_mm2']:>5.1f}%)")
         print(f"     State SRAM:      {best['state_sram_area_mm2']:>7.2f}  ({100*best['state_sram_area_mm2']/best['total_area_mm2']:>5.1f}%)")
@@ -387,6 +408,7 @@ def main():
         print(f"  ENERGY BREAKDOWN (uJ):")
         e_tot = best['energy_full_uJ']
         print(f"     PE compute (MAC): {best['e_mac_uJ']:>7.2f}  ({100*best['e_mac_uJ']/e_tot:>5.1f}%)")
+        print(f"     NoC + control:    {best['e_noc_ctrl_uJ']:>7.2f}  ({100*best['e_noc_ctrl_uJ']/e_tot:>5.1f}%)")
         print(f"     Weight SRAM acc:  {best['e_wsram_uJ']:>7.2f}  ({100*best['e_wsram_uJ']/e_tot:>5.1f}%)")
         print(f"     Act SRAM acc:     {best['e_asram_uJ']:>7.2f}  ({100*best['e_asram_uJ']/e_tot:>5.1f}%)")
         print(f"     Per-PE spads:     {best['e_spad_uJ']:>7.2f}  ({100*best['e_spad_uJ']/e_tot:>5.1f}%)")
