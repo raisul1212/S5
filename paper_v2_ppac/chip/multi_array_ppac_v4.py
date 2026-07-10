@@ -267,7 +267,9 @@ def config_ppac(config, target_cyc):
         wc_rep = wall_clock_rep((g['M'], g['N'], g['K'], g['dtype']), g['repeat'])
         energy_rep = g['repeat']
         # Relax util threshold only for low-rank gate shapes where K=40 or N=40
-        is_low_rank_gate = (g['K'] == 40 or g['N'] == 40) and config == "corner3p"
+        # Corner 2 (Pure S5 low-rank) and Corner 3' (Mambino low-rank) both have K=40
+        # blocks that CANNOT hit 100% util at any standard std square.
+        is_low_rank_gate = (g['K'] == 40 or g['N'] == 40) and config in ("corner2", "corner3p")
         min_util = 62.5 if is_low_rank_gate else 100.0
         _, _, _, ay, ax = choose_array(g, target_cyc, wc_rep, min_util=min_util)
         b = block_ppac(g, ay, ax, ert, wc_rep, energy_rep)
@@ -312,7 +314,7 @@ def config_ppac(config, target_cyc):
 def main():
     targets = [8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152]
     all_results = {}
-    for cfg in ["corner1", "corner3p"]:
+    for cfg in ["config4", "config5", "corner1", "corner2", "corner3p"]:
         all_results[cfg] = [config_ppac(cfg, t) for t in targets]
 
     print("=" * 128)
@@ -321,7 +323,7 @@ def main():
     print(f"{'Config':<10}{'Target':>10}{'PEs':>8}{'Bot cyc':>12}{'Latency':>11}"
           f"{'Tput':>10}{'Energy':>10}{'Area(mm2)':>12}{'Area*ms':>10}{'acc/mJ':>9}")
     print("-" * 128)
-    for cfg in ["corner1", "corner3p"]:
+    for cfg in ["config4", "config5", "corner1", "corner2", "corner3p"]:
         for r in all_results[cfg]:
             print(f"{cfg:<10}{r['target_cyc']:>10,}{r['total_pe']:>8,}"
                   f"{r['bottleneck_cycles']:>12,}{r['latency_ms']:>9.3f}ms"
@@ -333,7 +335,7 @@ def main():
     print("=" * 100)
     print("ATP (Area × Latency) OPTIMA at v4 accounting:")
     print("=" * 100)
-    for cfg in ["corner1", "corner3p"]:
+    for cfg in ["config4", "config5", "corner1", "corner2", "corner3p"]:
         best = min(all_results[cfg], key=lambda r: r['area_x_latency'])
         print(f"\n{cfg}: target_cyc = {best['target_cyc']:,}")
         print(f"  PEs: {best['total_pe']:,}  Area: {best['total_area_mm2']:.2f} mm2  "
