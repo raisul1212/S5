@@ -1,17 +1,26 @@
-# Public open-source release plan — Mambino paper
+# Public open-source release plan — Mambino paper (v2, 2026-07-10)
 
-**Status: DRAFT for review.** Nothing is deleted or moved until the plan is approved.
+**Status: READY TO EXECUTE.** Updated for v4 chip PPAC pipeline (H1–H4 + F1–F3 + NoC/control).
+
+## Target venue
+
+**IEEE TNNLS** (Transactions on Neural Networks and Learning Systems, Q1, IF ≈10.4).
+See [`PAPER_TNNLS_OUTLINE.md`](PAPER_TNNLS_OUTLINE.md) for the paper structure and
+submission checklist. This release bundle is the code+data supplement cited by the paper.
 
 ## Goal
 
 Publish a curated, minimal, self-contained code bundle alongside the paper so any
 reviewer or reader can:
 
-1. Rebuild the exact model architecture from the code
+1. Rebuild the exact model architecture from the code (`s5/`, `run_train.py`)
 2. Re-extract workloads from a downloaded checkpoint via
    `extract_workload_from_jaxpr.py` and verify the hard invariant passes
-3. Regenerate the chip PPAC pipeline (Accelergy + Timeloop-model) end-to-end
-4. Match paper numbers within the documented tolerance
+3. Regenerate the v4 chip PPAC pipeline end-to-end via
+   `paper_v2_ppac/chip/multi_array_ppac_v4.py` and match
+   `multi_array_sweep_v4.json` bit-for-bit
+4. Cross-validate cycle counts against SCALE-Sim v2 via
+   `run_scalesim_multi_array_validation.py`
 
 While NOT exposing:
 
@@ -69,20 +78,58 @@ Keep:
 - `flop_counter_jaxpr.py`
 - `extract_workload_from_jaxpr.py`
 
-### v2 chip PPAC pipeline (`paper_v2_ppac/`)
+### v2 chip PPAC pipeline (`paper_v2_ppac/`) — v4 authenticated
 
-Keep everything currently under `paper_v2_ppac/`:
-- `paper_v2_ppac/workloads/` — all 20 extracted workload files with manifests
-- `paper_v2_ppac/chip/build_chip_specs.py` — single Python source of truth
-- `paper_v2_ppac/chip/arch_mambino.cfg` — working Timeloop chip spec
-- `paper_v2_ppac/chip/arch_accelergy.yaml` + `arch_timeloop.yaml` — for reference
-- `paper_v2_ppac/chip/canonical_problem.yaml` + `mapping_canonical.yaml` — canonical run
+Keep from `paper_v2_ppac/`:
+
+**Workloads** (JAXPR-verified, hard-invariant-checked):
+- `paper_v2_ppac/workloads/workload_{cfg}_gemms.yaml` × 5 configs
+- `paper_v2_ppac/workloads/workload_{cfg}_elemwise.yaml` × 5
+- `paper_v2_ppac/workloads/workload_{cfg}_manifest.yaml` × 5 (provenance + hard invariant)
+
+**v4 simulator (the paper's ground truth)**:
+- `paper_v2_ppac/chip/multi_array_ppac_v4.py` — direct-instrumentation simulator
+  with H1–H4 + F1–F3 + NoC/control (the code cited by the paper)
+- `paper_v2_ppac/chip/multi_array_sweep_v4.json` — canonical output (bit-for-bit
+  reproducible)
+- `paper_v2_ppac/chip/build_chip_specs.py` — chip spec generator
+- `paper_v2_ppac/chip/gen_ert_all_variants.sh` — Accelergy driver (3 SRAM tiers ×
+  4 array sizes = 12 ERT runs)
+
+**Per-config ERTs** (Accelergy + CACTI + NeuroSim outputs):
+- `paper_v2_ppac/chip/out_accelergy_320KB_{8,16,32,64}x{8,16,32,64}/` (Config 4/5)
+- `paper_v2_ppac/chip/out_accelergy_384KB_*/` (Corner 2/3′)
+- `paper_v2_ppac/chip/out_accelergy_512KB_*/` (Corner 1)
+- `paper_v2_ppac/chip/arch_accelergy_{tier}_{size}.yaml` (12 spec YAMLs)
 - `paper_v2_ppac/chip/components/*.yaml` — Accelergy compound classes
-- `paper_v2_ppac/chip/out_accelergy/` — reference ERT/ART (validated)
-- `paper_v2_ppac/chip/timeloop-model.stats.txt` + `map.txt` — reference outputs
-- `paper_v2_ppac/chip/README.md`
-- `paper_v2_ppac/chip/pipeline_diagram.html`
-- `paper_v2_ppac/README.md`
+
+**SCALE-Sim v2 cross-validation**:
+- `paper_v2_ppac/chip/run_scalesim_multi_array_validation.py` — script
+- `paper_v2_ppac/chip/scalesim_multi_array_validation/validation_summary.csv` —
+  10-shape B/A-stationary agreement table
+
+**Docs**:
+- `paper_v2_ppac/PAPER_TNNLS_OUTLINE.md` — paper structure + submission checklist
+- `paper_v2_ppac/README.md` — pipeline overview
+- `paper_v2_ppac/chip/README.md` — v4 simulator quick-start
+- `paper_v2_ppac/chip/pipeline_diagram.html` — methods figure
+
+**Remove from paper_v2_ppac/chip/** (superseded intermediate work):
+- `direct_ppac.py` — v3 single-array simulator (superseded by v4 multi-array)
+- `run_all_configs_ppac.py` — v2 Timeloop-model driver (never authenticated,
+  Fable found dataflow bug)
+- `run_scalesim_sweep.py`, `run_scalesim_crosscheck.py` — v2 SCALE-Sim on
+  16×16 only (superseded by multi-array validation)
+- `per_gemm_ppac.json`, `per_config_ppac.json`, `per_gemm_ppac_v3.json`,
+  `per_config_ppac_v3.json`, `sweep_summary.csv`, `sweep_summary_v3.csv`,
+  `ppac_all_methods.csv`, `multi_array_sweep.json` — v2/v3 intermediate outputs
+- `arch_timeloop_{8,16,32,64}x*.yaml` — v3 Timeloop specs (superseded by
+  arch_accelergy per-tier per-size YAMLs)
+- `gen_fig_csvs.py`, `gen_fig_csvs_v3.py` — v2/v3 figure exporters (replace
+  with a single v4 figure exporter when the paper's figures are drafted)
+- `scalesim_sweep/`, `scalesim_crosscheck/`, `scalesim_config_*x*.cfg`,
+  `scalesim_sweep_*.csv`, `scalesim_gemms.csv`, `scalesim_vs_timeloop_16x16.csv` —
+  v2 SCALE-Sim intermediate
 
 ### Paper docs (`accelergy/`)
 
