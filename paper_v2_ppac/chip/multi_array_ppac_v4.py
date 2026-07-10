@@ -174,26 +174,32 @@ def block_ppac(g, ay, ax, ert, wc_rep, energy_rep, elem_energy_pJ_share=0):
                 real_macs=total_real_macs)
 
 # --- Array picker: max util + no over-provision -------------------------------
-def choose_array(g, target_cyc, wc_rep):
-    """Smallest 100%-util standard rectangle whose total cycles fit under target.
-    Search over the correct spatial-dim pair based on operand role."""
+def choose_array(g, target_cyc, wc_rep, min_util=100.0):
+    """Smallest rectangle with util >= min_util whose total cycles fit under target.
+    Search over the correct spatial-dim pair based on operand role.
+    min_util=100: strict rule (fails on shapes where no std size divides the dim).
+    min_util<100: relaxed rule (allows partial util e.g. for K=40 low-rank gates).
+    """
     M, N, K, dtype = g['M'], g['N'], g['K'], g['dtype']
     ds = g['per_mac_flops'] // 2
     r = role(M, N, K)
-    # Spatial dims depend on role
     spatial_y = M if r == 'A' else K
     spatial_x = K if r == 'A' else N
     candidates = []
     for ay in STD:
         for ax in STD:
             u = util(ay, ax, spatial_y, spatial_x)
-            b = block_ppac(g, ay, ax, ERT_DUMMY, wc_rep, energy_rep=1)  # cycles only
-            candidates.append((ay * ax, u, b['cycles'] / 1, ay, ax))
+            b = block_ppac(g, ay, ax, ERT_DUMMY, wc_rep, energy_rep=1)
+            candidates.append((ay * ax, u, b['cycles'], ay, ax))
     max_u = max(c[1] for c in candidates)
-    pool = [c for c in candidates if c[1] == 100.0] if max_u == 100.0 else \
-           [c for c in candidates if c[1] == max_u]
-    # F2 fix (Fable v4 audit): b['cycles'] already includes wc_rep (block_ppac
-    # multiplies by wc_rep internally). Compare directly to target — no second wc_rep.
+    # If min_util==100 and shape supports 100%, restrict to those. Otherwise allow >= min_util.
+    if min_util == 100.0 and max_u == 100.0:
+        pool = [c for c in candidates if c[1] == 100.0]
+    elif max_u < min_util:
+        pool = [c for c in candidates if c[1] == max_u]        # best achievable
+    else:
+        pool = [c for c in candidates if c[1] >= min_util]
+    # F2 fix: cycles already includes wc_rep.
     fits = [c for c in pool if c[2] <= target_cyc]
     if fits:
         return min(fits, key=lambda c: c[0])
@@ -254,10 +260,16 @@ def config_ppac(config, target_cyc):
     blocks = []
     total_pe = 0; total_cyc = 0; total_energy_pJ = 0.0
     total_real_macs = 0
+    # Per-config util-relaxation policy: Corner 3' has K=40 low-rank gate blocks
+    # that CANNOT hit 100% util at any standard std square. Relax to 62.5% for those
+    # blocks specifically. Corner 1 doesn't have K=40 shapes so this doesn't apply.
     for g in gemms:
         wc_rep = wall_clock_rep((g['M'], g['N'], g['K'], g['dtype']), g['repeat'])
         energy_rep = g['repeat']
-        _, _, _, ay, ax = choose_array(g, target_cyc, wc_rep)
+        # Relax util threshold only for low-rank gate shapes where K=40 or N=40
+        is_low_rank_gate = (g['K'] == 40 or g['N'] == 40) and config == "corner3p"
+        min_util = 62.5 if is_low_rank_gate else 100.0
+        _, _, _, ay, ax = choose_array(g, target_cyc, wc_rep, min_util=min_util)
         b = block_ppac(g, ay, ax, ert, wc_rep, energy_rep)
         blocks.append({'shape': f"{g['M']}x{g['N']}x{g['K']}_{g['dtype']}",
                        'rep_wc': wc_rep, 'rep_jaxpr': energy_rep, **b})
