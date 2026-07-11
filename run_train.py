@@ -129,6 +129,21 @@ if __name__ == "__main__":
 							 "Used for iso-param comparisons: shrink the "
 							 "gate to redirect params to bigger SSM state "
 							 "(via --ssm_size_base).  Default 0 = full-rank.")
+	parser.add_argument("--glu_structure", type=str, default="dense",
+						choices=["dense", "monarch", "blockdiag"],
+						help="v2 structured gate (half_glu2 only). 'dense' = v1 "
+							 "path (byte-identical). 'monarch' = R-head Monarch(b,m) "
+							 "operator (size via --glu_monarch_heads). 'blockdiag' = "
+							 "B diagonal blocks (size via --glu_blockdiag_blocks). "
+							 "For monarch/blockdiag, --glu_rank only needs to be >0 "
+							 "as the gate-on trigger; the structured op's size is set "
+							 "by its own knob.")
+	parser.add_argument("--glu_monarch_heads", type=int, default=3,
+						help="Monarch heads R (params = R*H*(b+m)+H). "
+							 "At H=128 (b,m)=(8,16): R=3 -> 9,216 params.")
+	parser.add_argument("--glu_blockdiag_blocks", type=int, default=2,
+						help="block-diagonal block count B (params = H^2/B + H). "
+							 "At H=128: B=2 -> 8,192 params.")
 	parser.add_argument("--bidir_predictor", type=str2bool, default=False,
 						help="If True, MambinoSSM's predictor scan runs "
 							 "bidirectionally (mirrors main scan), with "

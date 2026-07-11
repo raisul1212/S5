@@ -165,6 +165,9 @@ def train(args):
             batchnorm=args.batchnorm,
             bn_momentum=args.bn_momentum,
             glu_rank=getattr(args, 'glu_rank', 0),
+            glu_structure=getattr(args, 'glu_structure', 'dense'),
+            glu_monarch_heads=getattr(args, 'glu_monarch_heads', 3),
+            glu_blockdiag_blocks=getattr(args, 'glu_blockdiag_blocks', 2),
         )
 
     # initialize training state
@@ -572,7 +575,10 @@ def train(args):
                         activation=args.activation_fn, dropout=args.p_dropout,
                         mode=args.mode, prenorm=args.prenorm,
                         batchnorm=args.batchnorm, bn_momentum=args.bn_momentum,
-                        glu_rank=getattr(args, 'glu_rank', 0))
+                        glu_rank=getattr(args, 'glu_rank', 0),
+                        glu_structure=getattr(args, 'glu_structure', 'dense'),
+                        glu_monarch_heads=getattr(args, 'glu_monarch_heads', 3),
+                        glu_blockdiag_blocks=getattr(args, 'glu_blockdiag_blocks', 2))
                 # Run validate with noise rng
                 # SSM needs an rng whenever it takes the non-fast path,
                 # which is triggered by sigma > 0 OR bits > 0.
