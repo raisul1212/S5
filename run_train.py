@@ -141,6 +141,12 @@ if __name__ == "__main__":
 	parser.add_argument("--glu_monarch_heads", type=int, default=3,
 						help="Monarch heads R (params = R*H*(b+m)+H). "
 							 "At H=128 (b,m)=(8,16): R=3 -> 9,216 params.")
+	parser.add_argument("--glu_monarch_b", type=int, default=0,
+						help="Force Monarch factor b (m=H/b). 0=auto (8,16 at H=128). "
+							 "16 -> (16,8): same params, halves inner-einsum batch (lower latency).")
+	parser.add_argument("--glu_monarch_residual_rank", type=int, default=0,
+						help="Add a rank-r' dense residual to the Monarch gate (+2*H*r' "
+							 "params). r'=4 at H=128 -> +1,024/layer = iso-param with dense r=40.")
 	parser.add_argument("--glu_blockdiag_blocks", type=int, default=2,
 						help="block-diagonal block count B (params = H^2/B + H). "
 							 "At H=128: B=2 -> 8,192 params.")

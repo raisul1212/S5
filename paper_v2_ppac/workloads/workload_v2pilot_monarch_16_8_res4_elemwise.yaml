@@ -1,0 +1,2986 @@
+format: elementwise-workload-v1
+energy_class_totals:
+  structural:
+    total_flops: 0
+    total_scalar_ops: 45808485
+    primitive_count: 153
+  trivial:
+    total_flops: 24210718
+    total_scalar_ops: 21674142
+    primitive_count: 41
+  transcendental:
+    total_flops: 16783404
+    total_scalar_ops: 4195659
+    primitive_count: 7
+  moderate:
+    total_flops: 38953864
+    total_scalar_ops: 25236552
+    primitive_count: 53
+  reduction:
+    total_flops: 6553482
+    total_scalar_ops: 2097290
+    primitive_count: 4
+note: 'energy_class semantics: trivial (add/sub) folds into MAC pipeline; moderate
+  (mul/div) small ALU ~1-3 FLOPs/elem; transcendental (exp/log/tanh/sig/rsqrt) LUT
+  ~4-10 FLOPs/elem; reduction (reduce_sum/max/prod) chain of adds, memory-bound; structural
+  (reshape/transpose/broadcast/etc.) 0 FLOPs, data movement only.'
+entries_by_class:
+  structural:
+  - primitive: random_seed
+    out_shape: []
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 3
+    total_flops: 0
+    total_scalar_ops: 3
+    source_ops:
+    - root
+  - primitive: random_unwrap
+    out_shape:
+    - 2
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 3
+    total_flops: 0
+    total_scalar_ops: 6
+    source_ops:
+    - root
+  - primitive: random_clone
+    out_shape:
+    - 2
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 2
+    total_flops: 0
+    total_scalar_ops: 4
+    source_ops:
+    - root
+  - primitive: random_wrap
+    out_shape: []
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 2
+    total_flops: 0
+    total_scalar_ops: 2
+    source_ops:
+    - root
+  - primitive: random_split
+    out_shape:
+    - 1
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 2
+    total_flops: 0
+    total_scalar_ops: 2
+    source_ops:
+    - root
+  - primitive: random_unwrap
+    out_shape:
+    - 1
+    - 2
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 2
+    total_flops: 0
+    total_scalar_ops: 4
+    source_ops:
+    - root
+  - primitive: reshape
+    out_shape:
+    - 1
+    - 128
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 17
+    total_flops: 0
+    total_scalar_ops: 2176
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 1
+    - 128
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 41
+    total_flops: 0
+    total_scalar_ops: 5248
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 128
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 32
+    total_flops: 0
+    total_scalar_ops: 4096
+    source_ops:
+    - root
+  - primitive: convert_element_type
+    out_shape:
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 80
+    total_flops: 0
+    total_scalar_ops: 640
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 8
+    - 128
+    - 1
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: squeeze
+    out_shape:
+    - 8
+    - 128
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: convert_element_type
+    out_shape:
+    - 8
+    - 128
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 128
+    - 8
+    - 1
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: squeeze
+    out_shape:
+    - 128
+    - 8
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: convert_element_type
+    out_shape:
+    - 128
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 128
+    - 16
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 8
+    total_flops: 0
+    total_scalar_ops: 16384
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 8
+    - 1
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 16
+    total_flops: 0
+    total_scalar_ops: 128
+    source_ops:
+    - root
+  - primitive: squeeze
+    out_shape:
+    - 8
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 16
+    total_flops: 0
+    total_scalar_ops: 128
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 8
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 192
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 8
+    - 1
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 192
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 2048
+    - 8
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 16
+    total_flops: 0
+    total_scalar_ops: 262144
+    source_ops:
+    - root
+  - primitive: convert_element_type
+    out_shape:
+    - 2048
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 16
+    total_flops: 0
+    total_scalar_ops: 262144
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 192
+    source_ops:
+    - root
+  - primitive: transpose
+    out_shape:
+    - 1
+    - 2048
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 393216
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1024
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 393216
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 1024
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 393216
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 1024
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 196608
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 512
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 196608
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 512
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 196608
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 512
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 98304
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 256
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 98304
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 256
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 98304
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 256
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 128
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 128
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 128
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 24576
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 64
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 24576
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 64
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 24576
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 64
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 12288
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 32
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 12288
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 32
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 12288
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 32
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 6144
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 16
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 6144
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 16
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 6144
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 16
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 3072
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 8
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 3072
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 8
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 3072
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 8
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 1536
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 4
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 1536
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 4
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 1536
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 4
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 768
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 2
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 768
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 2
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 768
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 2
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 384
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 360
+    total_flops: 0
+    total_scalar_ops: 2880
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 1
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 368
+    total_flops: 0
+    total_scalar_ops: 2944
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 1
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 56
+    total_flops: 0
+    total_scalar_ops: 448
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 0
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 0
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 0
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 0
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 0
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 0
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 192
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 1
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 192
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 2
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 768
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 1
+    - 2
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 768
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 2
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 384
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 2
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 384
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 4
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 1536
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 1
+    - 4
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 1536
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 3
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 1152
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 3
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 1152
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 3
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 576
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 4
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 768
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 4
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 768
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 8
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 3072
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 1
+    - 8
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 3072
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 7
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 2688
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 7
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 2688
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 7
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 1344
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 8
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 1536
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 8
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 1536
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 16
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 6144
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 1
+    - 16
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 6144
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 15
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 5760
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 15
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 5760
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 15
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 2880
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 16
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 3072
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 16
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 3072
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 32
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 12288
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 1
+    - 32
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 12288
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 31
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 11904
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 31
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 11904
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 31
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 5952
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 32
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 6144
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 32
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 6144
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 64
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 24576
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 1
+    - 64
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 24576
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 63
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 24192
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 63
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 24192
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 63
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 12096
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 64
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 12288
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 64
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 12288
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 128
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 1
+    - 128
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 127
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 48768
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 127
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 48768
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 127
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 24384
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 128
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 24576
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 128
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 24576
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 256
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 98304
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 1
+    - 256
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 98304
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 255
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 97920
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 255
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 97920
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 255
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 48960
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 256
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 256
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 512
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 196608
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 1
+    - 512
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 196608
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 511
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 196224
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 511
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 196224
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 511
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 98112
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 512
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 98304
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 512
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 98304
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 1024
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 393216
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 1
+    - 1024
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 393216
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1023
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 392832
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 1023
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 392832
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 1023
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 196416
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1024
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 196608
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 1024
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 196608
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 2048
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 786432
+    source_ops:
+    - root
+  - primitive: pad
+    out_shape:
+    - 1
+    - 2048
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 48
+    total_flops: 0
+    total_scalar_ops: 786432
+    source_ops:
+    - root
+  - primitive: slice
+    out_shape:
+    - 1
+    - 2047
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 8
+    total_flops: 0
+    total_scalar_ops: 131008
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 2048
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 8
+    total_flops: 0
+    total_scalar_ops: 131072
+    source_ops:
+    - root
+  - primitive: real
+    out_shape:
+    - 128
+    - 1
+    - 2048
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 16
+    total_flops: 0
+    total_scalar_ops: 4194304
+    source_ops:
+    - root
+  - primitive: transpose
+    out_shape:
+    - 1
+    - 2048
+    - 128
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 16
+    total_flops: 0
+    total_scalar_ops: 4194304
+    source_ops:
+    - root
+  - primitive: rev
+    out_shape:
+    - 2048
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 16
+    total_flops: 0
+    total_scalar_ops: 262144
+    source_ops:
+    - root
+  - primitive: rev
+    out_shape:
+    - 1
+    - 2048
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 16
+    total_flops: 0
+    total_scalar_ops: 262144
+    source_ops:
+    - root
+  - primitive: concatenate
+    out_shape:
+    - 1
+    - 2048
+    - 16
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 8
+    total_flops: 0
+    total_scalar_ops: 262144
+    source_ops:
+    - root
+  - primitive: reshape
+    out_shape:
+    - 1
+    - 2048
+    - 16
+    - 8
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 8
+    total_flops: 0
+    total_scalar_ops: 2097152
+    source_ops:
+    - root
+  - primitive: transpose
+    out_shape:
+    - 1
+    - 3
+    - 2048
+    - 16
+    - 8
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 8
+    total_flops: 0
+    total_scalar_ops: 6291456
+    source_ops:
+    - root
+  - primitive: transpose
+    out_shape:
+    - 1
+    - 3
+    - 2048
+    - 8
+    - 16
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 16
+    total_flops: 0
+    total_scalar_ops: 12582912
+    source_ops:
+    - root
+  - primitive: reshape
+    out_shape:
+    - 1
+    - 3
+    - 2048
+    - 128
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 8
+    total_flops: 0
+    total_scalar_ops: 6291456
+    source_ops:
+    - root
+  - primitive: iota
+    out_shape:
+    - 2048
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 1
+    total_flops: 0
+    total_scalar_ops: 2048
+    source_ops:
+    - root
+  - primitive: convert_element_type
+    out_shape:
+    - 2048
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 1
+    total_flops: 0
+    total_scalar_ops: 2048
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 2048
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 1
+    total_flops: 0
+    total_scalar_ops: 2048
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 1
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 4
+    total_flops: 0
+    total_scalar_ops: 4
+    source_ops:
+    - log_softmax
+    - root
+  - primitive: lt
+    out_shape:
+    - 1
+    - 2048
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 1
+    total_flops: 0
+    total_scalar_ops: 2048
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 2048
+    - 1
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 1
+    total_flops: 0
+    total_scalar_ops: 2048
+    source_ops:
+    - root
+  - primitive: convert_element_type
+    out_shape:
+    - 1
+    - 2048
+    - 1
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 1
+    total_flops: 0
+    total_scalar_ops: 2048
+    source_ops:
+    - root
+  - primitive: broadcast_in_dim
+    out_shape:
+    - 1
+    - 10
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 1
+    total_flops: 0
+    total_scalar_ops: 10
+    source_ops:
+    - root
+  - primitive: max
+    out_shape:
+    - 1
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 1
+    total_flops: 0
+    total_scalar_ops: 1
+    source_ops:
+    - log_softmax
+  - primitive: stop_gradient
+    out_shape:
+    - 1
+    - 1
+    dtype_sig: real
+    per_instance_flops: 0
+    instance_count: 1
+    total_flops: 0
+    total_scalar_ops: 1
+    source_ops:
+    - log_softmax
+  trivial:
+  - primitive: add
+    out_shape:
+    - 1
+    - 2048
+    - 128
+    dtype_sig: real
+    per_instance_flops: 262144
+    instance_count: 57
+    total_flops: 14942208
+    total_scalar_ops: 14942208
+    source_ops:
+    - root
+  - primitive: sub
+    out_shape:
+    - 1
+    - 2048
+    - 128
+    dtype_sig: real
+    per_instance_flops: 262144
+    instance_count: 16
+    total_flops: 4194304
+    total_scalar_ops: 4194304
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 128
+    dtype_sig: real
+    per_instance_flops: 128
+    instance_count: 8
+    total_flops: 1024
+    total_scalar_ops: 1024
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 16
+    instance_count: 16
+    total_flops: 256
+    total_scalar_ops: 128
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 8
+    - 128
+    dtype_sig: complex
+    per_instance_flops: 2048
+    instance_count: 24
+    total_flops: 49152
+    total_scalar_ops: 24576
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 128
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 2048
+    instance_count: 48
+    total_flops: 98304
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: sub
+    out_shape:
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 16
+    instance_count: 24
+    total_flops: 384
+    total_scalar_ops: 192
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 1024
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 16384
+    instance_count: 48
+    total_flops: 786432
+    total_scalar_ops: 393216
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 512
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 8192
+    instance_count: 48
+    total_flops: 393216
+    total_scalar_ops: 196608
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 256
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 4096
+    instance_count: 48
+    total_flops: 196608
+    total_scalar_ops: 98304
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 128
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 2048
+    instance_count: 48
+    total_flops: 98304
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 64
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 1024
+    instance_count: 48
+    total_flops: 49152
+    total_scalar_ops: 24576
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 32
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 512
+    instance_count: 48
+    total_flops: 24576
+    total_scalar_ops: 12288
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 16
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 256
+    instance_count: 48
+    total_flops: 12288
+    total_scalar_ops: 6144
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 8
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 128
+    instance_count: 48
+    total_flops: 6144
+    total_scalar_ops: 3072
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 4
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 64
+    instance_count: 48
+    total_flops: 3072
+    total_scalar_ops: 1536
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 2
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 32
+    instance_count: 48
+    total_flops: 1536
+    total_scalar_ops: 768
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 1
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 16
+    instance_count: 48
+    total_flops: 768
+    total_scalar_ops: 384
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 0
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 0
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 2
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 32
+    instance_count: 24
+    total_flops: 768
+    total_scalar_ops: 384
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 4
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 64
+    instance_count: 24
+    total_flops: 1536
+    total_scalar_ops: 768
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 3
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 48
+    instance_count: 24
+    total_flops: 1152
+    total_scalar_ops: 576
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 8
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 128
+    instance_count: 24
+    total_flops: 3072
+    total_scalar_ops: 1536
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 7
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 112
+    instance_count: 24
+    total_flops: 2688
+    total_scalar_ops: 1344
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 16
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 256
+    instance_count: 24
+    total_flops: 6144
+    total_scalar_ops: 3072
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 15
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 240
+    instance_count: 24
+    total_flops: 5760
+    total_scalar_ops: 2880
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 32
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 512
+    instance_count: 24
+    total_flops: 12288
+    total_scalar_ops: 6144
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 31
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 496
+    instance_count: 24
+    total_flops: 11904
+    total_scalar_ops: 5952
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 64
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 1024
+    instance_count: 24
+    total_flops: 24576
+    total_scalar_ops: 12288
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 63
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 1008
+    instance_count: 24
+    total_flops: 24192
+    total_scalar_ops: 12096
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 127
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 2032
+    instance_count: 24
+    total_flops: 48768
+    total_scalar_ops: 24384
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 256
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 4096
+    instance_count: 24
+    total_flops: 98304
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 255
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 4080
+    instance_count: 24
+    total_flops: 97920
+    total_scalar_ops: 48960
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 512
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 8192
+    instance_count: 24
+    total_flops: 196608
+    total_scalar_ops: 98304
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 511
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 8176
+    instance_count: 24
+    total_flops: 196224
+    total_scalar_ops: 98112
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1024
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 16384
+    instance_count: 24
+    total_flops: 393216
+    total_scalar_ops: 196608
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 1023
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 16368
+    instance_count: 24
+    total_flops: 392832
+    total_scalar_ops: 196416
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 2048
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 32768
+    instance_count: 24
+    total_flops: 786432
+    total_scalar_ops: 393216
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 2048
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 32768
+    instance_count: 32
+    total_flops: 1048576
+    total_scalar_ops: 524288
+    source_ops:
+    - root
+  - primitive: add
+    out_shape:
+    - 1
+    - 10
+    dtype_sig: real
+    per_instance_flops: 10
+    instance_count: 1
+    total_flops: 10
+    total_scalar_ops: 10
+    source_ops:
+    - root
+  - primitive: sub
+    out_shape:
+    - 1
+    - 10
+    dtype_sig: real
+    per_instance_flops: 10
+    instance_count: 2
+    total_flops: 20
+    total_scalar_ops: 20
+    source_ops:
+    - log_softmax
+  transcendental:
+  - primitive: rsqrt
+    out_shape:
+    - 1
+    - 128
+    dtype_sig: real
+    per_instance_flops: 512
+    instance_count: 8
+    total_flops: 4096
+    total_scalar_ops: 1024
+    source_ops:
+    - root
+  - primitive: exp
+    out_shape:
+    - 8
+    dtype_sig: real
+    per_instance_flops: 32
+    instance_count: 16
+    total_flops: 512
+    total_scalar_ops: 128
+    source_ops:
+    - root
+  - primitive: exp
+    out_shape:
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 64
+    instance_count: 24
+    total_flops: 1536
+    total_scalar_ops: 192
+    source_ops:
+    - root
+  - primitive: tanh
+    out_shape:
+    - 1
+    - 2048
+    - 128
+    dtype_sig: real
+    per_instance_flops: 1048576
+    instance_count: 8
+    total_flops: 8388608
+    total_scalar_ops: 2097152
+    source_ops:
+    - root
+  - primitive: logistic
+    out_shape:
+    - 1
+    - 2048
+    - 128
+    dtype_sig: real
+    per_instance_flops: 1048576
+    instance_count: 8
+    total_flops: 8388608
+    total_scalar_ops: 2097152
+    source_ops:
+    - root
+  - primitive: exp
+    out_shape:
+    - 1
+    - 10
+    dtype_sig: real
+    per_instance_flops: 40
+    instance_count: 1
+    total_flops: 40
+    total_scalar_ops: 10
+    source_ops:
+    - log_softmax
+  - primitive: log
+    out_shape:
+    - 1
+    - 1
+    dtype_sig: real
+    per_instance_flops: 4
+    instance_count: 1
+    total_flops: 4
+    total_scalar_ops: 1
+    source_ops:
+    - log_softmax
+  moderate:
+  - primitive: mul
+    out_shape:
+    - 1
+    - 128
+    dtype_sig: real
+    per_instance_flops: 128
+    instance_count: 8
+    total_flops: 1024
+    total_scalar_ops: 1024
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 2048
+    - 128
+    dtype_sig: real
+    per_instance_flops: 262144
+    instance_count: 65
+    total_flops: 17039360
+    total_scalar_ops: 17039360
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 48
+    instance_count: 64
+    total_flops: 3072
+    total_scalar_ops: 512
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 8
+    - 128
+    dtype_sig: complex
+    per_instance_flops: 6144
+    instance_count: 48
+    total_flops: 294912
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 128
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 6144
+    instance_count: 48
+    total_flops: 294912
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 8
+    dtype_sig: real
+    per_instance_flops: 8
+    instance_count: 16
+    total_flops: 128
+    total_scalar_ops: 128
+    source_ops:
+    - root
+  - primitive: div
+    out_shape:
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 80
+    instance_count: 24
+    total_flops: 1920
+    total_scalar_ops: 192
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 2048
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 98304
+    instance_count: 16
+    total_flops: 1572864
+    total_scalar_ops: 262144
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1024
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 49152
+    instance_count: 24
+    total_flops: 1179648
+    total_scalar_ops: 196608
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 1024
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 49152
+    instance_count: 24
+    total_flops: 1179648
+    total_scalar_ops: 196608
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 512
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 24576
+    instance_count: 24
+    total_flops: 589824
+    total_scalar_ops: 98304
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 512
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 24576
+    instance_count: 24
+    total_flops: 589824
+    total_scalar_ops: 98304
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 256
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 12288
+    instance_count: 24
+    total_flops: 294912
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 256
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 12288
+    instance_count: 24
+    total_flops: 294912
+    total_scalar_ops: 49152
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 128
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 6144
+    instance_count: 24
+    total_flops: 147456
+    total_scalar_ops: 24576
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 64
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 3072
+    instance_count: 24
+    total_flops: 73728
+    total_scalar_ops: 12288
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 64
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 3072
+    instance_count: 24
+    total_flops: 73728
+    total_scalar_ops: 12288
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 32
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 1536
+    instance_count: 24
+    total_flops: 36864
+    total_scalar_ops: 6144
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 32
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 1536
+    instance_count: 24
+    total_flops: 36864
+    total_scalar_ops: 6144
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 16
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 768
+    instance_count: 24
+    total_flops: 18432
+    total_scalar_ops: 3072
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 16
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 768
+    instance_count: 24
+    total_flops: 18432
+    total_scalar_ops: 3072
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 8
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 384
+    instance_count: 24
+    total_flops: 9216
+    total_scalar_ops: 1536
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 8
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 384
+    instance_count: 24
+    total_flops: 9216
+    total_scalar_ops: 1536
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 4
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 192
+    instance_count: 24
+    total_flops: 4608
+    total_scalar_ops: 768
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 4
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 192
+    instance_count: 24
+    total_flops: 4608
+    total_scalar_ops: 768
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 2
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 96
+    instance_count: 24
+    total_flops: 2304
+    total_scalar_ops: 384
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 2
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 96
+    instance_count: 24
+    total_flops: 2304
+    total_scalar_ops: 384
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 48
+    instance_count: 48
+    total_flops: 2304
+    total_scalar_ops: 384
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 1
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 48
+    instance_count: 48
+    total_flops: 2304
+    total_scalar_ops: 384
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 0
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 0
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 0
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 0
+    instance_count: 24
+    total_flops: 0
+    total_scalar_ops: 0
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 3
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 144
+    instance_count: 24
+    total_flops: 3456
+    total_scalar_ops: 576
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 3
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 144
+    instance_count: 24
+    total_flops: 3456
+    total_scalar_ops: 576
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 7
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 336
+    instance_count: 24
+    total_flops: 8064
+    total_scalar_ops: 1344
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 7
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 336
+    instance_count: 24
+    total_flops: 8064
+    total_scalar_ops: 1344
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 15
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 720
+    instance_count: 24
+    total_flops: 17280
+    total_scalar_ops: 2880
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 15
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 720
+    instance_count: 24
+    total_flops: 17280
+    total_scalar_ops: 2880
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 31
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 1488
+    instance_count: 24
+    total_flops: 35712
+    total_scalar_ops: 5952
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 31
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 1488
+    instance_count: 24
+    total_flops: 35712
+    total_scalar_ops: 5952
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 63
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 3024
+    instance_count: 24
+    total_flops: 72576
+    total_scalar_ops: 12096
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 63
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 3024
+    instance_count: 24
+    total_flops: 72576
+    total_scalar_ops: 12096
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 127
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 6096
+    instance_count: 24
+    total_flops: 146304
+    total_scalar_ops: 24384
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 127
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 6096
+    instance_count: 24
+    total_flops: 146304
+    total_scalar_ops: 24384
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 255
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 12240
+    instance_count: 24
+    total_flops: 293760
+    total_scalar_ops: 48960
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 255
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 12240
+    instance_count: 24
+    total_flops: 293760
+    total_scalar_ops: 48960
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 511
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 24528
+    instance_count: 24
+    total_flops: 588672
+    total_scalar_ops: 98112
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 511
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 24528
+    instance_count: 24
+    total_flops: 588672
+    total_scalar_ops: 98112
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1023
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 49104
+    instance_count: 24
+    total_flops: 1178496
+    total_scalar_ops: 196416
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 1
+    - 1023
+    - 8
+    dtype_sig: complex
+    per_instance_flops: 49104
+    instance_count: 24
+    total_flops: 1178496
+    total_scalar_ops: 196416
+    source_ops:
+    - root
+  - primitive: mul
+    out_shape:
+    - 128
+    - 1
+    - 2048
+    dtype_sig: real
+    per_instance_flops: 262144
+    instance_count: 16
+    total_flops: 4194304
+    total_scalar_ops: 4194304
+    source_ops:
+    - root
+  - primitive: div
+    out_shape:
+    - 1
+    dtype_sig: real
+    per_instance_flops: 1
+    instance_count: 8
+    total_flops: 8
+    total_scalar_ops: 8
+    source_ops:
+    - root
+  - primitive: integer_pow
+    out_shape:
+    - 1
+    - 2048
+    - 128
+    dtype_sig: real
+    per_instance_flops: 786432
+    instance_count: 8
+    total_flops: 6291456
+    total_scalar_ops: 2097152
+    source_ops:
+    - root
+  - primitive: div
+    out_shape:
+    - 1
+    - 128
+    dtype_sig: real
+    per_instance_flops: 128
+    instance_count: 1
+    total_flops: 128
+    total_scalar_ops: 128
+    source_ops:
+    - root
+  reduction:
+  - primitive: reduce_sum
+    out_shape:
+    - 1
+    dtype_sig: real
+    per_instance_flops: 262143
+    instance_count: 9
+    total_flops: 2097153
+    total_scalar_ops: 9
+    source_ops:
+    - log_softmax
+    - root
+  - primitive: reduce_sum
+    out_shape:
+    - 1
+    - 2048
+    - 128
+    dtype_sig: real
+    per_instance_flops: 524288
+    instance_count: 8
+    total_flops: 4194304
+    total_scalar_ops: 2097152
+    source_ops:
+    - root
+  - primitive: reduce_sum
+    out_shape:
+    - 1
+    - 128
+    dtype_sig: real
+    per_instance_flops: 262016
+    instance_count: 1
+    total_flops: 262016
+    total_scalar_ops: 128
+    source_ops:
+    - root
+  - primitive: reduce_max
+    out_shape:
+    - 1
+    dtype_sig: real
+    per_instance_flops: 9
+    instance_count: 1
+    total_flops: 9
+    total_scalar_ops: 1
+    source_ops:
+    - log_softmax

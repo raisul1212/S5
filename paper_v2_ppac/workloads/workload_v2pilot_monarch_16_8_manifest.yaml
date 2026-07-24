@@ -1,0 +1,88 @@
+format: workload-manifest-v1
+generated_by: extract_workload_from_jaxpr.py
+generated_at: '2026-07-23T20:18:18Z'
+git_sha: 57bb5d46c5c6b806b0a8cd2441a79a023fc18dd2
+checkpoint_path: /tmp/none/best
+args:
+  ckpt_prefix: /tmp/none/best
+  config_name: v2pilot_monarch_16_8
+  out_dir: paper_v2_ppac/workloads/
+  dir_name: ./cache_dir
+  use_mambino_ssm: true
+  ssm_size_base: 16
+  activation_fn: half_glu2
+  glu_rank: 40
+  glu_structure: monarch
+  glu_monarch_heads: 3
+  glu_monarch_b: 16
+  glu_monarch_residual_rank: 0
+  glu_blockdiag_blocks: 2
+  bidirectional: true
+  batchnorm: true
+  bn_momentum: 0.95
+  prenorm: true
+  blocks: 8
+  n_layers: 8
+  d_model: 128
+  dataset: listops-classification
+  C_init: lecun_normal
+  discretization: zoh
+  mode: pool
+  conj_sym: true
+  clip_eigs: false
+  dt_min: 0.001
+  dt_max: 0.1
+  bidir_predictor: false
+  bsz: 1
+  p_dropout: 0.0
+  jax_seed: 0
+  ssm_lr_base: 0.001
+  lr_factor: 3.0
+  weight_decay: 0.04
+  opt_config: BfastandCdecay
+  dt_global: false
+jaxpr_walker_totals:
+  random_seed: 0
+  random_unwrap: 0
+  random_clone: 0
+  random_wrap: 0
+  random_split: 0
+  dot_general: 916457984
+  reshape: 0
+  broadcast_in_dim: 0
+  add: 17918858
+  sub: 4194708
+  rsqrt: 4096
+  mul: 32660352
+  convert_element_type: 0
+  slice: 0
+  squeeze: 0
+  concatenate: 0
+  exp: 2088
+  div: 2056
+  transpose: 0
+  pad: 0
+  real: 0
+  rev: 0
+  reduce_sum: 6553473
+  integer_pow: 6291456
+  tanh: 8388608
+  logistic: 8388608
+  iota: 0
+  lt: 0
+  reduce_max: 9
+  max: 0
+  stop_gradient: 0
+  log: 4
+emitter_totals:
+  gemm_count: 58
+  unique_gemm_shapes: 7
+  total_dot_general_flops: 916457984
+  total_elementwise_flops: 84404316
+  elemwise_unique_signatures: 258
+hard_invariant_check:
+  passed: true
+  message: 'dot_general: walker=916,457,984 emitter=916,457,984 (OK); elementwise:
+    walker=84,404,316 emitter=84,404,316 (OK)'
+  rule: sum(emitter.dot_general) == walker.dot_general AND sum(emitter.elementwise)
+    == sum(walker.elementwise)

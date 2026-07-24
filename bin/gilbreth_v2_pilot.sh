@@ -43,7 +43,9 @@ case "$ARM" in
   dense_r32) GATE="--glu_structure=dense --glu_rank=32" ;;
   monarch)   GATE="--glu_structure=monarch --glu_rank=40 --glu_monarch_heads=3" ;;
   blockdiag) GATE="--glu_structure=blockdiag --glu_rank=40 --glu_blockdiag_blocks=2" ;;
-  *) echo "unknown arm '$ARM' (want dense_r40|dense_r32|monarch|blockdiag)"; exit 1 ;;
+  monarch_16_8)      GATE="--glu_structure=monarch --glu_rank=40 --glu_monarch_heads=3 --glu_monarch_b=16" ;;
+  monarch_16_8_res4) GATE="--glu_structure=monarch --glu_rank=40 --glu_monarch_heads=3 --glu_monarch_b=16 --glu_monarch_residual_rank=4" ;;
+  *) echo "unknown arm '$ARM'"; exit 1 ;;
 esac
 
 CKPT_DIR="./checkpoints/v2pilot_${ARM}_seed${SEED}_${JOB}"

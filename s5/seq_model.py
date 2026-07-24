@@ -34,6 +34,8 @@ class StackedEncoderModel(nn.Module):
     glu_rank: int = 0
     glu_structure: str = "dense"       # v2 gate: dense | monarch | blockdiag
     glu_monarch_heads: int = 3
+    glu_monarch_b: int = 0
+    glu_monarch_residual_rank: int = 0
     glu_blockdiag_blocks: int = 2
     # Chip architecture knob: how many analog SSM layers between DAC/ADC
     # boundary crossings.  1 = ADC+DAC every layer (baseline, 2L crossings
@@ -76,6 +78,8 @@ class StackedEncoderModel(nn.Module):
                 glu_rank=self.glu_rank,
                 glu_structure=self.glu_structure,
                 glu_monarch_heads=self.glu_monarch_heads,
+                glu_monarch_b=self.glu_monarch_b,
+                glu_monarch_residual_rank=self.glu_monarch_residual_rank,
                 glu_blockdiag_blocks=self.glu_blockdiag_blocks,
                 dac_in_enabled=dac_in,
                 adc_out_enabled=adc_out,
@@ -157,6 +161,8 @@ class ClassificationModel(nn.Module):
     glu_rank: int = 0
     glu_structure: str = "dense"       # v2 gate: dense | monarch | blockdiag
     glu_monarch_heads: int = 3
+    glu_monarch_b: int = 0
+    glu_monarch_residual_rank: int = 0
     glu_blockdiag_blocks: int = 2
     crossings_every: int = 1  # chip arch knob -- see StackedEncoderModel
     digital_bits: int = 0     # chip digital precision -- see SequenceLayer
@@ -179,6 +185,8 @@ class ClassificationModel(nn.Module):
                             glu_rank=self.glu_rank,
                             glu_structure=self.glu_structure,
                             glu_monarch_heads=self.glu_monarch_heads,
+                            glu_monarch_b=self.glu_monarch_b,
+                            glu_monarch_residual_rank=self.glu_monarch_residual_rank,
                             glu_blockdiag_blocks=self.glu_blockdiag_blocks,
                             crossings_every=self.crossings_every,
                             digital_bits=self.digital_bits,

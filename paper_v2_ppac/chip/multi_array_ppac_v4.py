@@ -48,6 +48,10 @@ _cfg_ctx = "default"    # set inside config_ppac to route TIER lookup for F1 fix
 ACC = {"config4": 0.5993, "config5": 0.5917,
        "corner1": 0.6089, "corner2": 0.5991, "corner3p": 0.6138}
 
+# Configs whose K=40/N=40 low-rank gate blocks may relax to >=62.5% util (v1 rule).
+# Module-level so a driver can toggle it for a no-relaxation sensitivity sweep.
+RELAX_SET = {"corner2", "corner3p", "v2pilot_dense_r40"}
+
 # Elemwise cost coefficients (units of mac_energy per scalar op) — H3 keeps compute
 # side of the earlier model but adds memory traffic below.
 ELEMWISE_COMPUTE_COEFF = {"trivial": 1.0, "moderate": 3.0, "transcendental": 10.0,
@@ -96,6 +100,7 @@ def role(M, N, K):
 # --- Per-block PPAC with H1-H4 fixes ------------------------------------------
 def block_ppac(g, ay, ax, ert, wc_rep, energy_rep, elem_energy_pJ_share=0):
     M, N, K, dtype = g['M'], g['N'], g['K'], g['dtype']
+    batch = int(g.get('batch', 1))                     # batched GEMM (structured gates)
     ds = g['per_mac_flops'] // 2                       # dtype_scale
     output_scale = 2 if dtype == 'complex_complex' else 1
     r = role(M, N, K)
@@ -156,7 +161,16 @@ def block_ppac(g, ay, ax, ert, wc_rep, energy_rep, elem_energy_pJ_share=0):
         total_cyc = cyc_per_inst * wc_rep
 
     n_pe = ay * ax
-    total_real_macs = M * N * K * ds * energy_rep
+    # Batched GEMM: `batch` independent matmuls with DISTINCT weights run
+    # sequentially on the array. Array size (n_pe) and per-matmul psum residency
+    # (M_chunk x N) are unchanged; all WORK scales x batch. batch==1 for every v1
+    # workload, so this is a no-op there (corner3p cross-check is the regression gate).
+    weight_bytes *= batch
+    act_read_bytes *= batch
+    act_write_bytes *= batch
+    psum_spill_bytes *= batch
+    cyc_per_inst *= batch
+    total_real_macs = M * N * K * ds * energy_rep * batch
     total_cyc = cyc_per_inst * wc_rep
 
     e_mac = total_real_macs * ert['mac']['compute']
@@ -186,8 +200,14 @@ def block_ppac(g, ay, ax, ert, wc_rep, energy_rep, elem_energy_pJ_share=0):
 def choose_array(g, target_cyc, wc_rep, min_util=100.0):
     """Smallest rectangle with util >= min_util whose total cycles fit under target.
     Search over the correct spatial-dim pair based on operand role.
-    min_util=100: strict rule (fails on shapes where no std size divides the dim).
-    min_util<100: relaxed rule (allows partial util e.g. for K=40 low-rank gates).
+    min_util=100: strict rule — requires 100% utilization on the chosen axis.
+    min_util<100: relaxed rule for the util-vs-latency tradeoff. For rank-40
+        low-rank gates, an 8-wide axis reaches 100% util (40=5x8) but requires
+        5 contraction tiles and can exceed the per-config bottleneck target T;
+        the relaxed rule lets the picker choose a wider array (e.g. 64-wide, 1
+        contraction tile, 40/64=62.5% util) that meets T at the ATP-optimal
+        design point. The 62.5% figure is a util-vs-latency policy, not a
+        divisibility limitation.
     """
     M, N, K, dtype = g['M'], g['N'], g['K'], g['dtype']
     ds = g['per_mac_flops'] // 2
@@ -269,16 +289,19 @@ def config_ppac(config, target_cyc):
     blocks = []
     total_pe = 0; total_cyc = 0; total_energy_pJ = 0.0
     total_real_macs = 0
-    # Per-config util-relaxation policy: Corner 3' has K=40 low-rank gate blocks
-    # that CANNOT hit 100% util at any standard std square. Relax to 62.5% for those
-    # blocks specifically. Corner 1 doesn't have K=40 shapes so this doesn't apply.
+    # Per-config util-vs-latency policy: Corner 2 and Corner 3' have K=40 low-rank
+    # gate blocks whose 100%-util mapping IS available (40 = 5x8, an 8-wide axis
+    # divides 40 evenly with 5 contraction tiles) but that mapping does not meet
+    # the bottleneck target T at the ATP-optimal design point. Relaxing the util
+    # floor to 62.5% lets the picker choose a wider array (e.g. 64-wide, 1 tile,
+    # 40/64=62.5% util) that meets T. Corner 1 has no K=40 shape and is unaffected.
     for g in gemms:
         wc_rep = wall_clock_rep((g['M'], g['N'], g['K'], g['dtype']), g['repeat'])
         energy_rep = g['repeat']
-        # Relax util threshold only for low-rank gate shapes where K=40 or N=40
-        # Corner 2 (Pure S5 low-rank) and Corner 3' (Mambino low-rank) both have K=40
-        # blocks that CANNOT hit 100% util at any standard std square.
-        is_low_rank_gate = (g['K'] == 40 or g['N'] == 40) and config in ("corner2", "corner3p")
+        # Relax util threshold only for low-rank gate shapes where K=40 or N=40 in
+        # Corner 2 (Pure S5 low-rank) and Corner 3' (Mambino low-rank). This is a
+        # util-vs-latency policy, not a divisibility limitation.
+        is_low_rank_gate = (g['K'] == 40 or g['N'] == 40) and config in RELAX_SET
         min_util = 62.5 if is_low_rank_gate else 100.0
         _, _, _, ay, ax = choose_array(g, target_cyc, wc_rep, min_util=min_util)
         b = block_ppac(g, ay, ax, ert, wc_rep, energy_rep)

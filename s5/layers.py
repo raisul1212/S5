@@ -59,6 +59,8 @@ class SequenceLayer(nn.Module):
     # only the "gate-on" trigger; the structured op's size is set by the knobs below).
     glu_structure: str = "dense"
     glu_monarch_heads: int = 3     # R independent Monarch(b,m) ops summed; params = R*H*(b+m)
+    glu_monarch_b: int = 0         # 0 = auto (b=largest pow2 <= sqrt(H)); set 16 -> (16,8) at H=128
+    glu_monarch_residual_rank: int = 0  # >0 adds a rank-r' dense residual (iso-param fill / DPLR)
     glu_blockdiag_blocks: int = 2  # B diagonal blocks of (H/B)x(H/B); params = H^2/B + H
     # Per-layer DAC/ADC enable bools set by StackedEncoderModel based on
     # crossings_every.  Passed to SSM at instantiation; SSM uses them to
@@ -119,9 +121,14 @@ class SequenceLayer(nn.Module):
 
     # ---- v2 structured gate (half_glu2) -------------------------------------
     def _monarch_bm(self):
-        """Factor H = b * m with b the largest power of two <= sqrt(H) dividing H.
-        For H=128 -> (b, m) = (8, 16): both clean {8,16} systolic contraction dims."""
+        """Factor H = b * m.  glu_monarch_b>0 forces b (e.g. 16 -> (16,8) at H=128,
+        which halves the inner-einsum batch vs auto (8,16) -> lower latency).  Default
+        auto: b = largest power of two <= sqrt(H) dividing H -> (8,16) at H=128."""
         H = self.d_model
+        if self.glu_monarch_b > 0:
+            b = self.glu_monarch_b
+            assert H % b == 0, f"glu_monarch_b must divide d_model; got b={b} H={H}"
+            return b, H // b
         b = 1
         while (2 * b) * (2 * b) <= H and H % (2 * b) == 0:
             b *= 2
@@ -141,6 +148,12 @@ class SequenceLayer(nn.Module):
                                      _fanin_normal(b, 1.0 / math.sqrt(R)),
                                      (R, m, b, b))
         self.monarch_bias = self.param("monarch_bias", nn.initializers.zeros, (H,))
+        # Optional rank-r' dense residual (DPLR-style) to fill an iso-param budget:
+        # +2*H*r' kernel params (down K=H->r', up K=r'->H); a full-H low-rank correction
+        # on top of the Monarch operator.  r'=4 at H=128 -> +1,024/layer = iso with dense r=40.
+        if self.glu_monarch_residual_rank > 0:
+            self.monarch_res_down = nn.Dense(self.glu_monarch_residual_rank, use_bias=False)
+            self.monarch_res_up = nn.Dense(H, use_bias=False)
 
     def _apply_monarch(self, x):
         b, m = self._monarch_bm()
@@ -151,7 +164,10 @@ class SequenceLayer(nn.Module):
         y1 = jnp.einsum("lbm,rbmn->rlbn", x0, self.monarch_W1)   # (R,L,b,m)
         y1t = jnp.swapaxes(y1, 2, 3)                              # (R,L,m,b) -- permutation
         y2 = jnp.einsum("rlmb,rmbc->rlmc", y1t, self.monarch_W2)  # (R,L,m,b)
-        return y2.reshape(R, L, H).sum(axis=0) + self.monarch_bias
+        out = y2.reshape(R, L, H).sum(axis=0)
+        if self.glu_monarch_residual_rank > 0:
+            out = out + self.monarch_res_up(self.monarch_res_down(x))
+        return out + self.monarch_bias
 
     def _setup_blockdiag(self):
         B = self.glu_blockdiag_blocks

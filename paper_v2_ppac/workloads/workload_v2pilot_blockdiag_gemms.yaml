@@ -1,0 +1,158 @@
+format: timeloop-problem-summary-v1
+unique_gemm_count: 6
+total_gemm_instances: 50
+gemms:
+- M: 2048
+  N: 128
+  K: 20
+  batch: 1
+  dtype: real_real
+  per_mac_flops: 2
+  repeat: 1
+  total_real_macs: 5242880
+  source_ops:
+  - name: gemm_0001
+    src: root
+- M: 8
+  N: 2048
+  K: 128
+  batch: 1
+  dtype: complex_real
+  per_mac_flops: 4
+  repeat: 24
+  total_real_macs: 100663296
+  source_ops:
+  - name: gemm_0002
+    src: root
+  - name: gemm_0004
+    src: root
+  - name: gemm_0005
+    src: root
+  - name: gemm_0008
+    src: root
+  - name: gemm_0010
+    src: root
+  - name: gemm_0011
+    src: root
+  - name: gemm_0014
+    src: root
+  - name: gemm_0016
+    src: root
+  - name: gemm_0017
+    src: root
+  - name: gemm_0020
+    src: root
+  - name: gemm_0022
+    src: root
+  - name: gemm_0023
+    src: root
+  - name: gemm_0026
+    src: root
+  - name: gemm_0028
+    src: root
+  - name: gemm_0029
+    src: root
+  - name: gemm_0032
+    src: root
+  - name: gemm_0034
+    src: root
+  - name: gemm_0035
+    src: root
+  - name: gemm_0038
+    src: root
+  - name: gemm_0040
+    src: root
+  - name: gemm_0041
+    src: root
+  - name: gemm_0044
+    src: root
+  - name: gemm_0046
+    src: root
+  - name: gemm_0047
+    src: root
+- M: 128
+  N: 2048
+  K: 8
+  batch: 1
+  dtype: complex_complex
+  per_mac_flops: 8
+  repeat: 8
+  total_real_macs: 67108864
+  source_ops:
+  - name: gemm_0003
+    src: root
+  - name: gemm_0009
+    src: root
+  - name: gemm_0015
+    src: root
+  - name: gemm_0021
+    src: root
+  - name: gemm_0027
+    src: root
+  - name: gemm_0033
+    src: root
+  - name: gemm_0039
+    src: root
+  - name: gemm_0045
+    src: root
+- M: 128
+  N: 2048
+  K: 16
+  batch: 1
+  dtype: complex_complex
+  per_mac_flops: 8
+  repeat: 8
+  total_real_macs: 134217728
+  source_ops:
+  - name: gemm_0006
+    src: root
+  - name: gemm_0012
+    src: root
+  - name: gemm_0018
+    src: root
+  - name: gemm_0024
+    src: root
+  - name: gemm_0030
+    src: root
+  - name: gemm_0036
+    src: root
+  - name: gemm_0042
+    src: root
+  - name: gemm_0048
+    src: root
+- M: 64
+  N: 2048
+  K: 64
+  batch: 2
+  dtype: real_real
+  per_mac_flops: 2
+  repeat: 8
+  total_real_macs: 134217728
+  source_ops:
+  - name: gemm_0007
+    src: root
+  - name: gemm_0013
+    src: root
+  - name: gemm_0019
+    src: root
+  - name: gemm_0025
+    src: root
+  - name: gemm_0031
+    src: root
+  - name: gemm_0037
+    src: root
+  - name: gemm_0043
+    src: root
+  - name: gemm_0049
+    src: root
+- M: 1
+  N: 10
+  K: 128
+  batch: 1
+  dtype: real_real
+  per_mac_flops: 2
+  repeat: 1
+  total_real_macs: 1280
+  source_ops:
+  - name: gemm_0050
+    src: root

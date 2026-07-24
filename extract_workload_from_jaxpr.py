@@ -491,12 +491,19 @@ def build_forward(args):
     padded = args.dataset in ("imdb-classification",
                               "listops-classification",
                               "aan-classification")
-    create_dataset_fn = Datasets[args.dataset]
-    trainloader, valloader, testloader, aux, n_classes, seq_len, in_dim, tsize = \
-        create_dataset_fn(args.dir_name, seed=args.jax_seed, bsz=args.bsz)
-
-    print(f"[extract] dataset={args.dataset} L={seq_len} in_dim={in_dim} "
-          f"n_classes={n_classes}")
+    # Dims override: skip the (heavy) dataset loader when seq_len/in_dim/n_classes are
+    # given.  Only needed for model-shape construction, so hardcoding known dims yields
+    # a byte-identical JAXPR while avoiding a broken `datasets`/`packaging` import.
+    if args.seq_len > 0 and args.in_dim > 0 and args.n_classes > 0:
+        seq_len, in_dim, n_classes = args.seq_len, args.in_dim, args.n_classes
+        print(f"[extract] dims OVERRIDE (no dataset load): L={seq_len} in_dim={in_dim} "
+              f"n_classes={n_classes}")
+    else:
+        create_dataset_fn = Datasets[args.dataset]
+        trainloader, valloader, testloader, aux, n_classes, seq_len, in_dim, tsize = \
+            create_dataset_fn(args.dir_name, seed=args.jax_seed, bsz=args.bsz)
+        print(f"[extract] dataset={args.dataset} L={seq_len} in_dim={in_dim} "
+              f"n_classes={n_classes}")
 
     ssm_size = args.ssm_size_base
     block_size = int(ssm_size / args.blocks)
@@ -540,6 +547,11 @@ def build_forward(args):
         activation=args.activation_fn, dropout=args.p_dropout,
         mode=args.mode, prenorm=args.prenorm, batchnorm=args.batchnorm,
         bn_momentum=args.bn_momentum, glu_rank=args.glu_rank,
+        glu_structure=args.glu_structure,
+        glu_monarch_heads=args.glu_monarch_heads,
+        glu_monarch_b=args.glu_monarch_b,
+        glu_monarch_residual_rank=args.glu_monarch_residual_rank,
+        glu_blockdiag_blocks=args.glu_blockdiag_blocks,
     )
 
     key = random.PRNGKey(args.jax_seed)
@@ -612,6 +624,15 @@ def main():
     p.add_argument("--ssm_size_base", type=int, required=True)
     p.add_argument("--activation_fn", default="gelu")
     p.add_argument("--glu_rank", type=int, default=0)
+    p.add_argument("--glu_structure", type=str, default="dense")
+    p.add_argument("--glu_monarch_heads", type=int, default=3)
+    p.add_argument("--glu_monarch_b", type=int, default=0)
+    p.add_argument("--glu_monarch_residual_rank", type=int, default=0)
+    p.add_argument("--glu_blockdiag_blocks", type=int, default=2)
+    # >0 for all three skips the dataset loader (avoids datasets/packaging import).
+    p.add_argument("--seq_len", type=int, default=0)
+    p.add_argument("--in_dim", type=int, default=0)
+    p.add_argument("--n_classes", type=int, default=0)
     p.add_argument("--bidirectional", type=str2bool, default=True)
     p.add_argument("--batchnorm", type=str2bool, default=True)
     p.add_argument("--bn_momentum", type=float, default=0.95)
