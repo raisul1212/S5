@@ -22,6 +22,9 @@ ARMS = {
     "v2pilot_dense_r32": dict(tier="384KB", ntraj=3, acc=0.6035),
     "v2pilot_monarch":   dict(tier="384KB", ntraj=3, acc=0.6092),
     "v2pilot_blockdiag": dict(tier="384KB", ntraj=3, acc=0.6072),
+    # iso-param round (2026-07-24)
+    "v2pilot_monarch_16_8":      dict(tier="384KB", ntraj=3, acc=0.6093),
+    "v2pilot_monarch_16_8_res4": dict(tier="384KB", ntraj=3, acc=0.6137),
 }
 for name, d in ARMS.items():
     m.CONFIG_TIER[name] = d["tier"]
@@ -30,7 +33,8 @@ for name, d in ARMS.items():
 
 # corner3p (v1 Corner 3') runs from its existing v1 workload as the cross-check.
 ORDER = ["corner3p", "v2pilot_dense_r40", "v2pilot_dense_r32",
-         "v2pilot_monarch", "v2pilot_blockdiag"]
+         "v2pilot_monarch", "v2pilot_blockdiag",
+         "v2pilot_monarch_16_8", "v2pilot_monarch_16_8_res4"]
 
 best_by = {}
 for name in ORDER:
