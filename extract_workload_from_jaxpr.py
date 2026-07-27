@@ -470,6 +470,132 @@ def emit_from_jaxpr(jaxpr, emitter: WorkloadEmitter,
 
 
 # ============================================================
+# Op-DAG extractor (increment 2) — producer->consumer graph at GEMM +
+# elementwise-SEGMENT granularity for the v5 pipeline scheduler + fusion.
+# Same JAXPR walk as the emitter (scan/pjit recursion), plus var-dependency
+# tracking. Predictor vs main-scan GEMMs are distinguished by source_op path.
+# ============================================================
+def _vkey(v):
+    return id(v)   # unique per live Var object; we hold refs through the walk
+
+
+def _bytes_of(v):
+    try:
+        n = 1
+        for s in v.aval.shape:
+            n *= int(s)
+        return n * (2 if _is_complex_dtype(v.aval.dtype) else 1)   # INT8: 1 byte/real
+    except Exception:
+        return 0
+
+
+class DagBuilder:
+    def __init__(self):
+        self.nodes = []          # gemm: {id,kind,M,N,K,batch,dtype,repeat,source}
+        self.edges = {}          # (src,dst) -> bytes (max seen)
+
+    def new_node(self, rec):
+        rec["id"] = len(self.nodes)
+        self.nodes.append(rec)
+        return rec["id"]
+
+    def add_edge(self, src, dst, b):
+        if src is None or src == dst:
+            return
+        self.edges[(src, dst)] = max(self.edges.get((src, dst), 0), int(b))
+
+
+def build_dag(jaxpr, dag: DagBuilder, env: dict, multiplier: int, source_stack):
+    """env: vkey -> producer node id for this jaxpr's free (in)vars.
+    Returns vkey -> producer node id for this jaxpr's OUTVARS (for the caller)."""
+    prod = dict(env)
+    pending = []   # consecutive elementwise eqns -> one segment node
+
+    def flush():
+        if not pending:
+            return
+        inside = {_vkey(v) for e in pending for v in e.outvars}
+        seg_in, seg_out, nscalar = [], [], 0
+        for e in pending:
+            for v in e.invars:
+                if hasattr(v, "aval") and _vkey(v) not in inside:
+                    seg_in.append(v)
+            seg_out.extend(e.outvars)
+            if e.outvars and hasattr(e.outvars[0], "aval"):
+                n = 1
+                for s in e.outvars[0].aval.shape:
+                    n *= int(s)
+                nscalar += n
+        nid = dag.new_node(dict(kind="elem", n_scalar_ops=int(nscalar * multiplier),
+                                source="/".join(source_stack) or "root"))
+        for v in seg_in:
+            dag.add_edge(prod.get(_vkey(v)), nid, _bytes_of(v))
+        for v in seg_out:
+            prod[_vkey(v)] = nid
+        pending.clear()
+
+    for eqn in jaxpr.eqns:
+        prim = eqn.primitive.name
+        if prim in ("scan", "while", "pjit", "jit", "call", "xla_call",
+                    "custom_jvp_call", "custom_vjp_call", "checkpoint"):
+            flush()
+            if prim == "scan":
+                inner = _get_inner_jaxpr(eqn.params, "jaxpr")
+                L = int(eqn.params.get("length", 1)); mm = multiplier * L; tag = f"scan[L={L}]"
+            elif prim == "while":
+                inner = _get_inner_jaxpr(eqn.params, "body_jaxpr"); mm = multiplier; tag = "while"
+            else:
+                inner = (_get_inner_jaxpr(eqn.params, "jaxpr")
+                         or _get_inner_jaxpr(eqn.params, "call_jaxpr"))
+                mm = multiplier; tag = str(eqn.params.get("name") or prim)
+            if inner is not None:
+                inner_env = {_vkey(iv): prod.get(_vkey(eqn.invars[i]))
+                             for i, iv in enumerate(inner.invars) if i < len(eqn.invars)}
+                out_prod = build_dag(inner, dag, inner_env, mm, source_stack + [tag])
+                for i, ov in enumerate(eqn.outvars):
+                    if i < len(inner.outvars):
+                        prod[_vkey(ov)] = out_prod.get(_vkey(inner.outvars[i]))
+            continue
+
+        if prim == "dot_general":
+            flush()
+            (lc, rc), (lb, rb) = eqn.params["dimension_numbers"]
+            ls, rs = eqn.invars[0].aval.shape, eqn.invars[1].aval.shape
+            batch = _prod([ls[i] for i in lb])
+            M = _prod([ls[i] for i in range(len(ls)) if i not in lc and i not in lb])
+            N = _prod([rs[i] for i in range(len(rs)) if i not in rc and i not in rb])
+            K = _prod([ls[i] for i in lc])
+            lcx = _is_complex_dtype(eqn.invars[0].aval.dtype)
+            rcx = _is_complex_dtype(eqn.invars[1].aval.dtype)
+            dtype = ("complex_complex" if (lcx and rcx)
+                     else "complex_real" if (lcx ^ rcx) else "real_real")
+            nid = dag.new_node(dict(kind="gemm", M=int(M), N=int(N), K=int(K),
+                                    batch=int(batch), dtype=dtype, repeat=int(multiplier),
+                                    source="/".join(source_stack) or "root"))
+            for v in eqn.invars:
+                if hasattr(v, "aval"):
+                    dag.add_edge(prod.get(_vkey(v)), nid, _bytes_of(v))
+            for v in eqn.outvars:
+                prod[_vkey(v)] = nid
+        else:
+            pending.append(eqn)
+    flush()
+    return {_vkey(v): prod.get(_vkey(v)) for v in jaxpr.outvars}
+
+
+def emit_dag_yaml(dag: DagBuilder, path, config):
+    payload = dict(format="op-dag-v1", config=config,
+                   node_count=len(dag.nodes),
+                   gemm_count=sum(1 for n in dag.nodes if n["kind"] == "gemm"),
+                   edge_count=len(dag.edges),
+                   nodes=dag.nodes,
+                   edges=[dict(src=s, dst=d, bytes=int(b))
+                          for (s, d), b in sorted(dag.edges.items())])
+    with open(path, "w") as f:
+        yaml.safe_dump(payload, f, sort_keys=False, default_flow_style=False)
+
+
+# ============================================================
 # Model loading (parallel to flop_counter_jaxpr.py's main; inlined so
 # both scripts stay stable independently of each other)
 # ============================================================
@@ -618,6 +744,11 @@ def main():
                    help="Short tag for output files (e.g. corner1, corner3p, config4)")
     p.add_argument("--out_dir", default="./paper_v2_ppac/workloads/",
                    help="Where to emit workload_<cfg>_*.{csv,yaml}")
+    p.add_argument("--emit_dag", action="store_true",
+                   help="Also emit workload_<cfg>_dag.yaml (op-DAG: producer->consumer "
+                        "edges at GEMM + elementwise-segment granularity, for the v5 "
+                        "pipeline scheduler). Predictor vs main-scan GEMMs distinguished "
+                        "by source_op path.")
     p.add_argument("--dir_name", type=str, default="./cache_dir")
     # Model args (mirror flop_counter_jaxpr.py / run_train.py)
     p.add_argument("--use_mambino_ssm", type=str2bool, default=False)
@@ -707,6 +838,18 @@ def main():
     emitter.emit_scalesim_csv(f"{stem}_gemms.csv")
     emitter.emit_timeloop_yaml(f"{stem}_gemms.yaml")
     emitter.emit_elemwise_yaml(f"{stem}_elemwise.yaml")
+    if args.emit_dag:
+        print(f"[extract] building op-DAG...", flush=True)
+        dag = DagBuilder()
+        build_dag(jaxpr, dag, env={}, multiplier=1, source_stack=[])
+        emit_dag_yaml(dag, f"{stem}_dag.yaml", args.config_name)
+        # Cross-check: one DAG gemm node per emitter GEMM record (same dot_general set).
+        dag_gemms = sum(1 for n in dag.nodes if n["kind"] == "gemm")
+        dag_ok = (dag_gemms == len(emitter.gemms))
+        print(f"[extract] op-DAG: {len(dag.nodes)} nodes ({dag_gemms} gemm), "
+              f"{len(dag.edges)} edges; gemm-count vs emitter "
+              f"({dag_gemms} vs {len(emitter.gemms)}): {'OK' if dag_ok else 'MISMATCH'}",
+              flush=True)
     emitter.emit_manifest(f"{stem}_manifest.yaml",
                           walker_totals=walker_totals,
                           checkpoint_path=args.ckpt_prefix,
