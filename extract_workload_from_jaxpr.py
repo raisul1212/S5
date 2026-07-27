@@ -473,7 +473,11 @@ def emit_from_jaxpr(jaxpr, emitter: WorkloadEmitter,
 # Op-DAG extractor (increment 2) — producer->consumer graph at GEMM +
 # elementwise-SEGMENT granularity for the v5 pipeline scheduler + fusion.
 # Same JAXPR walk as the emitter (scan/pjit recursion), plus var-dependency
-# tracking. Predictor vs main-scan GEMMs are distinguished by source_op path.
+# tracking. NOTE: the traced JAXPR is flattened -> every node's source is 'root';
+# the predictor is NOT separable by source label. It is separable by GRAPH STRUCTURE
+# (its subgraph is anchored by the K=P predictor C-projection); the scheduler uses
+# shape + connectivity, not source_op. Elem nodes carry class_ops/prims so the
+# scheduler can find the bidir-scan barrier ('rev') and the gate/GLU chain ('logistic').
 # ============================================================
 def _vkey(v):
     return id(v)   # unique per live Var object; we hold refs through the walk
@@ -492,17 +496,20 @@ def _bytes_of(v):
 class DagBuilder:
     def __init__(self):
         self.nodes = []          # gemm: {id,kind,M,N,K,batch,dtype,repeat,source}
-        self.edges = {}          # (src,dst) -> bytes (max seen)
+        self.edges = {}          # (src,dst) -> {vkey: bytes}  (dedupe DISTINCT tensors)
 
     def new_node(self, rec):
         rec["id"] = len(self.nodes)
         self.nodes.append(rec)
         return rec["id"]
 
-    def add_edge(self, src, dst, b):
+    def add_edge(self, src, dst, vkey, b):
+        # Sum bytes over DISTINCT tensors that flow src->dst (dedupe by vkey so the
+        # same var consumed twice isn't double-counted); do NOT take max (undercounts
+        # multi-tensor edges) -- Fable fix.
         if src is None or src == dst:
             return
-        self.edges[(src, dst)] = max(self.edges.get((src, dst), 0), int(b))
+        self.edges.setdefault((src, dst), {})[vkey] = int(b)
 
 
 def build_dag(jaxpr, dag: DagBuilder, env: dict, multiplier: int, source_stack):
@@ -516,20 +523,34 @@ def build_dag(jaxpr, dag: DagBuilder, env: dict, multiplier: int, source_stack):
             return
         inside = {_vkey(v) for e in pending for v in e.outvars}
         seg_in, seg_out, nscalar = [], [], 0
+        # Per-ELEMWISE_CLASS scalar-op counts + primitive histogram (Fable fix): lets the
+        # v5 scheduler locate structure inside a merged segment -- e.g. a 'rev'/'reverse'
+        # marks the bidirectional-scan barrier; 'logistic'/'mul' marks the gate/GLU chain;
+        # transcendental vs structural counts cost LUT work vs free data movement.
+        class_ops, prims = {}, {}
         for e in pending:
+            p = e.primitive.name
+            prims[p] = prims.get(p, 0) + 1
+            cls = ELEMWISE_CLASS.get(p, "unknown")
+            n = 1
+            if e.outvars and hasattr(e.outvars[0], "aval"):
+                for s in e.outvars[0].aval.shape:
+                    n *= int(s)
+            else:
+                n = 0
+            sc = n * multiplier
+            class_ops[cls] = class_ops.get(cls, 0) + sc
+            nscalar += sc
             for v in e.invars:
                 if hasattr(v, "aval") and _vkey(v) not in inside:
                     seg_in.append(v)
             seg_out.extend(e.outvars)
-            if e.outvars and hasattr(e.outvars[0], "aval"):
-                n = 1
-                for s in e.outvars[0].aval.shape:
-                    n *= int(s)
-                nscalar += n
-        nid = dag.new_node(dict(kind="elem", n_scalar_ops=int(nscalar * multiplier),
+        nid = dag.new_node(dict(kind="elem", n_scalar_ops=int(nscalar),
+                                class_ops={k: int(v) for k, v in class_ops.items()},
+                                prims=prims,
                                 source="/".join(source_stack) or "root"))
         for v in seg_in:
-            dag.add_edge(prod.get(_vkey(v)), nid, _bytes_of(v))
+            dag.add_edge(prod.get(_vkey(v)), nid, _vkey(v), _bytes_of(v))
         for v in seg_out:
             prod[_vkey(v)] = nid
         pending.clear()
@@ -574,7 +595,7 @@ def build_dag(jaxpr, dag: DagBuilder, env: dict, multiplier: int, source_stack):
                                     source="/".join(source_stack) or "root"))
             for v in eqn.invars:
                 if hasattr(v, "aval"):
-                    dag.add_edge(prod.get(_vkey(v)), nid, _bytes_of(v))
+                    dag.add_edge(prod.get(_vkey(v)), nid, _vkey(v), _bytes_of(v))
             for v in eqn.outvars:
                 prod[_vkey(v)] = nid
         else:
@@ -589,8 +610,8 @@ def emit_dag_yaml(dag: DagBuilder, path, config):
                    gemm_count=sum(1 for n in dag.nodes if n["kind"] == "gemm"),
                    edge_count=len(dag.edges),
                    nodes=dag.nodes,
-                   edges=[dict(src=s, dst=d, bytes=int(b))
-                          for (s, d), b in sorted(dag.edges.items())])
+                   edges=[dict(src=s, dst=d, bytes=int(sum(vb.values())))
+                          for (s, d), vb in sorted(dag.edges.items())])
     with open(path, "w") as f:
         yaml.safe_dump(payload, f, sort_keys=False, default_flow_style=False)
 
@@ -746,9 +767,11 @@ def main():
                    help="Where to emit workload_<cfg>_*.{csv,yaml}")
     p.add_argument("--emit_dag", action="store_true",
                    help="Also emit workload_<cfg>_dag.yaml (op-DAG: producer->consumer "
-                        "edges at GEMM + elementwise-segment granularity, for the v5 "
-                        "pipeline scheduler). Predictor vs main-scan GEMMs distinguished "
-                        "by source_op path.")
+                        "edges (bytes summed over distinct tensors) at GEMM + "
+                        "elementwise-segment granularity, elem segments annotated with "
+                        "per-class op counts + primitive histogram, for the v5 pipeline "
+                        "scheduler. Predictor separated by graph structure, not source_op "
+                        "(flattened JAXPR -> all 'root').")
     p.add_argument("--dir_name", type=str, default="./cache_dir")
     # Model args (mirror flop_counter_jaxpr.py / run_train.py)
     p.add_argument("--use_mambino_ssm", type=str2bool, default=False)
