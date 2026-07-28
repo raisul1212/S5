@@ -1,0 +1,114 @@
+"""merged_frontier.py — the FAIR (latency, peak-power) comparison Fable demanded.
+
+The scheduler's "at matched n_chunks Mambino keeps a peak lead" is an artifact: it holds
+each config at its OWN per-config ATP-optimal design point (corner1 @ target_cyc 32768,
+corner3p @ 262144 -- an 8x speed-grade gap) and then matches only the NEW knob n_chunks,
+which hides corner3p's 1.5-3.2x latency deficit. The fair test gives BOTH configs BOTH
+knobs -- design point (target_cyc) AND pipelining (n_chunks) -- and asks who is on the
+JOINT (latency, peak) Pareto. This script builds that and reports iso-latency + iso-budget
+cuts, plus the accuracy dimension (Mambino delivers higher acc, so raw latency/peak is only
+half the story).
+"""
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import multi_array_ppac_v4 as m4
+import multi_array_ppac_v5 as m5
+import ppac_v5_scheduler as sch
+
+FREQ_HZ = m4.FREQ_HZ
+# dense enough to straddle each config's latency-optimal n* (corner1~5, corner3p~11)
+NS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32]
+
+
+def _pipe(blocks, n):
+    """REALISTIC (fill/drain) makespan -- shares the scheduler's model so the frontier and
+    the per-config validation cannot diverge."""
+    P = [(b["energy_pJ"] + m4.NOC_ENERGY_FRACTION_OF_MAC * b["e_mac"]) / b["cycles"] for b in blocks]
+    lat = sch._makespan_cyc(blocks, n, fill_drain=True) / FREQ_HZ * 1e3
+    peak = sum(sorted(P, reverse=True)[:min(n, len(P))])
+    return lat, peak
+
+
+def all_points(config):
+    """Every (target_cyc x n_chunks) design for a config -> (lat, peak, area, acc)."""
+    pts = []
+    for t in m5.TARGETS:
+        r = m5.analyze(config, t, honest=True)
+        for n in NS:
+            lat, peak = _pipe(r["blocks"], n)
+            pts.append(dict(config=config, target=t, n=n, lat=lat, peak=peak,
+                            area=r["total_area_mm2"], acc=r["acc"], energy=r["energy_full_uJ"]))
+    return pts
+
+
+def dominated(p, others, eps=1e-9):
+    """p is (Pareto-)dominated if some q is <= on BOTH latency and peak and < on one."""
+    for q in others:
+        if q is p:
+            continue
+        if q["lat"] <= p["lat"] + eps and q["peak"] <= p["peak"] + eps \
+                and (q["lat"] < p["lat"] - eps or q["peak"] < p["peak"] - eps):
+            return True
+    return False
+
+
+def main():
+    c1 = all_points("corner1")     # Pure S5
+    c3 = all_points("corner3p")    # Mambino
+    allp = c1 + c3
+
+    print("=" * 80)
+    print("FAIR MERGED FRONTIER — both configs, both knobs (target_cyc x n_chunks)")
+    print("Pure S5 acc=%.4f | Mambino acc=%.4f (+%.2f pp)"
+          % (m4.ACC["corner1"], m4.ACC["corner3p"], 100 * (m4.ACC["corner3p"] - m4.ACC["corner1"])))
+    print("=" * 80)
+
+    # --- Joint (latency, peak) Pareto: who is non-dominated? ---
+    front = [p for p in allp if not dominated(p, allp)]
+    n_c1 = sum(1 for p in front if p["config"] == "corner1")
+    n_c3 = sum(1 for p in front if p["config"] == "corner3p")
+    print(f"\n[JOINT PARETO on (latency,peak)] {len(front)} non-dominated points: "
+          f"{n_c1} Pure S5, {n_c3} Mambino")
+    for p in sorted(front, key=lambda x: x["lat"]):
+        print(f"    {p['config']:<9} t={p['target']:>9,} n={p['n']:>2}  "
+              f"lat {p['lat']:.3f} ms  peak {p['peak']:>5.0f} mW  area {p['area']:.1f}  acc {p['acc']:.4f}")
+
+    # --- Does Mambino UNIQUELY own a low-peak region Pure S5 can't reach? ---
+    c1_min_peak = min(p["peak"] for p in c1)
+    c3_min_peak = min(p["peak"] for p in c3)
+    print(f"\n[MIN reachable peak]  Pure S5 {c1_min_peak:.0f} mW   Mambino {c3_min_peak:.0f} mW")
+    if c3_min_peak < c1_min_peak:
+        print(f"    -> Mambino reaches {c1_min_peak - c3_min_peak:.0f} mW LOWER peak than Pure S5 can "
+              f"(at lat {min(p['lat'] for p in c3 if p['peak']==c3_min_peak):.3f} ms) — a real unique region.")
+    else:
+        print("    -> Pure S5 reaches peak as low or lower than Mambino — no unique low-peak region.")
+
+    # --- ISO-LATENCY cut (Fable probe b): at each Pure S5 latency, min peak of each config ---
+    print("\n[ISO-LATENCY] at a target latency, the MIN peak each config can achieve (any t,n):")
+    print(f"    {'lat<=ms':>8}{'S5 peak':>9}{'Mamb peak':>11}{'winner':>10}{'  S5 acc/pk   Mamb acc/pk':>26}")
+    for L in [0.15, 0.20, 0.25, 0.30, 0.40, 0.60]:
+        s5 = [p for p in c1 if p["lat"] <= L + 1e-9]
+        mb = [p for p in c3 if p["lat"] <= L + 1e-9]
+        s5p = min((p["peak"] for p in s5), default=float("inf"))
+        mbp = min((p["peak"] for p in mb), default=float("inf"))
+        win = "Pure S5" if s5p < mbp else ("Mambino" if mbp < s5p else "tie")
+        s5a = m4.ACC["corner1"] / s5p * 1e3 if s5p < float("inf") else 0
+        mba = m4.ACC["corner3p"] / mbp * 1e3 if mbp < float("inf") else 0
+        sp = f"{s5p:.0f}" if s5p < float("inf") else "--"
+        mp = f"{mbp:.0f}" if mbp < float("inf") else "--"
+        print(f"    {L:>8.2f}{sp:>9}{mp:>11}{win:>10}    {s5a:>8.3f}     {mba:>8.3f}")
+
+    # --- ISO-BUDGET cut (Fable probe a): corner1 at corner3p's ATP budget (262144) ---
+    print("\n[ISO-BUDGET] corner1 given corner3p's design budget (target_cyc=262144):")
+    r1 = m5.analyze("corner1", 262144, honest=True)
+    r3 = m5.analyze("corner3p", 262144, honest=True)
+    for n in [1, 2, 4]:
+        l1, p1 = _pipe(r1["blocks"], n)
+        l3, p3 = _pipe(r3["blocks"], n)
+        print(f"    n={n}: Pure S5 ({l1:.3f} ms, {p1:.0f} mW)  vs  Mambino ({l3:.3f} ms, {p3:.0f} mW)")
+
+
+if __name__ == "__main__":
+    main()
