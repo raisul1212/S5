@@ -160,14 +160,19 @@ DAG_FILE = {"corner1": "workload_corner1_dag_dag.yaml", "corner3p": "workload_co
 
 
 @functools.lru_cache(maxsize=None)
+def _analyze(config, target=None, honest=True):
+    """Cached design-point result. target=None -> ATP-optimal; else that target_cyc. Caching is
+    essential: barrier_point + _shape_timing both need it, and config_ppac re-reads YAMLs+ERT."""
+    return _atp(config, honest=honest) if target is None else m5.analyze(config, target, honest=honest)
+
+
+@functools.lru_cache(maxsize=None)
 def _shape_timing(config, honest=True, target=None):
     """shape -> (per_instance_cycles, fill_drain_frac, power_mW). target=None -> the ATP-optimal
     design; an explicit target_cyc -> that design point (needed for the FAIR both-knob barrier
     frontier). per_instance = block_cycles / rep_wc (rep_wc == #DAG nodes of that shape)."""
-    blocks = (_atp(config, honest=honest)["blocks"] if target is None
-              else m5.analyze(config, target, honest=honest)["blocks"])
     return {b["shape"]: (b["cycles"] / b["rep_wc"], _block_filldrain_frac(b), _stage_power_mW(b))
-            for b in blocks}
+            for b in _analyze(config, target, honest)["blocks"]}
 
 
 @functools.lru_cache(maxsize=None)
@@ -189,6 +194,28 @@ def _barrier_segments(config):
     return tuple(segs)
 
 
+@functools.lru_cache(maxsize=None)
+def _predictor_collapse(config, honest=True, target=None):
+    """The SSM shape whose raw-v4 wall_clock_rep collapses (the predictor-overlap shape), with
+    the CONCURRENT design's (factor, 2nd-array area cost mm2, 2nd-array power mW) AT THIS DESIGN
+    POINT. Under the concurrent predictor, `factor`*count of that shape's instances serialize on
+    the main array; the rest overlap on a dedicated 2nd array (+area, +peak). None for Pure S5.
+    target must be threaded (Fable 2d): the SSM array size shrinks at large target_cyc, so the
+    2nd-array cost is design-point-dependent -- freezing it at the ATP point over-charges
+    concurrent at t>=524288. Anchor: corner3p ATP -> 8x2048x128_complex_real, 16/24, +1.84 mm2
+    (19.76->21.60, memo), 377 mW."""
+    for b in _analyze(config, target, honest)["blocks"]:
+        parts = b["shape"].split("_")
+        mnk = parts[0].split("x")
+        tup = (int(mnk[0]), int(mnk[1]), int(mnk[2]), "_".join(parts[1:]))
+        raw = m4.wall_clock_rep(tup, b["rep_jaxpr"])
+        if raw != b["rep_jaxpr"]:
+            extra = b["silicon_pe"] * m4.PE_AREA_UM2 / 1e6 * (
+                1 + m4.NOC_AREA_FRACTION_OF_PE + m4.CONTROL_AREA_FRACTION_OF_PE)
+            return (b["shape"], raw / b["rep_jaxpr"], extra, _stage_power_mW(b))
+    return None
+
+
 def _seg_stage_makespan(stages, n, fill_drain):
     """One barrier-segment's chunk-pipeline makespan. stages = [(duration_cyc, fd_frac), ...]."""
     if not stages:
@@ -200,26 +227,39 @@ def _seg_stage_makespan(stages, n, fill_drain):
     return sum(t) + (n - 1) * max(t)
 
 
-def barrier_point(config, n_chunks, honest=True, fill_drain=True, target=None):
+def barrier_point(config, n_chunks, honest=True, fill_drain=True, target=None, concurrent_predictor=False):
     """(latency, peak) WITH per-layer bidir barriers enforced. Latency = sum over barrier-
     segments of each segment's internal chunk-pipeline makespan (no cross-segment streaming).
     Peak = max over segments (barriers serialize the segments -> one active at a time) of the
     segment's co-active power. Silicon/area/energy identical to pipeline_point (frozen).
-    target=None uses the ATP-optimal design; pass a target_cyc for the both-knob frontier."""
+    target=None uses the ATP-optimal design; pass a target_cyc for the both-knob frontier.
+    concurrent_predictor=True: the predictor SSM runs on a dedicated 2nd array (factor*count of
+    the SSM shape serialize on the main; the rest overlap) -> shorter SSM stage, +area, +peak."""
     if config not in DAG_FILE:
         raise ValueError(f"no op-DAG for {config}; barrier model needs an extracted DAG")
-    r = _atp(config, honest=honest) if target is None else m5.analyze(config, target, honest=honest)
+    r = _analyze(config, target, honest)
     sh = _shape_timing(config, honest, target)
+    pc = _predictor_collapse(config, honest, target) if concurrent_predictor else None
     n = max(1, int(n_chunks))
     total_cyc, peak = 0.0, 0.0
     for seg in _barrier_segments(config):
-        stages = [(sh[s][0] * c, sh[s][1]) for s, c in seg]        # same-shape serialize (count*per_inst)
+        stages, powers = [], []
+        for s, c in seg:
+            eff, is_ssm = c, bool(pc) and s == pc[0]
+            if is_ssm:
+                eff = c * pc[1]            # predictor overlap: factor*count serialize on main array
+                                            # (eff is integer when count%3==0, as in these DAGs)
+            stages.append((sh[s][0] * eff, sh[s][1]))
+            powers.append((sh[s][2], is_ssm))
         total_cyc += _seg_stage_makespan(stages, n, fill_drain)
-        powers = sorted((sh[s][2] for s, _c in seg), reverse=True)  # distinct arrays co-active
-        peak = max(peak, sum(powers[:min(n, len(powers))]))
+        co = sorted(powers, key=lambda x: -x[0])[:min(n, len(powers))]      # co-active stages
+        extra = pc[3] if (pc and any(i for _p, i in co)) else 0.0          # 2nd array draws power
+        peak = max(peak, sum(p for p, _i in co) + extra)                    # only when SSM co-active
     latency_ms = total_cyc / FREQ_HZ * 1e3
+    area = r["total_area_mm2"] + (pc[2] if pc else 0.0)
     return dict(config=config, n_chunks=n, latency_ms=latency_ms, peak_mW=peak,
-                area_mm2=r["total_area_mm2"], energy_uJ=r["energy_full_uJ"], acc=r["acc"],
+                area_mm2=area, energy_uJ=r["energy_full_uJ"], acc=r["acc"],
+                predictor="concurrent" if concurrent_predictor else "serial",
                 avg_power_mW=r["energy_full_uJ"] / latency_ms if latency_ms else 0.0)
 
 

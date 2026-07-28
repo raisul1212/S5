@@ -31,22 +31,61 @@ def _pipe(blocks, n):
     return lat, peak
 
 
-def all_points(config, barrier=False):
-    """Every (target_cyc x n_chunks) design for a config -> (lat, peak, area, acc). barrier=True
-    enforces the per-layer bidir-scan barriers (op-DAG configs only) -- the load-bearing fair
-    both-knob barrier test."""
+def all_points(config, barrier=False, concurrent=False):
+    """Every (target_cyc x n_chunks) design -> multi-domain vector (lat, peak, energy, area, acc).
+    barrier=True enforces per-layer bidir-scan barriers (op-DAG configs). concurrent=True runs the
+    predictor on a dedicated 2nd array (+area, +peak, shorter SSM). NB energy is the frozen v4
+    value (dynamic energy is schedule-invariant; the concurrent 2nd-array leak is not added --
+    small, noted in the report)."""
     pts = []
     for t in m5.TARGETS:
         r = m5.analyze(config, t, honest=True)
+        area = r["total_area_mm2"]
         for n in NS:
             if barrier and config in sch.DAG_FILE:
-                bp = sch.barrier_point(config, n, target=t)
-                lat, peak = bp["latency_ms"], bp["peak_mW"]
+                bp = sch.barrier_point(config, n, target=t, concurrent_predictor=concurrent)
+                lat, peak, area = bp["latency_ms"], bp["peak_mW"], bp["area_mm2"]
             else:
                 lat, peak = _pipe(r["blocks"], n)
             pts.append(dict(config=config, target=t, n=n, lat=lat, peak=peak,
-                            area=r["total_area_mm2"], acc=r["acc"], energy=r["energy_full_uJ"]))
+                            area=area, acc=r["acc"], energy=r["energy_full_uJ"]))
     return pts
+
+
+def multi_domain_predictor():
+    """The multi-domain (latency / peak / energy / area / acc) view of Pure S5 vs Mambino
+    serial vs Mambino concurrent-predictor, under barriers. Shows that pushing Mambino toward
+    Pure S5's latency INVERTS its area+peak advantages -- the domains conflict."""
+    modes = [("Pure S5", "corner1", False), ("Mamb serial", "corner3p", False),
+             ("Mamb concur", "corner3p", True)]
+    data = {name: all_points(cfg, barrier=True, concurrent=conc) for name, cfg, conc in modes}
+    print("\n" + "=" * 84)
+    print("MULTI-DOMAIN predictor comparison (barrier, both-knob) — the domains CONFLICT")
+    print("=" * 84)
+    print(f"    {'mode':<13}{'lat ms':>8}{'peak mW':>9}{'energy uJ':>11}{'area mm2':>10}{'acc':>8}")
+    print("  fastest-latency design of each mode:")
+    for name in data:
+        p = min(data[name], key=lambda x: x["lat"])
+        print(f"    {name:<13}{p['lat']:>8.3f}{p['peak']:>9.0f}{p['energy']:>11.0f}{p['area']:>10.1f}{p['acc']:>8.4f}")
+    print("  lowest-peak design of each mode (the relaxed-latency corner):")
+    for name in data:
+        p = min(data[name], key=lambda x: x["peak"])
+        print(f"    {name:<13}{p['lat']:>8.3f}{p['peak']:>9.0f}{p['energy']:>11.0f}{p['area']:>10.1f}{p['acc']:>8.4f}")
+    # 3-way iso-latency min-peak
+    print("\n  iso-latency min-peak (mW) -- best Mambino predictor vs Pure S5:")
+    print(f"    {'lat<=ms':>8}{'PureS5':>9}{'Mamb-ser':>10}{'Mamb-conc':>11}{'winner':>9}")
+    for L in [0.40, 0.45, 0.50, 0.55, 0.60, 0.70]:
+        s = _min_peak_leq(data["Pure S5"], L)
+        ms = _min_peak_leq(data["Mamb serial"], L)
+        mc = _min_peak_leq(data["Mamb concur"], L)
+        best = min([x for x in (ms, mc) if x is not None], default=None)
+        win = "--" if (s is None or best is None) else ("S5" if s < best - 1e-6 else "Mamb")
+
+        def f(x):
+            return "--" if x is None else f"{x:.0f}"
+        print(f"    {L:>8.2f}{f(s):>9}{f(ms):>10}{f(mc):>11}{win:>9}")
+    print("  -> at the low-latency extreme Mambino's area+peak advantages INVERT (bigger+hotter"
+          " than Pure S5); its Pareto home is the relaxed-latency, low-peak corner.")
 
 
 def _min_peak_leq(pts, L):
@@ -146,3 +185,4 @@ def main():
 if __name__ == "__main__":
     main()
     iso_latency_both_knobs()
+    multi_domain_predictor()
