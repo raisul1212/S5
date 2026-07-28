@@ -31,16 +31,49 @@ def _pipe(blocks, n):
     return lat, peak
 
 
-def all_points(config):
-    """Every (target_cyc x n_chunks) design for a config -> (lat, peak, area, acc)."""
+def all_points(config, barrier=False):
+    """Every (target_cyc x n_chunks) design for a config -> (lat, peak, area, acc). barrier=True
+    enforces the per-layer bidir-scan barriers (op-DAG configs only) -- the load-bearing fair
+    both-knob barrier test."""
     pts = []
     for t in m5.TARGETS:
         r = m5.analyze(config, t, honest=True)
         for n in NS:
-            lat, peak = _pipe(r["blocks"], n)
+            if barrier and config in sch.DAG_FILE:
+                bp = sch.barrier_point(config, n, target=t)
+                lat, peak = bp["latency_ms"], bp["peak_mW"]
+            else:
+                lat, peak = _pipe(r["blocks"], n)
             pts.append(dict(config=config, target=t, n=n, lat=lat, peak=peak,
                             area=r["total_area_mm2"], acc=r["acc"], energy=r["energy_full_uJ"]))
     return pts
+
+
+def _min_peak_leq(pts, L):
+    ps = [p["peak"] for p in pts if p["lat"] <= L + 1e-9]
+    return min(ps) if ps else None
+
+
+def iso_latency_both_knobs():
+    """The FAIR (both-knob) iso-latency peak comparison, no-barrier vs WITH-barrier. This is the
+    test Fable flagged as missing -- the barrier crossover MUST be read here, not off the
+    single-knob ATP frontier (which pins Pure S5 at its 8x-faster design and is unfair)."""
+    c1n, c3n = all_points("corner1"), all_points("corner3p")
+    c1b, c3b = all_points("corner1", barrier=True), all_points("corner3p", barrier=True)
+    print("\n" + "=" * 80)
+    print("FAIR both-knob iso-latency peak (min over ALL target_cyc x n): NO-barrier vs BARRIER")
+    print("=" * 80)
+    print(f"    {'lat<=ms':>8} | {'S5 nb':>7}{'Mamb nb':>9}{'win':>8} | {'S5 br':>7}{'Mamb br':>9}{'win':>8}")
+
+    def w(a, b):
+        return "--" if (a is None or b is None) else ("S5" if a < b - 1e-6 else ("Mamb" if b < a - 1e-6 else "tie"))
+
+    def f(x):
+        return "--" if x is None else f"{x:.0f}"
+    for L in [0.40, 0.45, 0.50, 0.55, 0.60, 0.70]:
+        s5n, m3n = _min_peak_leq(c1n, L), _min_peak_leq(c3n, L)
+        s5b, m3b = _min_peak_leq(c1b, L), _min_peak_leq(c3b, L)
+        print(f"    {L:>8.2f} | {f(s5n):>7}{f(m3n):>9}{w(s5n,m3n):>8} | {f(s5b):>7}{f(m3b):>9}{w(s5b,m3b):>8}")
 
 
 def dominated(p, others, eps=1e-9):
@@ -112,3 +145,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    iso_latency_both_knobs()

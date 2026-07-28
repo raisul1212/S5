@@ -30,12 +30,19 @@ next refinement, guided by the Fable check):
         (fd re-paid PER CHUNK), so latency is U-shaped in n (interior optimum; see optimal_n).
         pipeline_point(..., fill_drain=False) still exposes the free-chunk interpolation bound.
         Sensitivity to the M-chunk fold: ~10-12% on min-latency (see _block_filldrain_frac).
-    (b) OPEN per-layer bidir barriers: both configs carry 8 dag 'rev' segments; a reverse scan
-        cannot stream chunks across the barrier, so cross-barrier pipelining is unphysical.
-        Enforcing this costs Mambino MORE of its pipelined-latency recovery than Pure S5
-        (Mambino leans harder on deep chunking), so it can move the 0.4-0.6 ms crossover -- the
-        very-low-peak unique region (n=1, slow targets) is barrier-immune; the crossover is not.
+    (b) DONE per-layer bidir barriers (barrier_point/validate_barriers): both configs carry 8
+        dag 'rev' segments; a reverse scan cannot stream chunks across the barrier. Segmented
+        the pipeline at each -> 9 short pipelines in series. Conservation (n=1==serial) +
+        dominance verified. On the FAIR both-knob frontier barriers HELP Mambino's iso-latency
+        case (Pure S5's low-peak mid-latency points are slow-target deep-chunk designs that
+        barriers penalize most); the crossover stays ~[0.50, 0.60] ms. (The per-ATP-point
+        "Mambino inflates 1.34x" is a barrier-blind design-point artifact, NOT architecture.)
+        Model boundary: forbids cross-SEGMENT streaming but allows post-L/pre-(L+1) overlap;
+        a fwd/bwd-split scan mapping would relieve Pure S5 more than Mambino (disclose).
     (c) OPEN gate/GLU fusion ('logistic' segments) not modeled.
+    (d) predictor scheduling: all of the above is the SERIAL predictor (honest, 24 SSM
+        instances time-multiplexed on one array). The CONCURRENT predictor (2nd 512-PE array)
+        is a separate design point (increment 2d).
   Background power (elem+state+leak) is off the peak timeline here -- see peak_power_scenarios.py
   for the complete-chip peak BAND (adding it flips no iso-latency winner; Fable-confirmed).
   Stages are per-SHAPE blocks (rep folded in), so cross-layer dependencies are not enforced and
@@ -44,6 +51,8 @@ next refinement, guided by the Fable check):
 import functools
 import os
 import sys
+
+import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import multi_array_ppac_v4 as m4
@@ -141,6 +150,124 @@ def optimal_n(config, honest=True, nmax=256):
 
 
 # ------------------------------------------------------------------
+# Barrier model (increment 2c) — consumes the op-DAG. The bidirectional-scan 'rev' segments
+# (one per layer) are hard flushes: a reverse scan needs the WHOLE sequence, so chunks cannot
+# stream across them. The pipeline is therefore SEGMENTED at each 'rev' -> many short pipelines
+# in series (pay fill/drain per segment, less overlap) instead of one long backbone pipe. The
+# barrier adds NO work (conservation: n=1 barrier makespan == serial), it only limits overlap.
+# ------------------------------------------------------------------
+DAG_FILE = {"corner1": "workload_corner1_dag_dag.yaml", "corner3p": "workload_corner3p_dag_dag.yaml"}
+
+
+@functools.lru_cache(maxsize=None)
+def _shape_timing(config, honest=True, target=None):
+    """shape -> (per_instance_cycles, fill_drain_frac, power_mW). target=None -> the ATP-optimal
+    design; an explicit target_cyc -> that design point (needed for the FAIR both-knob barrier
+    frontier). per_instance = block_cycles / rep_wc (rep_wc == #DAG nodes of that shape)."""
+    blocks = (_atp(config, honest=honest)["blocks"] if target is None
+              else m5.analyze(config, target, honest=honest)["blocks"])
+    return {b["shape"]: (b["cycles"] / b["rep_wc"], _block_filldrain_frac(b), _stage_power_mW(b))
+            for b in blocks}
+
+
+@functools.lru_cache(maxsize=None)
+def _barrier_segments(config):
+    """Walk the op-DAG in id order; group GEMM-node shapes into segments split at each 'rev'
+    elem barrier. Returns a tuple of segments, each a tuple of (shape, count) -- same-shape
+    instances in one segment SHARE the shape's dedicated array (they serialize)."""
+    d = yaml.safe_load(open(m4.WORKLOADS / DAG_FILE[config]))
+    segs, cur = [], {}
+    for n in sorted(d["nodes"], key=lambda x: x["id"]):
+        if n["kind"] == "gemm":
+            s = f"{n['M']}x{n['N']}x{n['K']}_{n['dtype']}"
+            cur[s] = cur.get(s, 0) + 1
+        elif "rev" in (n.get("prims") or {}):
+            segs.append(tuple(cur.items()))
+            cur = {}
+    if cur:
+        segs.append(tuple(cur.items()))
+    return tuple(segs)
+
+
+def _seg_stage_makespan(stages, n, fill_drain):
+    """One barrier-segment's chunk-pipeline makespan. stages = [(duration_cyc, fd_frac), ...]."""
+    if not stages:
+        return 0.0
+    if fill_drain:
+        t = [d * f + d * (1 - f) / n for d, f in stages]
+    else:
+        t = [d / n for d, _ in stages]
+    return sum(t) + (n - 1) * max(t)
+
+
+def barrier_point(config, n_chunks, honest=True, fill_drain=True, target=None):
+    """(latency, peak) WITH per-layer bidir barriers enforced. Latency = sum over barrier-
+    segments of each segment's internal chunk-pipeline makespan (no cross-segment streaming).
+    Peak = max over segments (barriers serialize the segments -> one active at a time) of the
+    segment's co-active power. Silicon/area/energy identical to pipeline_point (frozen).
+    target=None uses the ATP-optimal design; pass a target_cyc for the both-knob frontier."""
+    if config not in DAG_FILE:
+        raise ValueError(f"no op-DAG for {config}; barrier model needs an extracted DAG")
+    r = _atp(config, honest=honest) if target is None else m5.analyze(config, target, honest=honest)
+    sh = _shape_timing(config, honest, target)
+    n = max(1, int(n_chunks))
+    total_cyc, peak = 0.0, 0.0
+    for seg in _barrier_segments(config):
+        stages = [(sh[s][0] * c, sh[s][1]) for s, c in seg]        # same-shape serialize (count*per_inst)
+        total_cyc += _seg_stage_makespan(stages, n, fill_drain)
+        powers = sorted((sh[s][2] for s, _c in seg), reverse=True)  # distinct arrays co-active
+        peak = max(peak, sum(powers[:min(n, len(powers))]))
+    latency_ms = total_cyc / FREQ_HZ * 1e3
+    return dict(config=config, n_chunks=n, latency_ms=latency_ms, peak_mW=peak,
+                area_mm2=r["total_area_mm2"], energy_uJ=r["energy_full_uJ"], acc=r["acc"],
+                avg_power_mW=r["energy_full_uJ"] / latency_ms if latency_ms else 0.0)
+
+
+def barrier_optimal_n(config, honest=True, nmax=256):
+    return min((barrier_point(config, n, honest, fill_drain=True) for n in range(1, nmax + 1)),
+               key=lambda p: p["latency_ms"])
+
+
+@functools.lru_cache(maxsize=None)
+def _dag_topological(config):
+    """True iff every DAG edge has src_id < dst_id -- i.e. id-order is a valid topological order.
+    This is what makes id-order barrier segmentation CONSERVATIVE: a gemm placed after a 'rev'
+    cannot be a predecessor of it, so we never optimistically stream a barrier-dependent op
+    across the barrier (Fable-flagged: guards a future DAG with an aux side-branch gemm)."""
+    d = yaml.safe_load(open(m4.WORKLOADS / DAG_FILE[config]))
+    return all(e["src"] < e["dst"] for e in d["edges"])
+
+
+def validate_barriers():
+    """Barrier-model invariants (op-DAG configs only): (0) TOPOLOGY -- id-order is a valid
+    topological order (all edges src<dst), so segmentation is conservative; (1) CONSERVATION --
+    barrier n=1 latency == serial (barriers add no work, only forbid cross-segment overlap);
+    (2) DOMINANCE -- barrier latency >= no-barrier latency at every n.
+    NOTE the reported per-config floor inflation is a PER-ATP-DESIGN-POINT number, NOT an
+    architecture claim -- most of Mambino's larger inflation is its barrier-blind ATP encoder
+    (8x8 array, ~30% of the floor). With BOTH knobs free the inflation is near-symmetric
+    (~1.06x vs ~1.03x), and on the FAIR both-knob frontier barriers HELP Mambino's iso-latency
+    case (see merged_frontier.iso_latency_both_knobs). Read the crossover THERE, never here."""
+    print("=== VALIDATION: barrier model (op-DAG configs) ===")
+    ok = True
+    for cfg in DAG_FILE:
+        b = _atp(cfg, honest=True)
+        topo = _dag_topological(cfg)
+        cons = abs(barrier_point(cfg, 1)["latency_ms"] - b["lat_serial_ms"]) < 1e-6
+        dom = all(barrier_point(cfg, n)["latency_ms"] >= pipeline_point(cfg, n)["latency_ms"] - 1e-9
+                  for n in [1, 2, 4, 8, 16, 32])
+        nb, br = optimal_n(cfg), barrier_optimal_n(cfg)
+        tag = "PASS" if (topo and cons and dom) else "FAIL"
+        if not (topo and cons and dom):
+            ok = False
+        print(f"  [{tag}] {cfg:<9} topo={topo} conservation(n=1==serial)={cons} barrier>=no-barrier={dom} | "
+              f"ATP-pt floor {nb['latency_ms']:.3f}->{br['latency_ms']:.3f} ms ({br['latency_ms']/nb['latency_ms']:.2f}x, "
+              f"design-pt artifact -- read crossover on the fair both-knob frontier)")
+    print("BARRIER VALIDATION:", "ALL PASS" if ok else "FAILURES")
+    return ok
+
+
+# ------------------------------------------------------------------
 # Validation + A/B
 # ------------------------------------------------------------------
 def validate_bounds():
@@ -201,6 +328,18 @@ def ab_pareto():
               f"peak gap is not iso-work")
 
 
+def barrier_ab():
+    print("\n=== bidir-barrier effect on the ATP-point latency floor (NOT the crossover) ===")
+    print("  (per-config ATP design point; the fair crossover is in merged_frontier.iso_latency_both_knobs)")
+    for cfg in DAG_FILE:
+        nb, br = optimal_n(cfg), barrier_optimal_n(cfg)
+        tag = "Pure S5" if cfg == "corner1" else "Mambino"
+        print(f"  {cfg} ({tag}): floor {nb['latency_ms']:.3f} -> {br['latency_ms']:.3f} ms "
+              f"({br['latency_ms']/nb['latency_ms']:.2f}x, design-pt artifact), peak {br['peak_mW']:.0f} mW @ n*={br['n_chunks']}")
+
+
 if __name__ == "__main__":
     validate_bounds()
+    validate_barriers()
     ab_pareto()
+    barrier_ab()

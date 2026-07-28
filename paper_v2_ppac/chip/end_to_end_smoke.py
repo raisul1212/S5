@@ -119,6 +119,9 @@ def stage4_scheduler():
         check(monoA and opt["latency_ms"] < ser - 1e-9,
               f"{cfg}: interp-bound monotone={monoA}; realistic optimum n*={opt['n_chunks']} @ "
               f"{opt['latency_ms']:.3f} ms (< serial {ser:.3f})")
+    # (C) barrier model (op-DAG configs): conservation + barrier>=no-barrier
+    bok = sch.validate_barriers()
+    check(bok, "validate_barriers(): n=1==serial conservation + barrier>=no-barrier, DAG configs")
     # NEUTRAL REPORT (not an assertion): the matched-n_chunks A/B is NOT a fair comparison --
     # it holds each config at its own per-config ATP design point (different speed grades) and
     # hides Mambino's latency deficit. The fair (target_cyc x n_chunks) merged frontier lives
