@@ -27,10 +27,16 @@ this directly answers:
 
 ## 1. Task / data / metric
 
-- **Primary: text8** — 100 MB cleaned Wikipedia, lowercased, **27-symbol vocab** (a–z + space).
-  Standard split **90M / 5M / 5M** (train/val/test). Smallest standard char-LM ⇒ fast iteration.
-- **Stretch: enwik8** — 100 MB raw Wikipedia, ~205-symbol byte vocab (markup + case). Same 90/5/5.
-  Harder, more-cited; do only after text8 lands.
+- **Primary: enwik8** — 100 MB raw Wikipedia, **byte-level ~205-symbol vocab** (markup + case).
+  Standard split **90M / 5M / 5M** (train/val/test). THE recognized char-LM architecture benchmark.
+  **Why enwik8 not The Pile:** The Pile (825 GB) is pretraining-scale — comparable numbers need
+  125M–2.8B-param models on ~300B tokens across 8+ A100s for weeks. On our **two A30s** that is
+  infeasible AND the result would not be comparable to the literature. enwik8's 100M bytes fit the
+  budget: 3–4 configs × 8 seeds of 1–4M-param models ≈ a few GPU-hours each → ~1–3 days on 2×A30.
+- **Optional secondary: text8** — same data cleaned to lowercase a–z + space (**27-symbol vocab**).
+  NOT the benchmark; keep only as a cleaner substrate for the word-boundary interpretability panel
+  (no markup noise). Cheap once the plumbing exists. If skipped, run the boundary analysis on the
+  letter-run spans of enwik8.
 - **Metric: bits-per-character (BPC)** = test cross-entropy (nats) / ln 2, **val-BPC-selected**.
   Report **mean ± sd over the SAME 8 seeds** as ListOps (6554595/42/12345/271828/314159/1/2/3) so the
   matched-seed, paired-test rigor carries over.
@@ -68,7 +74,7 @@ The classification path POOLS over time → one label/seq (`seq_model.py:209-221
 
 | # | file | change |
 |---|---|---|
-| A | `s5/dataloading.py` | `create_text8_lm_dataset` (+enwik8): download/cache, char→id, split 90/5/5, chunk to L, return (x, y=x shifted +1). Register `"text8-lm"`/`"enwik8-lm"` in `Datasets`. padded=False, no lengths. |
+| A | `s5/dataloading.py` | `create_enwik8_lm_dataset` (+optional text8): download/cache, byte→id, split 90/5/5, chunk to L, return (x, y=x shifted +1). Register `"enwik8-lm"` (+`"text8-lm"`) in `Datasets`. padded=False, no lengths. |
 | B | `s5/seq_model.py` | `LMModel` (+`BatchLMModel` vmap): encoder(no pool) + per-position decoder. |
 | C | `s5/train_helpers.py` | `lm_cross_entropy` (per-position) + `validate_lm` → BPC. |
 | D | `s5/train.py` | `--task=lm` branch: model_cls=BatchLMModel; loss=LM CE; metric/select on val BPC. Reuse HiPPO, opt (BfastandCdecay), MambinoSSM init. |
@@ -122,9 +128,9 @@ This is where char-LM BEATS ListOps as an interpretability substrate:
 
 ## 7. Compute / timeline (Gilbreth)
 
-text8 L=1024, d_model=128, n_layers=6–8, bsz ~32–64: ~a few GPU-hours/seed on an a30. Ablation = 3 configs
-× 8 seeds × (signed + gateless) ≈ 24–48 runs → 1–2 days wall-clock batched. enwik8 later. Env
-`/scratch/gilbreth/raisul/envs/s5m`; worktree-isolated; push from the local box (Gilbreth has no GitHub auth).
+enwik8 L=1024, d_model=128, n_layers=6–8, bsz ~32–64: ~a few GPU-hours/seed on an A30. Ablation = 3 configs
+× 8 seeds × (signed + gateless) ≈ 24–48 runs; **two A30 nodes in parallel → ~1–3 days** wall-clock batched.
+Env `/scratch/gilbreth/raisul/envs/s5m`; worktree-isolated; push from the local box (Gilbreth has no GitHub auth).
 
 ---
 
@@ -169,8 +175,8 @@ math (1). Those three are the delta from the current single-task state.
 
 1. Build A–D (text8 dataloader, `LMModel`, LM loss, train.py `--task=lm`) with the kill-switch +
    byte-equivalence test. **Verify D1 (norm) first.**
-2. Smoke: 1 seed, L=1024, **gateless causal S5** → sane BPC (~1.4–1.6 early epochs). Proves the LM
-   plumbing before touching Mambino.
+2. Smoke: 1 seed, L=1024, **gateless causal S5** on an enwik8 slice → BPC descending toward ~1.3–1.5
+   (small model). Proves the LM plumbing before touching Mambino.
 3. Gateless causal Mambino, then Mambino 2.0 (signed), 1 seed → confirm the gate runs causally + BPC
    delta direction.
 4. Scale to 8 seeds × {S5-gelu, Mambino-gateless, Mambino-2.0-signed, unsigned}.
