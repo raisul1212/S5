@@ -50,7 +50,7 @@ TIER_KB = {"320KB": 320, "384KB": 384, "512KB": 512, "default": 384}
 _cfg_ctx = "default"    # set inside config_ppac to route TIER lookup for F1 fix
 ACC = {"config4": 0.5993, "config5": 0.5917,
        "corner1": 0.6089, "corner2": 0.5991, "corner3p": 0.6138,
-       "mambino2p0": 0.6075}   # PLACEHOLDER: signed gate seed 6554595; update to 8-seed mean
+       "mambino2p0": 0.6050}   # 8-seed signed-gate mean (sd 0.0042, n=8; seeds 6554595/42/12345/271828/314159/1/2/3)
 
 # Configs whose K=40/N=40 low-rank gate blocks may relax to >=62.5% util (v1 rule).
 # Module-level so a driver can toggle it for a no-relaxation sensitivity sweep.
