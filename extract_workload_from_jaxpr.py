@@ -675,6 +675,12 @@ def build_forward(args):
             conj_sym=args.conj_sym, clip_eigs=args.clip_eigs,
             bidirectional=args.bidirectional,
             bidir_predictor=args.bidir_predictor,
+            surprise_gate=args.surprise_gate,
+            gate_alpha=args.gate_alpha,
+            gate_range=args.gate_range,
+            gate_kappa_init=args.gate_kappa_init,
+            gate_bias_init=args.gate_bias_init,
+            gate_detach=args.gate_detach,
         )
     else:
         ssm_init_fn = init_S5SSM(
@@ -803,6 +809,12 @@ def main():
     p.add_argument("--dt_min", type=float, default=0.001)
     p.add_argument("--dt_max", type=float, default=0.1)
     p.add_argument("--bidir_predictor", type=str2bool, default=False)
+    p.add_argument("--surprise_gate", type=str2bool, default=False)
+    p.add_argument("--gate_alpha", type=float, default=0.9)
+    p.add_argument("--gate_range", type=str, default="signed")
+    p.add_argument("--gate_kappa_init", type=float, default=0.0)
+    p.add_argument("--gate_bias_init", type=float, default=2.0)
+    p.add_argument("--gate_detach", type=str2bool, default=False)
     p.add_argument("--bsz", type=int, default=1)
     p.add_argument("--p_dropout", type=float, default=0.0)
     p.add_argument("--jax_seed", type=int, default=0)
