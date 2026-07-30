@@ -83,6 +83,7 @@ Param overhead vs S5 alone (per layer, complex P, with bidirectional main
 Total per layer (incl. S5 wrapper): 29,280  (vs S5 alone 23,064)
 """
 from functools import partial
+import math
 import jax
 import jax.numpy as np
 from jax.nn.initializers import lecun_normal, normal
@@ -162,6 +163,58 @@ class MambinoSSM(nn.Module):
     gate_kappa_init: float = 0.0   # sensitivity init (0 => g starts flat at tanh(bias))
     gate_bias_init: float = 2.0    # bias init (+2 => g~0.96 = ~v1 write, livelier kappa grad)
     gate_detach: bool = False      # also stop-gradient eps in the WRITE (calibration fix)
+    # -- v2 Cluster B (role 2 = inference-time LEARNING).  A surprise-gated
+    # fast-weight associative memory, added as a PARALLEL branch:
+    #     k,q = norm(W_k x),   norm(W_q x)     shared address space (from x)
+    #     v   = norm(W_v eps)                  SIGNED content (the first moment)
+    #     s   = sigmoid(fw_kappa*z + fw_bias)  UNSIGNED write strength
+    #     M_t = gamma*M_{t-1} + (1-gamma)*s*(v k^T)      M in R^{d x d}, M_0 = 0
+    #     o_t = M_{t-1} q_t                    EXCLUSIVE read (read before write)
+    #     y  += W_o o_t
+    # M is STATE, not parameters -- it is written and read within one forward
+    # pass, which is what makes this inference-time learning.  The 4-roles
+    # theorem gives role 2 the signed first moment for its DIRECTION and the
+    # magnitude for its WRITE STRENGTH; hence v from eps, gate from ||eps||.
+    #
+    # Three deliberate choices (Fable-audited, see paper_v2_ppac/memos/
+    # cluster_b_implementation_plan.md):
+    #  * EXCLUSIVE read.  An inclusive read (M_t) lets the layer learn
+    #    W_q ~ W_k so that k_t.q_t ~ 1, degenerating into a gated
+    #    INSTANTANEOUS rank-d path that uses no memory at all.  Still causal,
+    #    so no test would catch it -- but it would void the whole claim.
+    #  * (1-gamma) coupling, no free eta.  Makes M a bounded EMA (||M|| <= 1
+    #    with normalized v,k) instead of scaling as 1/(1-gamma), and leaves
+    #    ONE scale on the path instead of eta x W_o (whose zero-init
+    #    combination is a permanently dead branch).
+    #  * v is normalized TOO.  Otherwise ||v|| ~ ||eps|| puts surprise into
+    #    the write twice -- once via the gate, once via the content -- which
+    #    would blunt the gated-vs-constant ablation.
+    #
+    # Attached in __call__ AFTER the main scan and OUTSIDE it, never folded
+    # into Bu_elements: that keeps the fast weight a SIBLING of the main scan
+    # (both consume x,eps; neither consumes the other), so it adds width, not
+    # depth, and the diagonal associative scan keeps its shape + kill-switch.
+    # Off (default) => byte-identical param tree AND forward.
+    fast_weight: bool = False
+    fw_dim: int = 8                 # d: q/k/v dim; M is d x d
+    fw_proj: str = "shared"         # "shared" (1 down-proj + 3 dxd mixers) | "separate"
+    fw_rule: str = "hebb"           # "hebb" (B0) | "delta" (B1, not implemented yet)
+    fw_kq_source: str = "x"         # address space:  "x" | "eps"
+    fw_v_source: str = "eps"        # written content: "eps" | "x"
+    fw_impl: str = "chunk"          # "seq" (reference) | "scan" | "chunk"
+    fw_chunk: int = 64              # chunk length C for fw_impl="chunk"
+    fw_gate_mode: str = "surprise"  # "surprise" (kappa learned) | "const" (kappa
+                                    # pinned to 0, bias learned -> the iso-param
+                                    # ablation) | "off" (s == 1, ungated)
+    fw_kappa_init: float = 0.0
+    fw_bias_init: float = 0.0       # sigmoid(0)=0.5 => half-strength write at init
+    fw_gamma_init: float = 0.95     # decay; stored as a logit when trainable
+    fw_gamma_trainable: bool = True  # False => gamma frozen at fw_gamma_init exactly
+                                     # (fw_gamma_init=0 gives the no-memory control)
+    fw_norm_qkv: bool = True
+    fw_out_init: str = "zeros"      # zero-init W_o => branch is an exact no-op at
+                                    # step 0, so training STARTS at the baseline
+    fw_read: str = "exclusive"      # "exclusive" (M_{t-1}) | "inclusive" (M_t)
 
     def setup(self):
         """Initialize main SSM parameters (identical to S5SSM) plus
@@ -354,20 +407,78 @@ class MambinoSSM(nn.Module):
                 lambda rng, shape: np.full(shape, self.gate_bias_init),
                 (1,))
 
-    def _surprise_gate(self, eps_seq):
-        """Per-token signed adaptive gate g(t) on the eps -> W_eps write.
+        # ── v2 Cluster-B fast-weight params.  Guarded exactly like the gate
+        # above, so fast_weight=False leaves the param tree byte-identical. ──
+        if self.fast_weight:
+            if self.fw_rule != "hebb":
+                raise NotImplementedError(
+                    f"fw_rule={self.fw_rule!r}: only 'hebb' (B0) is implemented. "
+                    "The delta rule (B1) has a data-dependent MATRIX transition "
+                    "(I - beta k k^T), which is not an associative scan and needs "
+                    "the chunked WY algorithm; see the Cluster B plan Sec 5.")
+            d = self.fw_dim
+            proj_init = lecun_normal()
+            if self.fw_proj == "shared":
+                # One H->d down-projection reused for q/k/v via three dxd
+                # mixers: 2Hd + 3d^2 params instead of separate's 4Hd.
+                self.fw_P = self.param("fw_P", proj_init, (self.H, d))
+                self.fw_Mq = self.param("fw_Mq", proj_init, (d, d))
+                self.fw_Mk = self.param("fw_Mk", proj_init, (d, d))
+                self.fw_Mv = self.param("fw_Mv", proj_init, (d, d))
+            elif self.fw_proj == "separate":
+                self.fw_W_q = self.param("fw_W_q", proj_init, (self.H, d))
+                self.fw_W_k = self.param("fw_W_k", proj_init, (self.H, d))
+                self.fw_W_v = self.param("fw_W_v", proj_init, (self.H, d))
+            else:
+                raise ValueError(f"fw_proj must be 'shared' or 'separate', got {self.fw_proj!r}")
+            # Zero-init W_o (default) makes the branch an exact no-op at step 0.
+            # NOT a dead gradient: dL/dW_o = (dL/dy) o^T is nonzero as long as
+            # o is not identically zero, so W_o escapes on the first update and
+            # every upstream gradient turns on behind it.  This is why eta was
+            # deleted rather than kept and zero-initialised -- W_o=0 AND eta=0
+            # together WOULD be permanently dead.
+            self.fw_W_o = self.param(
+                "fw_W_o",
+                (lambda rng, shape: np.zeros(shape))
+                if self.fw_out_init == "zeros" else proj_init,
+                (d, self.H))
+            if self.fw_gamma_trainable:
+                g0 = min(max(float(self.fw_gamma_init), 1e-4), 1.0 - 1e-4)
+                self.fw_gamma_logit = self.param(
+                    "fw_gamma_logit",
+                    lambda rng, shape: np.full(shape, math.log(g0 / (1.0 - g0))),
+                    (1,))
+            # Always allocated (even when fw_gate_mode='off') so the param tree
+            # is identical across gate modes -- that is what makes the
+            # surprise-vs-constant ablation exactly iso-parameter.
+            self.fw_kappa = self.param(
+                "fw_kappa",
+                lambda rng, shape: np.full(shape, self.fw_kappa_init),
+                (1,))
+            self.fw_bias = self.param(
+                "fw_bias",
+                lambda rng, shape: np.full(shape, self.fw_bias_init),
+                (1,))
+
+    def _surprise_z(self, eps_seq):
+        """EMA-normalized surprise magnitude z(t).  Pure (no params), so both
+        gates can share it:
 
             s(t)   = ||eps(t)||_2                     (surprise magnitude at H)
-            mu, s2 = causal EMA of s, s^2             (running normalizer)
-            z(t)   = (s(t) - mu(t)) / sqrt(var+eps)   (adaptive threshold)
-            g(t)   = tanh(kappa*z + bias)             ([-1,1]: push+/hold0/pop-)
+            mu, m2 = causal EMA of s, s^2             (running normalizer)
+            z(t)   = (s(t) - mu(t)) / sqrt(var + eps) (adaptive threshold)
+
+        Cluster A applies tanh(kappa_A z + b_A) on top (signed push/pop on the
+        state write); Cluster B applies sigmoid(kappa_B z + b_B) (unsigned
+        write strength for the fast weight).  Each owns its OWN kappa/bias --
+        z is the only thing they share.
 
         Scan-safe: pointwise ops + one causal-EMA associative scan (a linear
         recurrence, the same primitive as the SSM scan); the main scan is
-        untouched, so parallelism is preserved.  The gate DECISION reads
-        stop_gradient(eps) so it never trains the predictor (the gain is a
-        top-down, task-driven signal; the surprise stays the predictor's).
-        Returns (L, 1) real.
+        untouched, so parallelism is preserved.  Reads stop_gradient(eps) so
+        the gate DECISION never trains the predictor (the gain is a top-down,
+        task-driven signal; the surprise stays the predictor's).
+        Returns (L,) real.
         """
         s = np.linalg.norm(jax.lax.stop_gradient(eps_seq), axis=-1)   # (L,)
         L = s.shape[0]
@@ -387,13 +498,156 @@ class MambinoSSM(nn.Module):
         mu = mu / corr
         m2 = m2 / corr
         sig = np.sqrt(np.maximum(m2 - mu * mu, 0.0) + 1e-6)
-        z = (s - mu) / sig                                            # (L,)
-        pre = self.gate_kappa[0] * z + self.gate_bias[0]
+        return (s - mu) / sig                                         # (L,)
+
+    def _surprise_gate(self, eps_seq):
+        """Per-token signed adaptive gate g(t) on the eps -> W_eps write.
+
+            s(t)   = ||eps(t)||_2                     (surprise magnitude at H)
+            mu, s2 = causal EMA of s, s^2             (running normalizer)
+            z(t)   = (s(t) - mu(t)) / sqrt(var+eps)   (adaptive threshold)
+            g(t)   = tanh(kappa*z + bias)             ([-1,1]: push+/hold0/pop-)
+
+        Scan-safe: pointwise ops + one causal-EMA associative scan (a linear
+        recurrence, the same primitive as the SSM scan); the main scan is
+        untouched, so parallelism is preserved.  The gate DECISION reads
+        stop_gradient(eps) so it never trains the predictor (the gain is a
+        top-down, task-driven signal; the surprise stays the predictor's).
+        Returns (L, 1) real.
+        """
+        pre = self.gate_kappa[0] * self._surprise_z(eps_seq) + self.gate_bias[0]
         if self.gate_range == "unsigned":
             g = jax.nn.sigmoid(pre)
         else:
             g = np.tanh(pre)
         return g[:, None]                                             # (L, 1)
+
+    # ──────────────────────────────────────────────────────────────────
+    # Cluster B — surprise-gated fast weight (role 2)
+    # ──────────────────────────────────────────────────────────────────
+    def _fw_project(self, x_seq, eps_seq):
+        """Project q, k (address space) and v (written content) to dim d.
+
+        Sources are two INDEPENDENT flags so all four combinations are
+        explicit.  Default kq<-x, v<-eps: the theorem gives role 2 the signed
+        first moment for its direction (hence v from eps) while the address
+        space stays anchored on x, so a later query can actually hit what an
+        earlier surprise wrote.  Sourcing k from eps as well would only let
+        lookups fire when surprise PATTERNS recur -- a far weaker retrieval
+        condition.  Returns (q, k, v), each (L, d).
+        """
+        src = {"x": x_seq, "eps": eps_seq}
+        kq_in, v_in = src[self.fw_kq_source], src[self.fw_v_source]
+        if self.fw_proj == "shared":
+            q = (kq_in @ self.fw_P) @ self.fw_Mq
+            k = (kq_in @ self.fw_P) @ self.fw_Mk
+            v = (v_in @ self.fw_P) @ self.fw_Mv
+        else:
+            q = kq_in @ self.fw_W_q
+            k = kq_in @ self.fw_W_k
+            v = v_in @ self.fw_W_v
+        if self.fw_norm_qkv:
+            def l2n(u):
+                return u / np.sqrt(np.sum(u * u, axis=-1, keepdims=True) + 1e-6)
+            q, k, v = l2n(q), l2n(k), l2n(v)
+        return q, k, v
+
+    def _fw_seq(self, q, k, v, s, gamma):
+        """GROUND TRUTH implementation: the recurrence written out literally,
+        one step at a time.  O(L) sequential and slow, but correct by
+        construction -- `scan` and `chunk` are checked against this."""
+        d = q.shape[-1]
+
+        def step(M, inp):
+            q_t, k_t, v_t, s_t = inp
+            o_pre = M @ q_t                                   # read BEFORE write
+            M_new = gamma * M + (1.0 - gamma) * s_t * np.outer(v_t, k_t)
+            o_post = M_new @ q_t                              # read AFTER write
+            return M_new, (o_pre if self.fw_read == "exclusive" else o_post)
+
+        _, o = jax.lax.scan(step, np.zeros((d, d), dtype=q.dtype), (q, k, v, s))
+        return o
+
+    def _fw_scan(self, q, k, v, s, gamma):
+        """Parallel via associative_scan over the FLATTENED d^2 state.
+
+        gamma is a SCALAR shared by every entry of M, so M_t = gamma*M_{t-1} +
+        W_t decomposes into d^2 independent scalar linear recurrences -- the
+        same monoid `binary_operator` already implements for the SSM scan.
+        The scan is inclusive, so the exclusive read is produced by SHIFTING
+        the output, never by altering the scan.  Costs O(L*d^2) memory, which
+        is why `chunk` exists."""
+        L, d = q.shape
+        W = ((1.0 - gamma) * s[:, None, None]
+             * v[:, :, None] * k[:, None, :]).reshape(L, d * d)
+        A = np.full((L, d * d), gamma, dtype=W.dtype)
+        _, M = jax.lax.associative_scan(binary_operator, (A, W))   # inclusive M_t
+        M = M.reshape(L, d, d)
+        if self.fw_read == "exclusive":
+            M = np.concatenate([np.zeros_like(M[0:1]), M[:-1]], axis=0)
+        return np.einsum("lij,lj->li", M, q)
+
+    def _fw_chunk(self, q, k, v, s, gamma):
+        """Chunked: O(L*d + n*d^2) memory.  The one that scales, and the path
+        B1's delta rule will need.
+
+        With 0-based local index i in a chunk starting at global nC, and
+        S = M_{nC-1} the carried state:
+            M_{nC+i} = gamma^(i+1) S + sum_{i'<=i} gamma^(i-i') w_{nC+i'}
+        so  inclusive: carry exponent i+1, decay gamma^(i-i')   masked i >= i'
+            exclusive: carry exponent i,   decay gamma^(i-1-i') masked i >  i'
+        Both keep every exponent >= 0.
+
+        The decay matrix is built EXPLICITLY rather than by the usual
+        "rescale k by gamma^(-i')" trick, which is numerically unsafe: fp32
+        precision collapses once gamma^(-C) > 1/eps, i.e. below gamma ~ 0.878
+        at C=128, and bf16 breaks essentially always."""
+        L, d = q.shape
+        C = min(int(self.fw_chunk), L)
+        pad = (-L) % C
+        if pad:
+            q = np.pad(q, ((0, pad), (0, 0)))
+            k = np.pad(k, ((0, pad), (0, 0)))
+            v = np.pad(v, ((0, pad), (0, 0)))
+            s = np.pad(s, ((0, pad),))
+        n = (L + pad) // C
+        qc, kc = q.reshape(n, C, d), k.reshape(n, C, d)
+        vc, sc = v.reshape(n, C, d), s.reshape(n, C)
+        i = np.arange(C)
+        excl = (self.fw_read == "exclusive")
+        e = i[:, None] - i[None, :] - (1 if excl else 0)      # (C,C) decay exponent
+        D = np.where(e >= 0, gamma ** np.maximum(e, 0), 0.0)
+        carry = gamma ** (i + (0 if excl else 1))             # (C,)
+        tail = gamma ** (C - 1 - i)                           # (C,) for the state update
+
+        def step(S, blk):
+            qb, kb, vb, sb = blk
+            w = (1.0 - gamma) * sb[:, None] * vb              # (C,d) scaled values
+            o = ((qb @ kb.T) * D) @ w + carry[:, None] * (qb @ S.T)
+            S_new = gamma ** C * S + (w * tail[:, None]).T @ kb
+            return S_new, o
+
+        _, o = jax.lax.scan(step, np.zeros((d, d), dtype=q.dtype), (qc, kc, vc, sc))
+        return o.reshape(n * C, d)[:L]
+
+    def _apply_fastweight(self, x_seq, eps_seq):
+        """The full role-2 branch: project -> gate -> recur -> read -> W_o.
+        Returns (L, H), to be ADDED to the block output."""
+        q, k, v = self._fw_project(x_seq, eps_seq)
+        if self.fw_gate_mode == "off":
+            s = np.ones(x_seq.shape[0], dtype=q.dtype)
+        else:
+            # 'const' pins kappa to a literal 0 so the gate is a learned
+            # CONSTANT sigmoid(bias): identical parameter count to 'surprise',
+            # identical free write-rate, differing only in z-dependence.  That
+            # is what makes the ablation isolate the hypothesis and nothing else.
+            kappa = 0.0 if self.fw_gate_mode == "const" else self.fw_kappa[0]
+            s = jax.nn.sigmoid(kappa * self._surprise_z(eps_seq) + self.fw_bias[0])
+        gamma = (jax.nn.sigmoid(self.fw_gamma_logit[0]) if self.fw_gamma_trainable
+                 else np.asarray(self.fw_gamma_init, dtype=q.dtype))
+        impl = {"seq": self._fw_seq, "scan": self._fw_scan,
+                "chunk": self._fw_chunk}[self.fw_impl]
+        return impl(q, k, v, s, gamma) @ self.fw_W_o                  # (L, H)
 
     def _apply_predictor_scan(self, input_sequence):
         """Run the predictor scan and produce x_hat(t).
@@ -596,9 +850,17 @@ class MambinoSSM(nn.Module):
         # ── 4) Main scan with additive PC: u(t) = B @ x(t) + W_eps @ eps(t) ──
         ys = self._apply_main_scan_with_additive_pc(x, eps)            # (L, H)
 
-        # ── 5) Feedthrough: y = ys + D * x ──
+        # ── 5) Feedthrough + Cluster-B fast weight: y = ys + D*x + W_o @ o ──
         Du = jax.vmap(lambda u: self.D * u)(x)                         # (L, H)
-        output = ys + Du                                               # (L, H)
+        # The fast weight is a SIBLING of the main scan, not a successor: it
+        # consumes (x, eps) exactly as the main scan does, and neither consumes
+        # the other, so the critical path stays
+        #     predictor -> { main fwd || main bwd || fast weight } -> sum
+        # i.e. this adds WIDTH, not DEPTH.  Folding it into Bu_elements instead
+        # would have made it a predecessor and bought a third serial stage.
+        # 0.0 when off => byte-identical to the v1 forward.
+        o_fw = self._apply_fastweight(x, eps) if self.fast_weight else 0.0
+        output = ys + Du + o_fw                                        # (L, H)
 
         # ── 6) ADC out (analog -> digital) ──
         if self.noise_sigma > 0:
@@ -621,7 +883,13 @@ def init_MambinoSSM(H, P, Lambda_re_init, Lambda_im_init, V, Vinv,
                     dac_in_enabled=True, adc_out_enabled=True,
                     retention_sigma=0.0, read_sigma=0.0,
                     surprise_gate=False, gate_alpha=0.9, gate_range="signed",
-                    gate_kappa_init=0.0, gate_bias_init=2.0, gate_detach=False):
+                    gate_kappa_init=0.0, gate_bias_init=2.0, gate_detach=False,
+                    fast_weight=False, fw_dim=8, fw_proj="shared",
+                    fw_rule="hebb", fw_kq_source="x", fw_v_source="eps",
+                    fw_impl="chunk", fw_chunk=64, fw_gate_mode="surprise",
+                    fw_kappa_init=0.0, fw_bias_init=0.0, fw_gamma_init=0.95,
+                    fw_gamma_trainable=True, fw_norm_qkv=True,
+                    fw_out_init="zeros", fw_read="exclusive"):
     """Factory matching init_S5SSM signature exactly so MambinoSSM can
     be swapped in via a flag with no other changes.
 
@@ -654,4 +922,20 @@ def init_MambinoSSM(H, P, Lambda_re_init, Lambda_im_init, V, Vinv,
                    gate_range=gate_range,
                    gate_kappa_init=gate_kappa_init,
                    gate_bias_init=gate_bias_init,
-                   gate_detach=gate_detach)
+                   gate_detach=gate_detach,
+                   fast_weight=fast_weight,
+                   fw_dim=fw_dim,
+                   fw_proj=fw_proj,
+                   fw_rule=fw_rule,
+                   fw_kq_source=fw_kq_source,
+                   fw_v_source=fw_v_source,
+                   fw_impl=fw_impl,
+                   fw_chunk=fw_chunk,
+                   fw_gate_mode=fw_gate_mode,
+                   fw_kappa_init=fw_kappa_init,
+                   fw_bias_init=fw_bias_init,
+                   fw_gamma_init=fw_gamma_init,
+                   fw_gamma_trainable=fw_gamma_trainable,
+                   fw_norm_qkv=fw_norm_qkv,
+                   fw_out_init=fw_out_init,
+                   fw_read=fw_read)
