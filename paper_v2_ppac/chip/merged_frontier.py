@@ -57,7 +57,8 @@ def multi_domain_predictor():
     serial vs Mambino concurrent-predictor, under barriers. Shows that pushing Mambino toward
     Pure S5's latency INVERTS its area+peak advantages -- the domains conflict."""
     modes = [("Pure S5", "corner1", False), ("Mamb serial", "corner3p", False),
-             ("Mamb concur", "corner3p", True)]
+             ("Mamb concur", "corner3p", True),
+             ("M2.0 serial", "mambino2p0", False), ("M2.0 concur", "mambino2p0", True)]
     data = {name: all_points(cfg, barrier=True, concurrent=conc) for name, cfg, conc in modes}
     print("\n" + "=" * 84)
     print("MULTI-DOMAIN predictor comparison (barrier, both-knob) — the domains CONFLICT")

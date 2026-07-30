@@ -141,7 +141,7 @@ def ab_bounds():
           f"{'lat_ser ms':>11}{'lat_con ms':>11}{'peak_ser mW':>12}{'peak_con mW':>12}{'acc':>8}")
     print("-" * 90)
     rows = {}
-    for cfg in ["corner1", "corner2", "corner3p", "config4", "config5"]:
+    for cfg in ["corner1", "corner2", "corner3p", "config4", "config5", "mambino2p0"]:
         r = atp_optimal(cfg, honest=True); rows[cfg] = r
         print(f"{cfg:<9}{r['total_pe']:>7,}{r['total_area_mm2']:>8.2f}{r['energy_full_uJ']:>10.1f}"
               f"{r['lat_serial_ms']:>11.3f}{r['lat_concurrent_ms']:>11.3f}"

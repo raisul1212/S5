@@ -42,11 +42,13 @@ NOC_ENERGY_FRACTION_OF_MAC = 0.10
 
 CONFIG_TIER = {"config4": "320KB", "config5": "320KB",
                "corner1": "512KB", "corner2": "384KB", "corner3p": "384KB",
+               "mambino2p0": "320KB",   # Mambino 2.0 = config4 arch + surprise gate (same tier)
                "default": "384KB"}
 TIER_KB = {"320KB": 320, "384KB": 384, "512KB": 512, "default": 384}
 _cfg_ctx = "default"    # set inside config_ppac to route TIER lookup for F1 fix
 ACC = {"config4": 0.5993, "config5": 0.5917,
-       "corner1": 0.6089, "corner2": 0.5991, "corner3p": 0.6138}
+       "corner1": 0.6089, "corner2": 0.5991, "corner3p": 0.6138,
+       "mambino2p0": 0.6075}   # PLACEHOLDER: signed gate seed 6554595; update to 8-seed mean
 
 # Configs whose K=40/N=40 low-rank gate blocks may relax to >=62.5% util (v1 rule).
 # Module-level so a driver can toggle it for a no-relaxation sensitivity sweep.
@@ -262,7 +264,7 @@ def elemwise_energy(elem_yaml, ert):
     return total_pJ, per_class
 
 # --- State-SRAM (unchanged from direct_ppac) ----------------------------------
-N_TRAJ = {"config4": 3, "config5": 2, "corner1": 2, "corner2": 2, "corner3p": 3}
+N_TRAJ = {"config4": 3, "config5": 2, "corner1": 2, "corner2": 2, "corner3p": 3, "mambino2p0": 3}
 def state_energy(manifest, config, ert):
     args = manifest["args"]
     L = 2048; n_layers = args["n_layers"]

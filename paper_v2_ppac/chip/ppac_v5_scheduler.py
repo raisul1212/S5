@@ -156,7 +156,8 @@ def optimal_n(config, honest=True, nmax=256):
 # in series (pay fill/drain per segment, less overlap) instead of one long backbone pipe. The
 # barrier adds NO work (conservation: n=1 barrier makespan == serial), it only limits overlap.
 # ------------------------------------------------------------------
-DAG_FILE = {"corner1": "workload_corner1_dag_dag.yaml", "corner3p": "workload_corner3p_dag_dag.yaml"}
+DAG_FILE = {"corner1": "workload_corner1_dag_dag.yaml", "corner3p": "workload_corner3p_dag_dag.yaml",
+            "mambino2p0": "workload_mambino2p0_dag_dag.yaml"}
 
 
 @functools.lru_cache(maxsize=None)
