@@ -52,7 +52,7 @@ def main():
     print("=" * 92)
     print("PEAK-POWER ESTIMATES BY SCENARIO (v5) — array peak exact; complete-chip = band w/ background")
     print("=" * 92)
-    for cfg in ["corner1", "corner2", "corner3p", "config4", "config5"]:
+    for cfg in ["corner1", "corner2", "corner3p", "config4", "config5", "mambino2p0"]:
         b, bg, rows = scenarios(cfg)
         tag = "Pure S5" if cfg in ("corner1", "corner2") else "Mambino"
         print(f"\n{cfg} ({tag}, acc {m4.ACC[cfg]:.4f}, area {b['total_area_mm2']:.1f} mm2, "
