@@ -26,6 +26,10 @@ if __name__ == "__main__":
 		help="char-LM: cap train steps per epoch (0=full pass; char-LM trains by steps)")
 	parser.add_argument("--lm_eval_batches", type=int, default=0,
 		help="char-LM: cap val/test batches for BPC (0=full split; use small for smoke)")
+	parser.add_argument("--lm_steps", type=int, default=0,
+		help="char-LM: total step budget for the step-based warmup->cosine schedule (0=use epoch schedule)")
+	parser.add_argument("--lm_warmup_steps", type=int, default=0,
+		help="char-LM: linear-warmup steps (0=auto, ~2%% of lm_steps)")
 
 	# Model Parameters
 	parser.add_argument("--n_layers", type=int, default=6,

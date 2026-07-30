@@ -1,5 +1,6 @@
 from functools import partial
 import os
+import math
 import pickle
 import jax
 import jax.numpy as np
@@ -130,6 +131,22 @@ def reduce_lr_on_plateau(input, factor=0.2, patience=20, lr_min=1e-6):
 
 def constant_lr(step, base_lr, end_step,  lr_min=None):
     return base_lr
+
+
+def make_warmup_cosine(warmup_steps, total_steps, lr_min=1e-6):
+    """Step-based LR schedule for char-LM: linear warmup over `warmup_steps`, then
+    cosine decay base_lr -> lr_min over the remaining budget to `total_steps`. Returns
+    a scheduler with the (step, base_lr, end_step, lr_min) signature so it drops into
+    update_learning_rate_per_step; `step` is the GLOBAL cumulative training step, so the
+    schedule spans the whole budget across capped 'epochs' (the epoch-based warmup/cosine
+    branch in train.py does not fit a by-steps LM run)."""
+    def sched(step, base_lr, end_step=None, _lr_min=None):
+        if warmup_steps > 0 and step < warmup_steps:
+            return base_lr * (step + 1) / warmup_steps
+        denom = max(1, total_steps - warmup_steps)
+        prog = min(1.0, max(0.0, (step - warmup_steps) / denom))
+        return lr_min + 0.5 * (base_lr - lr_min) * (1.0 + math.cos(math.pi * prog))
+    return sched
 
 
 def update_learning_rate_per_step(lr_params, state):

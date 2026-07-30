@@ -6,7 +6,7 @@ from jax.scipy.linalg import block_diag
 import wandb
 
 from .train_helpers import create_train_state, reduce_lr_on_plateau,\
-    linear_warmup, cosine_annealing, constant_lr, train_epoch, validate,\
+    linear_warmup, cosine_annealing, constant_lr, make_warmup_cosine, train_epoch, validate,\
     lm_train_epoch, lm_validate,\
     save_checkpoint, save_checkpoint_msgpack, load_checkpoint_msgpack,\
     compute_predictor_frobenius
@@ -253,6 +253,15 @@ def train(args):
         # TODO: Switch to letting Optax handle this.
         #  Passing this around to manually handle per step learning rate decay.
         lr_params = (decay_function, ssm_lr, lr, step, end_step, args.opt_config, args.lr_min)
+
+        # char-LM: replace the epoch-based warmup/cosine with a STEP-based schedule
+        # spanning the full --lm_steps budget (warmup then cosine over global step).
+        if getattr(args, 'task', 'classification') == 'lm' and int(getattr(args, 'lm_steps', 0)) > 0:
+            _lm_total = int(args.lm_steps)
+            _lm_warm = int(getattr(args, 'lm_warmup_steps', 0)) or max(1, _lm_total // 50)
+            decay_function = make_warmup_cosine(_lm_warm, _lm_total, args.lr_min)
+            end_step = _lm_total
+            lr_params = (decay_function, ssm_lr, lr, step, end_step, args.opt_config, args.lr_min)
 
         train_rng, skey = random.split(train_rng)
         if getattr(args, 'task', 'classification') == 'lm':
