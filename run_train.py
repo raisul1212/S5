@@ -161,6 +161,19 @@ if __name__ == "__main__":
 							 "L=8).  Default False = causal forward-only "
 							 "predictor (streaming-inference-compatible). "
 							 "Ignored when --use_mambino_ssm=False.")
+	parser.add_argument("--surprise_gate", type=str2bool, default=False,
+						help="v2 Cluster-A signed adaptive gate on eps->W_eps inside MambinoSSM: g=tanh(kappa*z+bias), z=running-EMA-normalized ||eps||. Off (default) => byte-identical kill-switch; +2 scalars/layer.")
+	parser.add_argument("--gate_alpha", type=float, default=0.9,
+						help="EMA decay of the surprise-gate running normalizer.")
+	parser.add_argument("--gate_range", type=str, default="signed",
+						choices=["signed", "unsigned"],
+						help="signed=tanh[-1,1] (push/hold/pop); unsigned=sigmoid[0,1].")
+	parser.add_argument("--gate_kappa_init", type=float, default=0.0,
+						help="Init for gate sensitivity kappa (0 => g starts flat).")
+	parser.add_argument("--gate_bias_init", type=float, default=2.0,
+						help="Init for gate bias (+2 => g~0.96 = ~v1 write, livelier kappa grad).")
+	parser.add_argument("--gate_detach", type=str2bool, default=False,
+						help="Also stop-gradient eps in the W_eps write (calibration fix); gate DECISION always detaches.")
 	parser.add_argument("--chip_eval_sigmas", type=str, default="",
 						help="Comma-separated analog noise sigmas to sweep at "
 							 "end of training (e.g. '0,0.01,0.02,0.05,0.08'). "

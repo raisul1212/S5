@@ -150,6 +150,18 @@ class MambinoSSM(nn.Module):
     #   read_sigma: independent (post-scan Gaussian)
     retention_sigma: float = 0.0
     read_sigma: float = 0.0
+    # -- v2 surprise gate (Cluster A: roles 1+3+4 = state-write x adaptive
+    # gain x segmentation-via-sign).  Per-token signed adaptive gate on the
+    # eps -> W_eps write:  g(t)=tanh(kappa*z(t)+bias), z=running-EMA-normalized
+    # ||eps||,  u(t)=B_bar@x(t) + g(t)*(W_eps_bar@eps(t)).  Off (default) =>
+    # byte-identical param tree + forward (kill-switch; existing ckpts reload).
+    # Adds 2 scalars/layer.
+    surprise_gate: bool = False
+    gate_alpha: float = 0.9        # EMA decay of the running normalizer
+    gate_range: str = "signed"     # "signed"=tanh [-1,1] (push/pop) | "unsigned"=sigmoid [0,1]
+    gate_kappa_init: float = 0.0   # sensitivity init (0 => g starts flat at tanh(bias))
+    gate_bias_init: float = 2.0    # bias init (+2 => g~0.96 = ~v1 write, livelier kappa grad)
+    gate_detach: bool = False      # also stop-gradient eps in the WRITE (calibration fix)
 
     def setup(self):
         """Initialize main SSM parameters (identical to S5SSM) plus
@@ -328,6 +340,61 @@ class MambinoSSM(nn.Module):
             _, self.W_eps_bar = discretize_bilinear(
                 self.Lambda, W_eps_tilde, step)
 
+        # ── v2 surprise-gate params (2 scalars).  Allocated ONLY when the
+        # gate is on, so surprise_gate=False leaves the param tree
+        # byte-identical to today's MambinoSSM and existing checkpoints
+        # reload unchanged. ──
+        if self.surprise_gate:
+            self.gate_kappa = self.param(
+                "gate_kappa",
+                lambda rng, shape: np.full(shape, self.gate_kappa_init),
+                (1,))
+            self.gate_bias = self.param(
+                "gate_bias",
+                lambda rng, shape: np.full(shape, self.gate_bias_init),
+                (1,))
+
+    def _surprise_gate(self, eps_seq):
+        """Per-token signed adaptive gate g(t) on the eps -> W_eps write.
+
+            s(t)   = ||eps(t)||_2                     (surprise magnitude at H)
+            mu, s2 = causal EMA of s, s^2             (running normalizer)
+            z(t)   = (s(t) - mu(t)) / sqrt(var+eps)   (adaptive threshold)
+            g(t)   = tanh(kappa*z + bias)             ([-1,1]: push+/hold0/pop-)
+
+        Scan-safe: pointwise ops + one causal-EMA associative scan (a linear
+        recurrence, the same primitive as the SSM scan); the main scan is
+        untouched, so parallelism is preserved.  The gate DECISION reads
+        stop_gradient(eps) so it never trains the predictor (the gain is a
+        top-down, task-driven signal; the surprise stays the predictor's).
+        Returns (L, 1) real.
+        """
+        s = np.linalg.norm(jax.lax.stop_gradient(eps_seq), axis=-1)   # (L,)
+        L = s.shape[0]
+        a = self.gate_alpha
+        A = np.full((L, 1), a)
+        _, mu = jax.lax.associative_scan(
+            binary_operator, (A, ((1.0 - a) * s)[:, None]))
+        _, m2 = jax.lax.associative_scan(
+            binary_operator, (A, ((1.0 - a) * (s * s))[:, None]))
+        mu = mu[:, 0]
+        m2 = m2[:, 0]
+        # Adam-style bias-correction of the EMAs: without it the warmup
+        # underestimate makes early tokens spuriously surprising (z(0)~3
+        # regardless of input).  Dividing by (1-alpha^(t+1)) gives z(0)=0
+        # and self-corrects to the true EMA as t grows (no masking needed).
+        corr = 1.0 - a ** (np.arange(L) + 1.0)          # (L,)
+        mu = mu / corr
+        m2 = m2 / corr
+        sig = np.sqrt(np.maximum(m2 - mu * mu, 0.0) + 1e-6)
+        z = (s - mu) / sig                                            # (L,)
+        pre = self.gate_kappa[0] * z + self.gate_bias[0]
+        if self.gate_range == "unsigned":
+            g = jax.nn.sigmoid(pre)
+        else:
+            g = np.tanh(pre)
+        return g[:, None]                                             # (L, 1)
+
     def _apply_predictor_scan(self, input_sequence):
         """Run the predictor scan and produce x_hat(t).
 
@@ -432,11 +499,17 @@ class MambinoSSM(nn.Module):
         if self.noise_sigma > 0:
             Bu_x = inject_analog_noise(
                 Bu_x, self.noise_sigma, self.make_rng('noise'))
-        Bu_eps = jax.vmap(lambda u: self.W_eps_bar @ u)(eps_seq)  # (L, local_P)
+        eps_write = jax.lax.stop_gradient(eps_seq) if self.gate_detach else eps_seq
+        Bu_eps = jax.vmap(lambda u: self.W_eps_bar @ u)(eps_write)  # (L, local_P)
         # W_eps analog crossbar noise
         if self.noise_sigma > 0:
             Bu_eps = inject_analog_noise(
                 Bu_eps, self.noise_sigma, self.make_rng('noise'))
+        # v2 surprise gate: per-token signed modulation of the eps->W_eps write.
+        # (kill-switch: when surprise_gate=False AND gate_detach=False this
+        # block reduces to the original `Bu_eps = W_eps_bar @ eps_seq`.)
+        if self.surprise_gate:
+            Bu_eps = self._surprise_gate(eps_seq) * Bu_eps
         Bu_elements = Bu_x + Bu_eps                              # additive PC
 
         Lambda_elements = self.Lambda_bar * np.ones((L, self.Lambda_bar.shape[0]))
@@ -546,7 +619,9 @@ def init_MambinoSSM(H, P, Lambda_re_init, Lambda_im_init, V, Vinv,
                     bidir_predictor=False,
                     noise_sigma=0.0, adc_bits=0, dac_bits=0,
                     dac_in_enabled=True, adc_out_enabled=True,
-                    retention_sigma=0.0, read_sigma=0.0):
+                    retention_sigma=0.0, read_sigma=0.0,
+                    surprise_gate=False, gate_alpha=0.9, gate_range="signed",
+                    gate_kappa_init=0.0, gate_bias_init=2.0, gate_detach=False):
     """Factory matching init_S5SSM signature exactly so MambinoSSM can
     be swapped in via a flag with no other changes.
 
@@ -573,4 +648,10 @@ def init_MambinoSSM(H, P, Lambda_re_init, Lambda_im_init, V, Vinv,
                    dac_in_enabled=dac_in_enabled,
                    adc_out_enabled=adc_out_enabled,
                    retention_sigma=retention_sigma,
-                   read_sigma=read_sigma)
+                   read_sigma=read_sigma,
+                   surprise_gate=surprise_gate,
+                   gate_alpha=gate_alpha,
+                   gate_range=gate_range,
+                   gate_kappa_init=gate_kappa_init,
+                   gate_bias_init=gate_bias_init,
+                   gate_detach=gate_detach)

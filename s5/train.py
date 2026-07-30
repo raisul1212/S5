@@ -97,6 +97,18 @@ def train(args):
     print("V.shape={}".format(V.shape))
     print("Vinv.shape={}".format(Vinv.shape))
 
+    # ── v2 surprise-gate guard: gate_detach=True stop-gradients eps in the
+    # write, so the predictor then trains ONLY via lambda_pc*L_int.  With
+    # lambda_pc=0 that is zero gradient => predictor frozen at HiPPO init
+    # (degenerate; NOT the labelled calibration fix).  Require lambda_pc>0.
+    if (getattr(args, 'surprise_gate', False)
+            and getattr(args, 'gate_detach', False)
+            and float(getattr(args, 'lambda_pc', 0.0)) == 0.0):
+        raise ValueError(
+            "gate_detach=True with lambda_pc=0.0 freezes the MambinoSSM "
+            "predictor (write detached AND intrinsic loss zero-weighted => "
+            "zero gradient). Use lambda_pc>0 with gate_detach=True.")
+
     # ── Mambino-SSM route: replace S5SSM with MambinoSSM (predictor branch
     # + additive PC W_eps) when --use_mambino_ssm is set.  Drop-in
     # compatible signature so all S5 downstream code is unchanged.
@@ -117,7 +129,13 @@ def train(args):
                                        conj_sym=args.conj_sym,
                                        clip_eigs=args.clip_eigs,
                                        bidirectional=args.bidirectional,
-                                       bidir_predictor=bidir_predictor)
+                                       bidir_predictor=bidir_predictor,
+                                       surprise_gate=getattr(args, 'surprise_gate', False),
+                                       gate_alpha=getattr(args, 'gate_alpha', 0.9),
+                                       gate_range=getattr(args, 'gate_range', 'signed'),
+                                       gate_kappa_init=getattr(args, 'gate_kappa_init', 0.0),
+                                       gate_bias_init=getattr(args, 'gate_bias_init', 3.0),
+                                       gate_detach=getattr(args, 'gate_detach', False))
     else:
         ssm_init_fn = init_S5SSM(H=args.d_model,
                                  P=ssm_size,
@@ -552,6 +570,12 @@ def train(args):
                         conj_sym=args.conj_sym, clip_eigs=args.clip_eigs,
                         bidirectional=args.bidirectional,
                         bidir_predictor=getattr(args, 'bidir_predictor', False),
+                        surprise_gate=getattr(args, 'surprise_gate', False),
+                        gate_alpha=getattr(args, 'gate_alpha', 0.9),
+                        gate_range=getattr(args, 'gate_range', 'signed'),
+                        gate_kappa_init=getattr(args, 'gate_kappa_init', 0.0),
+                        gate_bias_init=getattr(args, 'gate_bias_init', 3.0),
+                        gate_detach=getattr(args, 'gate_detach', False),
                         noise_sigma=sigma, adc_bits=bits, dac_bits=bits)
                 else:
                     n_ssm = init_S5SSM(H=args.d_model, P=ssm_size,

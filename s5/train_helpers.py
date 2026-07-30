@@ -315,14 +315,14 @@ def create_train_state(model_cls,
             ssm_fn = map_nested_fn(
                 lambda k, _: "ssm"
                 if k in ["Lambda_re", "Lambda_im", "norm",
-                         "Lambda_s_re", "Lambda_s_im"]
+                         "Lambda_s_re", "Lambda_s_im", "gate_kappa", "gate_bias"]
                 else ("none" if k in [] else "regular")
             )
         else:
             ssm_fn = map_nested_fn(
                 lambda k, _: "ssm"
                 if k in ["Lambda_re", "Lambda_im", "log_step", "norm",
-                         "Lambda_s_re", "Lambda_s_im", "log_step_s"]
+                         "Lambda_s_re", "Lambda_s_im", "log_step_s", "gate_kappa", "gate_bias"]
                 else ("none" if k in [] else "regular")
             )
         tx = optax.multi_transform(
