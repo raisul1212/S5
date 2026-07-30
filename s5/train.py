@@ -16,6 +16,61 @@ from .ssm_init import make_DPLR_HiPPO
 from .mambino_ssm import init_MambinoSSM
 
 
+def _fw_kwargs(args):
+    """Cluster-B fast-weight kwargs, threaded IDENTICALLY to both
+    init_MambinoSSM call sites (the eval path silently diverging from the
+    training path is exactly the class of bug this centralisation prevents)."""
+    return dict(
+        fast_weight=getattr(args, 'fast_weight', False),
+        fw_dim=getattr(args, 'fw_dim', 8),
+        fw_proj=getattr(args, 'fw_proj', 'shared'),
+        fw_rule=getattr(args, 'fw_rule', 'hebb'),
+        fw_kq_source=getattr(args, 'fw_kq_source', 'x'),
+        fw_v_source=getattr(args, 'fw_v_source', 'eps'),
+        fw_impl=getattr(args, 'fw_impl', 'chunk'),
+        fw_chunk=getattr(args, 'fw_chunk', 64),
+        fw_gate_mode=getattr(args, 'fw_gate_mode', 'surprise'),
+        fw_kappa_init=getattr(args, 'fw_kappa_init', 0.0),
+        fw_bias_init=getattr(args, 'fw_bias_init', 0.0),
+        fw_gamma_init=getattr(args, 'fw_gamma_init', 0.95),
+        fw_gamma_trainable=getattr(args, 'fw_gamma_trainable', True),
+        fw_norm_qkv=getattr(args, 'fw_norm_qkv', True),
+        fw_out_init=getattr(args, 'fw_out_init', 'zeros'),
+        fw_read=getattr(args, 'fw_read', 'exclusive'),
+    )
+
+
+def _check_fw_flags(args):
+    """Hard-error on incoherent Cluster-B flag combinations, rather than
+    silently computing something that is not the advertised mechanism."""
+    if not getattr(args, 'fast_weight', False):
+        return
+    if getattr(args, 'fw_rule', 'hebb') == 'delta' and getattr(args, 'fw_impl', 'chunk') != 'chunk':
+        raise ValueError(
+            "fw_rule=delta requires fw_impl=chunk. The delta rule's transition "
+            "(I - beta k k^T) is a DATA-DEPENDENT MATRIX, so it is not an "
+            "associative scan; running it under fw_impl=scan would silently "
+            "compute the wrong recurrence.")
+    if not getattr(args, 'use_mambino_ssm', False):
+        raise ValueError(
+            "--fast_weight requires --use_mambino_ssm: the fast weight is gated "
+            "by the predictor's eps, which only MambinoSSM produces.")
+    # Analogue of the Cluster-A frozen-predictor trap: if every path from the
+    # task loss to the predictor is cut, the predictor stays at HiPPO init.
+    # eps reaches the fast weight through W_v, but the gate's z is always
+    # stop_gradient'd, so sourcing NOTHING from eps + a detached W_eps write +
+    # lambda_pc=0 leaves the predictor with zero gradient.
+    if (getattr(args, 'fw_v_source', 'eps') == 'x'
+            and getattr(args, 'fw_kq_source', 'x') == 'x'
+            and getattr(args, 'gate_detach', False)
+            and float(getattr(args, 'lambda_pc', 0.0)) == 0.0):
+        raise ValueError(
+            "fw_{kq,v}_source=x with gate_detach=True and lambda_pc=0.0 freezes "
+            "the MambinoSSM predictor: no task gradient reaches it (the fast "
+            "weight's z is stop_gradient'd by design). Use lambda_pc>0, "
+            "gate_detach=False, or source k/q/v from eps.")
+
+
 def train(args):
     """
     Main function to train over a certain number of epochs
@@ -109,6 +164,9 @@ def train(args):
             "predictor (write detached AND intrinsic loss zero-weighted => "
             "zero gradient). Use lambda_pc>0 with gate_detach=True.")
 
+    # ── v2 Cluster-B fast-weight guardrails ──
+    _check_fw_flags(args)
+
     # ── Mambino-SSM route: replace S5SSM with MambinoSSM (predictor branch
     # + additive PC W_eps) when --use_mambino_ssm is set.  Drop-in
     # compatible signature so all S5 downstream code is unchanged.
@@ -135,7 +193,8 @@ def train(args):
                                        gate_range=getattr(args, 'gate_range', 'signed'),
                                        gate_kappa_init=getattr(args, 'gate_kappa_init', 0.0),
                                        gate_bias_init=getattr(args, 'gate_bias_init', 3.0),
-                                       gate_detach=getattr(args, 'gate_detach', False))
+                                       gate_detach=getattr(args, 'gate_detach', False),
+                                       **_fw_kwargs(args))
     else:
         ssm_init_fn = init_S5SSM(H=args.d_model,
                                  P=ssm_size,
@@ -576,6 +635,7 @@ def train(args):
                         gate_kappa_init=getattr(args, 'gate_kappa_init', 0.0),
                         gate_bias_init=getattr(args, 'gate_bias_init', 3.0),
                         gate_detach=getattr(args, 'gate_detach', False),
+                        **_fw_kwargs(args),
                         noise_sigma=sigma, adc_bits=bits, dac_bits=bits)
                 else:
                     n_ssm = init_S5SSM(H=args.d_model, P=ssm_size,

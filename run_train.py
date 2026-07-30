@@ -174,6 +174,52 @@ if __name__ == "__main__":
 						help="Init for gate bias (+2 => g~0.96 = ~v1 write, livelier kappa grad).")
 	parser.add_argument("--gate_detach", type=str2bool, default=False,
 						help="Also stop-gradient eps in the W_eps write (calibration fix); gate DECISION always detaches.")
+
+	# ── v2 Cluster-B: surprise-gated fast weight (role 2 = inference-time learning) ──
+	parser.add_argument("--fast_weight", type=str2bool, default=False,
+						help="v2 Cluster-B fast weight: M_t = gamma*M_{t-1} + (1-gamma)*s*(v k^T), "
+							 "o_t = M_{t-1} q_t, added to the block output. M is per-sequence STATE, "
+							 "not parameters. Off (default) => byte-identical kill-switch.")
+	parser.add_argument("--fw_dim", type=int, default=8,
+						help="d: q/k/v dim; the fast weight M is d x d. shared d=8 => +17.0%% params.")
+	parser.add_argument("--fw_proj", type=str, default="shared",
+						choices=["shared", "separate"],
+						help="shared = 1 H->d down-proj + 3 dxd mixers (2Hd+3d^2); separate = 3 H->d (4Hd).")
+	parser.add_argument("--fw_rule", type=str, default="hebb", choices=["hebb", "delta"],
+						help="hebb = B0 outer-product write; delta = B1 error-correcting write (NOT yet implemented).")
+	parser.add_argument("--fw_kq_source", type=str, default="x", choices=["x", "eps"],
+						help="Address space for k and q. Default x keeps write-address and query in one anchored space.")
+	parser.add_argument("--fw_v_source", type=str, default="eps", choices=["x", "eps"],
+						help="Content written into M. Default eps = the SIGNED first moment (theory-pure); "
+							 "x is the ablation isolating whether surprise-as-content matters beyond the gate.")
+	parser.add_argument("--fw_impl", type=str, default="chunk", choices=["seq", "scan", "chunk"],
+						help="seq = sequential ground truth (slow); scan = associative_scan, O(L*d^2) memory; "
+							 "chunk = chunked, O(L*d + n*d^2). All three are verified equivalent.")
+	parser.add_argument("--fw_chunk", type=int, default=64,
+						help="Chunk length C for --fw_impl=chunk.")
+	parser.add_argument("--fw_gate_mode", type=str, default="surprise",
+						choices=["surprise", "const", "off"],
+						help="surprise = sigmoid(kappa*z+bias) (the hypothesis); const = kappa pinned to 0, "
+							 "bias learned (THE iso-param ablation: same param count, same free write rate, "
+							 "differs only in z-dependence); off = ungated, s==1.")
+	parser.add_argument("--fw_kappa_init", type=float, default=0.0,
+						help="Init for the fast-weight gate sensitivity kappa.")
+	parser.add_argument("--fw_bias_init", type=float, default=0.0,
+						help="Init for the fast-weight gate bias (0 => sigmoid=0.5, half-strength write).")
+	parser.add_argument("--fw_gamma_init", type=float, default=0.95,
+						help="Fast-weight decay gamma (memory length ~ 1/(1-gamma)). Stored as a logit when trainable.")
+	parser.add_argument("--fw_gamma_trainable", type=str2bool, default=True,
+						help="False => gamma frozen at --fw_gamma_init EXACTLY. Use with --fw_gamma_init=0 "
+							 "for the no-memory control arm.")
+	parser.add_argument("--fw_norm_qkv", type=str2bool, default=True,
+						help="L2-normalize q, k AND v. Normalizing v matters: otherwise ||v|| ~ ||eps|| puts "
+							 "surprise into the write twice and blunts the gated-vs-const ablation.")
+	parser.add_argument("--fw_out_init", type=str, default="zeros", choices=["zeros", "lecun"],
+						help="zeros => the branch is an exact no-op at step 0, so training STARTS at the baseline.")
+	parser.add_argument("--fw_read", type=str, default="exclusive",
+						choices=["exclusive", "inclusive"],
+						help="exclusive = o_t reads M_{t-1} (read before write). inclusive lets the layer learn "
+							 "W_q~W_k and degenerate into a gated INSTANTANEOUS path that uses no memory.")
 	parser.add_argument("--chip_eval_sigmas", type=str, default="",
 						help="Comma-separated analog noise sigmas to sweep at "
 							 "end of training (e.g. '0,0.01,0.02,0.05,0.08'). "
