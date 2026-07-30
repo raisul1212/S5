@@ -22,6 +22,10 @@ if __name__ == "__main__":
 		help="classification (default) or lm (char-LM: causal per-position head + BPC metric)")
 	parser.add_argument("--lm_seqlen", type=int, default=1024,
 		help="char-LM chunk/sequence length (only used when --task=lm)")
+	parser.add_argument("--lm_max_steps", type=int, default=0,
+		help="char-LM: cap train steps per epoch (0=full pass; char-LM trains by steps)")
+	parser.add_argument("--lm_eval_batches", type=int, default=0,
+		help="char-LM: cap val/test batches for BPC (0=full split; use small for smoke)")
 
 	# Model Parameters
 	parser.add_argument("--n_layers", type=int, default=6,

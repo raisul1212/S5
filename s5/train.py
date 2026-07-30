@@ -258,7 +258,8 @@ def train(args):
         if getattr(args, 'task', 'classification') == 'lm':
             state, train_loss, step, epoch_metrics = lm_train_epoch(
                 state, skey, model_cls, trainloader, seq_len, in_dim,
-                args.batchnorm, lr_params, lambda_pc=getattr(args, 'lambda_pc', 0.0))
+                args.batchnorm, lr_params, lambda_pc=getattr(args, 'lambda_pc', 0.0),
+                max_steps=int(getattr(args, 'lm_max_steps', 0)))
         else:
             state, train_loss, step, epoch_metrics = train_epoch(
                 state,
@@ -314,9 +315,11 @@ def train(args):
 
         if getattr(args, 'task', 'classification') == 'lm':
             print(f"[*] Running Epoch {epoch + 1} Validation (BPC)...")
-            val_bpc = lm_validate(state, model_cls, valloader, seq_len, in_dim, args.batchnorm)
+            val_bpc = lm_validate(state, model_cls, valloader, seq_len, in_dim, args.batchnorm,
+                                  max_batches=int(getattr(args, 'lm_eval_batches', 0)))
             print(f"[*] Running Epoch {epoch + 1} Test (BPC)...")
-            test_bpc = lm_validate(state, model_cls, testloader, seq_len, in_dim, args.batchnorm)
+            test_bpc = lm_validate(state, model_cls, testloader, seq_len, in_dim, args.batchnorm,
+                                   max_batches=int(getattr(args, 'lm_eval_batches', 0)))
             # map onto the classification bookkeeping: loss=BPC (minimized), acc=-BPC
             # (maximized) so both selection criteria pick the lowest-BPC model and
             # best_test_loss holds the val-selected test BPC.

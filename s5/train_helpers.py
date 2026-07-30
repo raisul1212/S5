@@ -763,6 +763,7 @@ def prep_lm_batch(batch, seq_len, in_dim):
     return x, y, its
 
 
+@partial(jax.jit, static_argnums=(5, 6, 7))
 def lm_train_step(state, rng, batch_inputs, batch_targets, batch_its,
                   model, batchnorm, lambda_pc):
     """Mirror of train_step but with the per-position LM loss. Mambino's intrinsic
@@ -792,13 +793,17 @@ def lm_train_step(state, rng, batch_inputs, batch_targets, batch_its,
 
 
 def lm_train_epoch(state, rng, model, trainloader, seq_len, in_dim, batchnorm,
-                   lr_params, lambda_pc=0.0):
-    """Mirror of train_epoch for the LM path. Returns (state, mean_loss, step, metrics)."""
+                   lr_params, lambda_pc=0.0, max_steps=0):
+    """Mirror of train_epoch for the LM path. Returns (state, mean_loss, step, metrics).
+    max_steps>0 caps the number of train steps this 'epoch' (char-LM trains by steps,
+    not full passes over 90M bytes; also used for smoke tests)."""
     model = model(training=True)
     batch_losses, batch_task, batch_intr = [], [], []
     per_block_accum = {}
     decay_function, ssm_lr, lr, step, end_step, opt_config, lr_min = lr_params
-    for batch in tqdm(trainloader):
+    for batch_idx, batch in enumerate(tqdm(trainloader)):
+        if max_steps and batch_idx >= max_steps:
+            break
         inputs, targets, its = prep_lm_batch(batch, seq_len, in_dim)
         rng, drop_rng = jax.random.split(rng)
         state, loss, task_loss, intr, per_block = lm_train_step(
@@ -826,11 +831,14 @@ def lm_eval_step(batch_inputs, batch_its, state, model, batchnorm):
     return model.apply({"params": state.params}, batch_inputs, batch_its)
 
 
-def lm_validate(state, model, testloader, seq_len, in_dim, batchnorm):
-    """Bits-per-character (BPC) = mean per-token NLL (nats) / ln 2 over the split."""
+def lm_validate(state, model, testloader, seq_len, in_dim, batchnorm, max_batches=0):
+    """Bits-per-character (BPC) = mean per-token NLL (nats) / ln 2 over the split.
+    max_batches>0 caps eval batches (smoke tests); 0 = full split."""
     model = model(training=False)
     tot_nll, tot_tok = 0.0, 0
-    for batch in tqdm(testloader):
+    for bi, batch in enumerate(tqdm(testloader)):
+        if max_batches and bi >= max_batches:
+            break
         inputs, targets, its = prep_lm_batch(batch, seq_len, in_dim)
         log_probs = lm_eval_step(inputs, its, state, model, batchnorm)
         tgt = one_hot(targets, log_probs.shape[-1])
