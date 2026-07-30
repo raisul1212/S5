@@ -182,5 +182,48 @@ math (1). Those three are the delta from the current single-task state.
 4. Scale to 8 seeds × {S5-gelu, Mambino-gateless, Mambino-2.0-signed, unsigned}.
 5. Surprise diagnostics (adapt `eps_diag.py`) + the causal erase-ablation.
 
+---
+
+## 11. Competitive-tier run plan (target ≤ ~1.2 BPC on enwik8, on 2× A30)
+
+Plumbing is validated (gateless causal S5 smoke: 8.35 → 3.57 BPC in 150 steps, commit 538fe88).
+Goal now: reach the **"clearly competitive architecture" tier (≤ ~1.15–1.20 BPC)** AND land the
+iso-param gate ablation. Reference tiers: SOTA (large) ~0.97–1.06; competitive ~1.10–1.20;
+respectable-for-size ~1.3–1.5 (verify exact baselines before citing). ~1.2 is **aspirational, not
+guaranteed** — it depends on model capacity (state size especially); gate the claim on Stage 2.
+
+**Prerequisite — Stage 0 code (small, task=lm-guarded):** the LR schedule is epoch-based
+(`warmup_end` in epochs, cosine over epochs); char-LM trains by STEPS. Add `--lm_steps` (total
+step budget) and, in the LM branch, compute a **step-based** schedule: linear warmup over
+`warmup_steps` (~1–2k), then cosine `lr → lr_min` over `lm_steps`. Byte-identical kill-switch
+(only fires for task=lm). Without this the cosine barely anneals over a capped run.
+
+**Stage 0 — recipe calibration (1× A30, ~half day).** Small config d_model=256, n_layers=8,
+ssm_size_base=64, L=1024, bsz=32, gateless causal S5. Short runs (~5–10k steps) to lock lr
+(try ssm_lr 1e-3, lr_factor 3–5), warmup, grad-clip; confirm healthy descent (BPC → ~1.6–1.8 by
+10k) and that **Mambino 2.0 trains stably** (grad norms bounded, no blow-up). Output: locked recipe.
+
+**Stage 1 — iso-param gate ablation = the CONTRIBUTION (2× A30, ~1–2 days).** Moderate size (the
+calibrated recipe), ~50–80k steps, ~2–4M params — sized so each run is ~2–4 GPU-h.
+Arms (matched seeds, start with 5: 6554595/42/12345/271828/314159, expand to 8 if it holds):
+Pure-S5-gelu · Mambino-gateless · Mambino-2.0-signed · Mambino-2.0-unsigned. Paired stats
+(Mambino 2.0 < gateless < Pure-S5? signed < unsigned?), mirroring the ListOps result. This gap is
+the paper's finding and does NOT require SOTA BPC.
+
+**Stage 2 — competitive absolute run = the CREDIBILITY number (2× A30, ~1–2 days).** Scale by
+SIZE not head (keep gelu): d_model=512, n_layers=12–16, ssm_size_base=128–256 (big state = LM
+memory capacity), L=2048, bsz=32–48, ~150k steps → ~15–30M params. Two configs Mambino-2.0 +
+Pure-S5-gelu (+ up to 3 seeds if budget), one long run each (~1 day/A30). Target ≤ ~1.2 BPC and
+confirm the gate gap survives at scale. **Checkpoint mid-run:** if BPC plateaus > ~1.3, either
+scale further (compute permitting) or report the size-appropriate number honestly — do not force
+a claim the gelu config can't support.
+
+**Risks / decisions.** (a) ≤1.2 not guaranteed — capacity-bound; Stage 2 checkpoint gates the
+claim. (b) Memory: d=512 + L=2048 + big state on 24 GB A30 — verify bsz fits, cut bsz/L on OOM.
+(c) Compute nodes may lack egress → pre-download enwik8 on the login node (done: cached in the
+worktree). (d) Keep the ablation at gelu (clean isolation of the gate); scale via size only.
+(e) The bidirectional PPAC numbers do NOT transfer to the causal LM workload — re-derive from the
+causal JAXPR before quoting any chip number for LM.
+
 Related: [[cluster_a_surprise_gate]], [[mambino2p0_ppac_result]], [[cluster_b_fastweight_memo]]
 (role-2 is orthogonal — could later stack on the LM too), [[mambino_paper_positioning]].
