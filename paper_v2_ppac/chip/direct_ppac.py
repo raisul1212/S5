@@ -302,9 +302,9 @@ def config_ppac(config: str, workload_dir: Path, chip_dir: Path,
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--workloads_dir",
-                    default=os.path.expanduser("~/dev/ssm-baselines/S5/paper_v2_ppac/workloads"))
+                    default=os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "workloads")))
     ap.add_argument("--chip_dir",
-                    default=os.path.expanduser("~/dev/ssm-baselines/S5/paper_v2_ppac/chip"))
+                    default=os.path.dirname(os.path.abspath(__file__)))
     args = ap.parse_args()
 
     workloads = Path(args.workloads_dir)

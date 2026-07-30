@@ -1,0 +1,99 @@
+format: workload-manifest-v1
+generated_by: extract_workload_from_jaxpr.py
+generated_at: '2026-07-30T05:06:11Z'
+git_sha: 84ca964d60488e03056b9bd8052b61d8ecf551e8
+checkpoint_path: none
+args:
+  ckpt_prefix: none
+  config_name: mambino2p0_dag
+  out_dir: paper_v2_ppac/workloads/
+  emit_dag: true
+  dir_name: ./cache_dir
+  use_mambino_ssm: true
+  ssm_size_base: 16
+  activation_fn: gelu
+  glu_rank: 0
+  glu_structure: dense
+  glu_monarch_heads: 3
+  glu_monarch_b: 0
+  glu_monarch_residual_rank: 0
+  glu_blockdiag_blocks: 2
+  seq_len: 2048
+  in_dim: 20
+  n_classes: 10
+  bidirectional: true
+  batchnorm: true
+  bn_momentum: 0.95
+  prenorm: true
+  blocks: 8
+  n_layers: 8
+  d_model: 128
+  dataset: listops-classification
+  C_init: lecun_normal
+  discretization: zoh
+  mode: pool
+  conj_sym: true
+  clip_eigs: false
+  dt_min: 0.001
+  dt_max: 0.1
+  bidir_predictor: false
+  surprise_gate: true
+  gate_alpha: 0.9
+  gate_range: signed
+  gate_kappa_init: 0.0
+  gate_bias_init: 2.0
+  gate_detach: false
+  bsz: 1
+  p_dropout: 0.0
+  jax_seed: 0
+  ssm_lr_base: 0.001
+  lr_factor: 3.0
+  weight_decay: 0.04
+  opt_config: BfastandCdecay
+  dt_global: false
+jaxpr_walker_totals:
+  random_seed: 0
+  random_unwrap: 0
+  random_clone: 0
+  random_wrap: 0
+  random_split: 0
+  dot_general: 614468096
+  reshape: 0
+  broadcast_in_dim: 0
+  add: 16067194
+  sub: 4243860
+  rsqrt: 4096
+  mul: 33659360
+  convert_element_type: 0
+  slice: 0
+  squeeze: 0
+  concatenate: 0
+  exp: 2088
+  div: 51208
+  transpose: 0
+  pad: 0
+  real: 0
+  stop_gradient: 0
+  reduce_sum: 4439937
+  sqrt: 131072
+  iota: 0
+  pow: 49152
+  max: 0
+  tanh: 8454144
+  rev: 0
+  integer_pow: 6291456
+  lt: 0
+  reduce_max: 9
+  log: 4
+emitter_totals:
+  gemm_count: 42
+  unique_gemm_shapes: 5
+  total_dot_general_flops: 614468096
+  total_elementwise_flops: 73393580
+  elemwise_unique_signatures: 474
+hard_invariant_check:
+  passed: true
+  message: 'dot_general: walker=614,468,096 emitter=614,468,096 (OK); elementwise:
+    walker=73,393,580 emitter=73,393,580 (OK)'
+  rule: sum(emitter.dot_general) == walker.dot_general AND sum(emitter.elementwise)
+    == sum(walker.elementwise)

@@ -22,8 +22,8 @@ from pathlib import Path
 import yaml
 sys.stdout.reconfigure(encoding='utf-8')
 
-CHIP = Path(os.path.expanduser("~/dev/ssm-baselines/S5/paper_v2_ppac/chip"))
-WORKLOADS = Path(os.path.expanduser("~/dev/ssm-baselines/S5/paper_v2_ppac/workloads"))
+CHIP = Path(__file__).resolve().parent
+WORKLOADS = CHIP.parent / "workloads"
 
 STD = [8, 16, 32, 64]
 FREQ_HZ = 1e9

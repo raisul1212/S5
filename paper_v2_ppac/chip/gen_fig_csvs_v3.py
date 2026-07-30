@@ -13,8 +13,8 @@ sanity check" line -- no predictor, no pipelining claim, sequential = pipelined.
 import csv, json, os
 from pathlib import Path
 
-CHIP = Path(os.path.expanduser("~/dev/ssm-baselines/S5/paper_v2_ppac/chip"))
-FIGS = Path(os.path.expanduser("~/dev/ssm-baselines/S5/paper/figure_data"))
+CHIP = Path(__file__).resolve().parent
+FIGS = CHIP.parent.parent / "paper" / "figure_data"
 FIGS.mkdir(parents=True, exist_ok=True)
 
 LABEL = {'config4':'Config 4','config5':'Config 5','corner1':'Corner 1',

@@ -18,8 +18,8 @@ from pathlib import Path
 
 import yaml
 
-CHIP = Path(os.path.expanduser("~/dev/ssm-baselines/S5/paper_v2_ppac/chip"))
-WORKLOADS = Path(os.path.expanduser("~/dev/ssm-baselines/S5/paper_v2_ppac/workloads"))
+CHIP = Path(__file__).resolve().parent
+WORKLOADS = CHIP.parent / "workloads"
 SCALESIM_OUT = CHIP / "scalesim_sweep"
 SCALESIM_OUT.mkdir(exist_ok=True)
 

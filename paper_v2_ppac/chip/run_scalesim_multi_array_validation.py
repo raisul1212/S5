@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-CHIP = Path(os.path.expanduser("~/dev/ssm-baselines/S5/paper_v2_ppac/chip"))
+CHIP = Path(__file__).resolve().parent
 SCALESIM_OUT = CHIP / "scalesim_multi_array_validation"
 SCALESIM_OUT.mkdir(exist_ok=True)
 
