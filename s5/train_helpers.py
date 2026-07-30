@@ -738,3 +738,103 @@ def eval_step(batch_inputs,
     accs = compute_accuracy(logits, batch_labels)
 
     return losses, accs, logits
+
+
+# ============================================================================
+# Char-LM path (ADDITIVE). The classification train_step / train_epoch /
+# validate / eval_step / cross_entropy_loss above are UNTOUCHED -- task="lm"
+# selects these instead at the top level (a task-level kill-switch).
+# ============================================================================
+def lm_cross_entropy(log_probs, targets):
+    """Mean per-token NLL in NATS. log_probs: (B,L,V) log-softmax; targets: (B,L) int."""
+    tgt = one_hot(targets, log_probs.shape[-1])       # (B,L,V)
+    nll = -np.sum(tgt * log_probs, axis=-1)           # (B,L)
+    return np.mean(nll)
+
+
+def prep_lm_batch(batch, seq_len, in_dim):
+    """(input_ids, target_ids) int64 tensors -> (one-hot inputs (B,L,in_dim) float,
+    target ids (B,L) int, dummy integration_timesteps)."""
+    x, y = batch
+    x = np.asarray(x.numpy())
+    y = np.asarray(y.numpy())
+    x = one_hot(x, in_dim)                             # (B,L,in_dim)
+    its = np.ones((x.shape[0], x.shape[1]))            # unused by the SSM; call-parity only
+    return x, y, its
+
+
+def lm_train_step(state, rng, batch_inputs, batch_targets, batch_its,
+                  model, batchnorm, lambda_pc):
+    """Mirror of train_step but with the per-position LM loss. Mambino's intrinsic
+    loss (sown per block) is still aggregated (lambda_pc default 0 -> logged only)."""
+    def loss_fn(params):
+        variables = {"params": params}
+        mut = ["intermediates"]
+        if batchnorm:
+            variables["batch_stats"] = state.batch_stats
+            mut = ["intermediates", "batch_stats"]
+        log_probs, mod_vars = model.apply(
+            variables, batch_inputs, batch_its,
+            rngs={"dropout": rng}, mutable=mut)
+        task_loss = lm_cross_entropy(log_probs, batch_targets)
+        per_block = _collect_intrinsic_per_block(mod_vars.get("intermediates", {}))
+        intrinsic_total = sum(per_block.values()) if per_block else np.float32(0.0)
+        total = task_loss + lambda_pc * intrinsic_total
+        return total, (mod_vars, task_loss, intrinsic_total, per_block)
+
+    (loss, (mod_vars, task_loss, intrinsic_total, per_block)), grads = \
+        jax.value_and_grad(loss_fn, has_aux=True)(state.params)
+    if batchnorm:
+        state = state.apply_gradients(grads=grads, batch_stats=mod_vars["batch_stats"])
+    else:
+        state = state.apply_gradients(grads=grads)
+    return state, loss, task_loss, intrinsic_total, per_block
+
+
+def lm_train_epoch(state, rng, model, trainloader, seq_len, in_dim, batchnorm,
+                   lr_params, lambda_pc=0.0):
+    """Mirror of train_epoch for the LM path. Returns (state, mean_loss, step, metrics)."""
+    model = model(training=True)
+    batch_losses, batch_task, batch_intr = [], [], []
+    per_block_accum = {}
+    decay_function, ssm_lr, lr, step, end_step, opt_config, lr_min = lr_params
+    for batch in tqdm(trainloader):
+        inputs, targets, its = prep_lm_batch(batch, seq_len, in_dim)
+        rng, drop_rng = jax.random.split(rng)
+        state, loss, task_loss, intr, per_block = lm_train_step(
+            state, drop_rng, inputs, targets, its, model, batchnorm, float(lambda_pc))
+        batch_losses.append(loss)
+        batch_task.append(task_loss)
+        batch_intr.append(intr)
+        for k, v in per_block.items():
+            per_block_accum.setdefault(k, []).append(v)
+        lr_params = (decay_function, ssm_lr, lr, step, end_step, opt_config, lr_min)
+        state, step = update_learning_rate_per_step(lr_params, state)
+    metrics = {
+        "task_loss": float(np.mean(np.array(batch_task))),
+        "intrinsic_loss": float(np.mean(np.array(batch_intr))),
+        "per_block_L_int": {k: float(np.mean(np.array(v))) for k, v in per_block_accum.items()},
+    }
+    return state, np.mean(np.array(batch_losses)), step, metrics
+
+
+@partial(jax.jit, static_argnums=(3, 4))
+def lm_eval_step(batch_inputs, batch_its, state, model, batchnorm):
+    if batchnorm:
+        return model.apply({"params": state.params, "batch_stats": state.batch_stats},
+                           batch_inputs, batch_its)
+    return model.apply({"params": state.params}, batch_inputs, batch_its)
+
+
+def lm_validate(state, model, testloader, seq_len, in_dim, batchnorm):
+    """Bits-per-character (BPC) = mean per-token NLL (nats) / ln 2 over the split."""
+    model = model(training=False)
+    tot_nll, tot_tok = 0.0, 0
+    for batch in tqdm(testloader):
+        inputs, targets, its = prep_lm_batch(batch, seq_len, in_dim)
+        log_probs = lm_eval_step(inputs, its, state, model, batchnorm)
+        tgt = one_hot(targets, log_probs.shape[-1])
+        nll = -np.sum(tgt * log_probs, axis=-1)       # (B,L) nats
+        tot_nll += float(np.sum(nll))
+        tot_tok += int(nll.size)
+    return (tot_nll / tot_tok) / float(np.log(2))

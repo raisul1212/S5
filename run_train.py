@@ -18,6 +18,10 @@ if __name__ == "__main__":
 	parser.add_argument("--dataset", type=str, choices=Datasets.keys(),
 						default='mnist-classification',
 						help="dataset name")
+	parser.add_argument("--task", type=str, default="classification", choices=["classification", "lm"],
+		help="classification (default) or lm (char-LM: causal per-position head + BPC metric)")
+	parser.add_argument("--lm_seqlen", type=int, default=1024,
+		help="char-LM chunk/sequence length (only used when --task=lm)")
 
 	# Model Parameters
 	parser.add_argument("--n_layers", type=int, default=6,

@@ -235,6 +235,61 @@ BatchClassificationModel = nn.vmap(
     split_rngs={"params": False, "dropout": True, "noise": True}, axis_name='batch')
 
 
+class LMModel(nn.Module):
+    """Autoregressive character-LM head: the stacked encoder (CAUSAL when the SSM
+    is unidirectional) with NO pooling, then a per-position linear decoder over the
+    vocab. Drop-in with the classification model's (x, integration_timesteps) call
+    signature so all of train.py's setup (HiPPO, opt, checkpointing) is reused.
+
+    Causality requirements (enforced by the caller, not here):
+      - the SSM must be unidirectional (bidirectional=False),
+      - batchnorm=False (LayerNorm) -- BatchNorm(axis_name='batch') normalizes each
+        feature over batch x time and would leak future statistics into position t.
+    """
+    ssm: nn.Module
+    d_output: int      # vocab size
+    d_model: int
+    n_layers: int
+    padded: bool = False        # LM chunks are fixed-length; kept for call-signature parity
+    activation: str = "gelu"
+    dropout: float = 0.0
+    training: bool = True
+    mode: str = ""              # unused (no pooling); kept for parity with model_cls kwargs
+    prenorm: bool = False
+    batchnorm: bool = False     # MUST be False for a causal LM (see docstring)
+    bn_momentum: float = 0.9
+    step_rescale: float = 1.0
+
+    def setup(self):
+        self.encoder = StackedEncoderModel(
+            ssm=self.ssm,
+            d_model=self.d_model,
+            n_layers=self.n_layers,
+            activation=self.activation,
+            dropout=self.dropout,
+            training=self.training,
+            prenorm=self.prenorm,
+            batchnorm=self.batchnorm,
+            bn_momentum=self.bn_momentum,
+            step_rescale=self.step_rescale,
+        )
+        self.decoder = nn.Dense(self.d_output)
+
+    def __call__(self, x, integration_timesteps):
+        x = self.encoder(x, integration_timesteps)   # (L, d_model) -- no pooling
+        x = self.decoder(x)                           # (L, vocab)
+        return nn.log_softmax(x, axis=-1)             # (L, vocab) per-position log-probs
+
+
+# vmap over the batch, exactly like BatchClassificationModel.
+BatchLMModel = nn.vmap(
+    LMModel,
+    in_axes=(0, 0),
+    out_axes=0,
+    variable_axes={"params": None, "dropout": None, 'batch_stats': None, "cache": 0, "prime": None, "intermediates": 0},
+    split_rngs={"params": False, "dropout": True, "noise": True}, axis_name='batch')
+
+
 # For Document matching task (e.g. AAN)
 class RetrievalDecoder(nn.Module):
     """

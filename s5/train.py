@@ -7,10 +7,11 @@ import wandb
 
 from .train_helpers import create_train_state, reduce_lr_on_plateau,\
     linear_warmup, cosine_annealing, constant_lr, train_epoch, validate,\
+    lm_train_epoch, lm_validate,\
     save_checkpoint, save_checkpoint_msgpack, load_checkpoint_msgpack,\
     compute_predictor_frobenius
 from .dataloading import Datasets
-from .seq_model import BatchClassificationModel, RetrievalModel
+from .seq_model import BatchClassificationModel, RetrievalModel, BatchLMModel
 from .ssm import init_S5SSM
 from .ssm_init import make_DPLR_HiPPO
 from .mambino_ssm import init_MambinoSSM
@@ -71,8 +72,12 @@ def train(args):
 
     # Create dataset...
     init_rng, key = random.split(init_rng, num=2)
-    trainloader, valloader, testloader, aux_dataloaders, n_classes, seq_len, in_dim, train_size = \
-      create_dataset_fn(args.dir_name, seed=args.jax_seed, bsz=args.bsz)
+    if getattr(args, 'task', 'classification') == 'lm':
+        trainloader, valloader, testloader, aux_dataloaders, n_classes, seq_len, in_dim, train_size = \
+          create_dataset_fn(args.dir_name, seed=args.jax_seed, bsz=args.bsz, L=int(getattr(args, 'lm_seqlen', 1024)))
+    else:
+        trainloader, valloader, testloader, aux_dataloaders, n_classes, seq_len, in_dim, train_size = \
+          create_dataset_fn(args.dir_name, seed=args.jax_seed, bsz=args.bsz)
 
     print(f"[*] Starting S5 Training on `{args.dataset}` =>> Initializing...")
 
@@ -190,6 +195,22 @@ def train(args):
             glu_blockdiag_blocks=getattr(args, 'glu_blockdiag_blocks', 2),
         )
 
+    # --- char-LM: override model_cls with the causal per-position LM head ---
+    if getattr(args, 'task', 'classification') == 'lm':
+        model_cls = partial(
+            BatchLMModel,
+            ssm=ssm_init_fn,
+            d_output=n_classes,          # vocab size (256 for enwik8 bytes)
+            d_model=args.d_model,
+            n_layers=args.n_layers,
+            padded=False,
+            activation=args.activation_fn,
+            dropout=args.p_dropout,
+            prenorm=args.prenorm,
+            batchnorm=args.batchnorm,    # caller MUST pass False for a causal LM
+            bn_momentum=args.bn_momentum,
+        )
+
     # initialize training state
     state = create_train_state(model_cls,
                                init_rng,
@@ -234,17 +255,22 @@ def train(args):
         lr_params = (decay_function, ssm_lr, lr, step, end_step, args.opt_config, args.lr_min)
 
         train_rng, skey = random.split(train_rng)
-        state, train_loss, step, epoch_metrics = train_epoch(
-            state,
-            skey,
-            model_cls,
-            trainloader,
-            seq_len,
-            in_dim,
-            args.batchnorm,
-            lr_params,
-            lambda_pc=getattr(args, 'lambda_pc', 0.0),
-        )
+        if getattr(args, 'task', 'classification') == 'lm':
+            state, train_loss, step, epoch_metrics = lm_train_epoch(
+                state, skey, model_cls, trainloader, seq_len, in_dim,
+                args.batchnorm, lr_params, lambda_pc=getattr(args, 'lambda_pc', 0.0))
+        else:
+            state, train_loss, step, epoch_metrics = train_epoch(
+                state,
+                skey,
+                model_cls,
+                trainloader,
+                seq_len,
+                in_dim,
+                args.batchnorm,
+                lr_params,
+                lambda_pc=getattr(args, 'lambda_pc', 0.0),
+            )
 
         # ── Mambino-style predictor-pathway telemetry ──
         # Format matches ncb/v04_train.py:1889-1897:
@@ -286,7 +312,19 @@ def train(args):
             if block_intrinsics_str:
                 print(f"[Mambino] E{epoch + 1}  per_block_L_int: {block_intrinsics_str}")
 
-        if valloader is not None:
+        if getattr(args, 'task', 'classification') == 'lm':
+            print(f"[*] Running Epoch {epoch + 1} Validation (BPC)...")
+            val_bpc = lm_validate(state, model_cls, valloader, seq_len, in_dim, args.batchnorm)
+            print(f"[*] Running Epoch {epoch + 1} Test (BPC)...")
+            test_bpc = lm_validate(state, model_cls, testloader, seq_len, in_dim, args.batchnorm)
+            # map onto the classification bookkeeping: loss=BPC (minimized), acc=-BPC
+            # (maximized) so both selection criteria pick the lowest-BPC model and
+            # best_test_loss holds the val-selected test BPC.
+            val_loss, val_acc = val_bpc, -val_bpc
+            test_loss, test_acc = test_bpc, -test_bpc
+            print(f"\n=>> Epoch {epoch + 1} Metrics ===")
+            print(f"\tTrain NLL: {train_loss:.5f} -- Val BPC: {val_bpc:.4f} -- Test BPC: {test_bpc:.4f}")
+        elif valloader is not None:
             print(f"[*] Running Epoch {epoch + 1} Validation...")
             val_loss, val_acc = validate(state,
                                          model_cls,

@@ -387,6 +387,58 @@ def create_pmnist_classification_dataset(cache_dir: Union[str, Path] = DEFAULT_C
 	return trn_loader, val_loader, tst_loader, aux_loaders, N_CLASSES, SEQ_LENGTH, IN_DIM, TRAIN_SIZE
 
 
+def _load_enwik8(cache_dir):
+    """Download+cache enwik8 (100M bytes) and return it as a uint8 numpy array."""
+    import zipfile, urllib.request
+    import numpy as _np
+    cache_dir = Path(cache_dir); cache_dir.mkdir(parents=True, exist_ok=True)
+    raw = cache_dir / "enwik8"
+    if not raw.exists():
+        zp = cache_dir / "enwik8.zip"
+        if not zp.exists():
+            print("[*] downloading enwik8 from mattmahoney.net ...")
+            urllib.request.urlretrieve("http://mattmahoney.net/dc/enwik8.zip", str(zp))
+        with zipfile.ZipFile(str(zp)) as z:
+            z.extract("enwik8", str(cache_dir))
+    return _np.frombuffer(raw.read_bytes(), dtype=_np.uint8)
+
+
+class _ByteLMDataset(torch.utils.data.Dataset):
+    """Non-overlapping length-L byte windows; item i = (bytes[iL:iL+L], next-byte targets)."""
+    def __init__(self, data, L):
+        self.data = data
+        self.L = L
+        self.n = max(0, (len(data) - 1) // L)
+
+    def __len__(self):
+        return self.n
+
+    def __getitem__(self, i):
+        import numpy as _np
+        s = i * self.L
+        x = self.data[s: s + self.L].astype(_np.int64)
+        y = self.data[s + 1: s + self.L + 1].astype(_np.int64)
+        return torch.from_numpy(x.copy()), torch.from_numpy(y.copy())
+
+
+def create_enwik8_lm_dataset(cache_dir: Union[str, Path] = DEFAULT_CACHE_DIR_ROOT,
+                             bsz: int = 50,
+                             seed: int = 42,
+                             L: int = 1024) -> ReturnType:
+    """enwik8 byte-level char-LM. 100M bytes -> 90M/5M/5M train/val/test, chunked to L.
+    VOCAB=256 (byte value = id; unused ids contribute 0 to loss). Loaders yield
+    (input_ids (B,L), target_ids (B,L)) int64 tensors (targets = inputs shifted +1)."""
+    print("[*] Generating enwik8 char-LM Dataset (L=%d)" % L)
+    data = _load_enwik8(Path(cache_dir) / "enwik8_data")
+    n90, n95, n100 = 90_000_000, 95_000_000, 100_000_000
+    tr, va, te = data[:n90], data[n90:n95], data[n95:n100]
+    trn = make_data_loader(_ByteLMDataset(tr, L), None, seed=seed, batch_size=bsz, shuffle=True, drop_last=True)
+    val = make_data_loader(_ByteLMDataset(va, L), None, seed=seed, batch_size=bsz, shuffle=False, drop_last=False)
+    tst = make_data_loader(_ByteLMDataset(te, L), None, seed=seed, batch_size=bsz, shuffle=False, drop_last=False)
+    VOCAB = 256
+    return trn, val, tst, {}, VOCAB, L, VOCAB, len(_ByteLMDataset(tr, L))
+
+
 Datasets = {
 	# Other loaders.
 	"mnist-classification": create_mnist_classification_dataset,
@@ -403,4 +455,7 @@ Datasets = {
 
 	# Speech.
 	"speech35-classification": create_speechcommands35_classification_dataset,
+
+	# Char-LM.
+	"enwik8-lm": create_enwik8_lm_dataset,
 }
