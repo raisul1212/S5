@@ -56,10 +56,11 @@ mkdir -p results/slurm
 GATE_RANGE=${GATE_RANGE:-signed}
 GATE_DETACH=${GATE_DETACH:-False}
 LAMBDA_PC=${LAMBDA_PC:-0.0}
+SEED=${SEED:-6554595}          # v1's 8 seeds: 6554595 42 12345 271828 314159 1 2 3
 
 JOB=$SLURM_JOB_ID
 SHA=$(git rev-parse HEAD)
-CKPT_DIR="./checkpoints/mambino_gelu_sgate_${GATE_RANGE}_d${GATE_DETACH}_lpc${LAMBDA_PC}_${JOB}"
+CKPT_DIR="./checkpoints/mambino_gelu_sgate_${GATE_RANGE}_d${GATE_DETACH}_lpc${LAMBDA_PC}_s${SEED}_${JOB}"
 mkdir -p "$CKPT_DIR"
 
 echo "Mambino-gelu + SURPRISE GATE (range=$GATE_RANGE detach=$GATE_DETACH lambda_pc=$LAMBDA_PC)"
@@ -79,7 +80,7 @@ python -u run_train.py \
     --C_init=lecun_normal --activation_fn=gelu --batchnorm=True \
     --bidirectional=True --blocks=8 --bsz=50 --d_model=128 \
     --dataset=listops-classification \
-    --epochs=40 --jax_seed=6554595 --lr_factor=3 --n_layers=8 \
+    --epochs=40 --jax_seed=$SEED --lr_factor=3 --n_layers=8 \
     --opt_config=BfastandCdecay \
     --p_dropout=0 --ssm_lr_base=0.001 --ssm_size_base=16 \
     --warmup_end=1 --weight_decay=0.04 \
