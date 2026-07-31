@@ -105,8 +105,10 @@ def main():
     hdr = (f"| job | model | params | seed | ep | drop | state | elapsed |"
            f" progress | test@peakval |")
     sep = "|---|---|---:|---|---:|---:|---|---:|---|---:|"
-    out = [f"# Mambino run status", "",
-           f"Generated: {sh('date \"+%Y-%m-%d %H:%M %Z\"')} on $(hostname)".replace("$(hostname)", sh("hostname")),
+    stamp = sh("date '+%Y-%m-%d %H:%M %Z'")
+    host = sh("hostname")
+    out = ["# Mambino run status", "",
+           f"Generated: {stamp} on {host}",
            "", "Model names per `paper_v2_ppac/memos/NAMING_AND_STATUS.md`.", "",
            hdr, sep]
     for r in rows:
