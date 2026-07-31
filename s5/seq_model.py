@@ -259,6 +259,8 @@ class LMModel(nn.Module):
     batchnorm: bool = False     # MUST be False for a causal LM (see docstring)
     bn_momentum: float = 0.9
     step_rescale: float = 1.0
+    glu_rank: int = 0           # >0 = low-rank half_glu2 gate (e.g. 40 = corner3')
+    glu_structure: str = "dense"
 
     def setup(self):
         self.encoder = StackedEncoderModel(
@@ -272,6 +274,8 @@ class LMModel(nn.Module):
             batchnorm=self.batchnorm,
             bn_momentum=self.bn_momentum,
             step_rescale=self.step_rescale,
+            glu_rank=self.glu_rank,
+            glu_structure=self.glu_structure,
         )
         self.decoder = nn.Dense(self.d_output)
 

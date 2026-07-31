@@ -56,6 +56,8 @@ SSM_LR=${SSM_LR:-0.001}
 LR_FACTOR=${LR_FACTOR:-4}
 EVAL_BATCHES=${EVAL_BATCHES:-60}
 LAMBDA_PC=${LAMBDA_PC:-0.0}
+ACTIVATION=${ACTIVATION:-gelu}    # gelu | half_glu2 (corner1/corner3' use half_glu2)
+GLU_RANK=${GLU_RANK:-0}           # 0 = full GLU; 40 = low-rank (corner3')
 EPOCHS=$(( LM_STEPS / EVAL_EVERY ))
 [ $EPOCHS -lt 1 ] && EPOCHS=1
 
@@ -67,7 +69,7 @@ case $MODEL in
 esac
 
 JOB=$SLURM_JOB_ID
-CKPT="./checkpoints/enwik8_${TAG}_d${D_MODEL}_L${N_LAYERS}_p${SSM_SIZE}_ctx${L}_s${SEED}_${JOB}"
+CKPT="./checkpoints/enwik8_${TAG}_${ACTIVATION}r${GLU_RANK}_d${D_MODEL}_L${N_LAYERS}_p${SSM_SIZE}_ctx${L}_s${SEED}_${JOB}"
 mkdir -p "$CKPT"
 echo "enwik8 char-LM | MODEL=$MODEL TAG=$TAG | d=$D_MODEL L=$N_LAYERS state=$SSM_SIZE ctx=$L bsz=$BSZ"
 echo "steps=$LM_STEPS warmup=$WARMUP eval_every=$EVAL_EVERY epochs=$EPOCHS ssm_lr=$SSM_LR lrf=$LR_FACTOR seed=$SEED"
@@ -78,7 +80,7 @@ python -u run_train.py \
     --lm_seqlen=$L --lm_steps=$LM_STEPS --lm_warmup_steps=$WARMUP \
     --lm_max_steps=$EVAL_EVERY --lm_eval_batches=$EVAL_BATCHES \
     $MFLAGS \
-    --C_init=lecun_normal --activation_fn=gelu --batchnorm=False --bidirectional=False \
+    --C_init=lecun_normal --activation_fn=$ACTIVATION --glu_rank=$GLU_RANK --batchnorm=False --bidirectional=False \
     --blocks=8 --bsz=$BSZ --d_model=$D_MODEL --n_layers=$N_LAYERS --ssm_size_base=$SSM_SIZE \
     --epochs=$EPOCHS --jax_seed=$SEED --lr_factor=$LR_FACTOR --ssm_lr_base=$SSM_LR \
     --opt_config=BfastandCdecay --p_dropout=0 --warmup_end=1 --weight_decay=0.05 \

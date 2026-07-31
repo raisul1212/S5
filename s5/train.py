@@ -209,6 +209,8 @@ def train(args):
             prenorm=args.prenorm,
             batchnorm=args.batchnorm,    # caller MUST pass False for a causal LM
             bn_momentum=args.bn_momentum,
+            glu_rank=getattr(args, 'glu_rank', 0),
+            glu_structure=getattr(args, 'glu_structure', 'dense'),
         )
 
     # initialize training state
