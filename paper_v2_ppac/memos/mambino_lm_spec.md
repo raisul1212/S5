@@ -27,21 +27,38 @@ learning. It is the char-LM redesign; it is NOT Mambino-3-G with more layers.
 
 ## 2. Thesis & honest novelty (read before believing the pitch)
 
-Most components exist: multiscale hierarchy = HM/Clockwork-RNN; confidence/surprise-gated skipping of
+**Primary novelty = hardware/efficiency co-design, NOT an ML-benchmark first.** The ML pieces mostly
+exist in isolation: multiscale hierarchy = HM/Clockwork-RNN; confidence/surprise-gated skipping of
 upper compute = **CALM early-exit (2022)**; gradient test-time updates = **TTT-layers (2024)**;
-surprise-gated test-time memory = **Titans (2025)**. The Mamba "frozen-vs-adaptive" contrast is fair
-vs Mamba but NOT vs TTT/Titans — that is the comparison reviewers will make.
+surprise-gated test-time memory = **Titans (2025)**. On a pure-ML axis Mambino-LM is a recombination,
+and the frozen-vs-adaptive contrast is fair vs Mamba but NOT vs TTT/Titans — reviewers will say so.
+**We do not lead with the ML claim.**
 
-**The ONE defensible new claim — center everything on it:**
-> **The closed-loop automation curve: inference-time learning at a *lower* level measurably *reduces*
-> adaptive-compute escalation over a stream — skill migrates *down* the hierarchy at inference.**
+**What no one has built is the substrate-level version of this loop.** Mambino-LM is designed so every
+mechanism is a *physical* lever on a compute-in-physics inference substrate
+([[chip_pitch_substrate_not_architecture]], [[inference_is_the_chip_bottleneck]]):
+- the **hard surprise gate α literally skips silicon** — an un-escalated token does not clock the
+  upper level's array (energy *not spent*, not merely FLOPs not counted);
+- the **slow-ticking upper level** (FIX #1) is a duty-cycled, low-toggle-rate block — the exact regime
+  a mixed-signal/analog SSM tile is most efficient in;
+- **inference-time learning migrates deliberation DOWN the hierarchy**, so energy-per-token *falls over
+  a stream* — the chip does measurably less work the longer it runs on one source.
 
-Nobody has published that curve as a first-class result. It is the only thing that distinguishes
-Mambino-LM from "TTT + Titans + ACT stacked." **Distinct from the neighbors:** Titans = flat,
-gradient-surprise memory, no hierarchy/escalation; CALM = confidence early-exit, no learning; TTT =
-flat gradient state, no surprise gating. Mambino-LM = **prediction-error surprise gating *hierarchical
-escalation*, with test-time learning that migrates deliberation downward.** If Stage 2 can't show the
-migration curve *with the controls in §8*, there is no paper — treat that as the project's crux.
+**The ML mechanism that DRIVES the energy story — the automation curve — is the supporting claim, not
+the headline:**
+> Inference-time learning at a *lower* level measurably *reduces* adaptive-compute escalation over a
+> stream — skill migrates *down* the hierarchy at inference, and on the substrate that shows up as a
+> **declining energy-per-token curve**.
+
+Nobody has published that curve, and — the moat — nobody has published it **as a measured energy
+result on a real inference substrate**. That pairing (a self-supervised migration mechanism + its PPAC
+consequence) is what separates Mambino-LM from "TTT + Titans + ACT stacked." **Distinct from the
+neighbors:** Titans = flat gradient-surprise memory, no hierarchy/escalation, no hardware; CALM =
+confidence early-exit, no learning, no hardware; TTT = flat gradient state, no surprise gating, no
+hardware. Mambino-LM = prediction-error surprise gating *hierarchical escalation* + test-time learning
+that migrates deliberation downward, **quantified as energy-per-token on the Mambino substrate.** If
+Stage 2 can't show the migration curve *with the controls in §8* AND its PPAC consequence, there is no
+paper — treat that as the project's crux.
 
 ---
 
@@ -68,6 +85,14 @@ shift). Use the inherited Mambino gate on **realized** error: `z_ℓ(t) = EMA-no
 (trailing, causal — post-hoc measurement, not a forecast). Escalate when recent tokens were
 surprising. This is the Mambino-3-G surprise gate **promoted from gating the error-write to gating
 deliberation depth** — the spine of the design, not a casualty.
+
+**Stage-0-validated refinement (2026-08-02, see §7):** trailing surprise is the *primary* gate — on a
+distribution shift it tracks the error jump (×13.5) while CE-confidence stays flat (×1.1, *confidently
+wrong*), and within-regime confidence is *negatively* correlated with error (−0.43). CE-confidence is
+**not useless**, but only as a **secondary, fine-grained signal once escalation is already on** (during
+active adaptation it tracks the per-token error gradient better than trailing surprise, +0.81 vs +0.40,
+because surprise lags). It must **never** be the primary escalation trigger. If Stage 1 wants a finer
+in-escalation modulation, confidence may feed the *magnitude* β of an already-fired nudge — not α.
 
 ### 3.4 FIX #3 — the inference-time learner is a TTT/Titans-style *small* fast-weight module
 Naive SGD on CE over a full SSM level at inference diverges, has no chunk-parallel form, and blows up
@@ -150,13 +175,27 @@ FLOP win.
 
 ## 7. Staging (strict order; each stage gates the next)
 
-- **Stage 0 — the calibration test (go/no-go, ~days, NO hierarchy/TTT code).** On a synthetic
+- **Stage 0 — the calibration test (go/no-go, NO hierarchy/TTT code). ✅ PASS (2026-08-02).** On a synthetic
   repeated-motif stream with a **mid-stream distribution shift**, using existing Mambino/S5 code +
   one minimal linear fast-weight module: measure whether **(i) softmax-confidence** and **(ii)
   trailing-surprise-z** each track **realized** per-token error, *with and without* the test-time
   update. Predicted: confidence decouples from correctness under TTT; trailing-surprise does not.
   - **PASS** (surprise tracks error, confidence doesn't) → proceed, gate on surprise.
   - **BOTH decouple** → the escalation premise is dead; **do not build the hierarchy.**
+  - **RESULT** (`paper_v2_ppac/mambino_lm/stage0_calibration.py`, CPU, GRU-LM stand-in, trigger→body grammar,
+    mid-stream A→B regime shift, seed 0):
+    - *Shift detection (frozen model — the load-bearing case):* at A→B, realized **error ×13.6**,
+      **trailing-surprise ×13.5** (tracks), **confidence-difficulty ×1.1** (flat — confidently wrong).
+      A confidence-gated escalation would NOT fire → stays wrong; a surprise-gated one fires → gets
+      help. Exactly the Fable-predicted failure mode.
+    - *Token-level miscalibration:* within regime B (frozen), confidence-difficulty is **negatively**
+      correlated with error (Spearman −0.43) — the most-wrong tokens are the most confident.
+    - *TTT works:* the linear fast-weight adapted at inference, cutting B-body error **8.03 → 0.83 (90%)**.
+    - *Nuance → FIX #2 refinement:* once actively adapting, confidence tracks the per-token gradient
+      better than trailing surprise (+0.81 vs +0.40, surprise lags) ⇒ **surprise = primary gate,
+      confidence = secondary-only**.
+    - *Limits:* GRU stand-in (not the SSM), synthetic grammar, one seed — the signal property is
+      architecture-agnostic; **re-confirm on the real SSM at Stage 1.**
 - **Stage 1 — 2 levels, NO learning.** Bottom + one slow-ticking top; surprise-gated escalation; show
   escalation works, confident tokens skip the top (adaptive compute), and it beats the CALM-monolith
   Pareto (§5). Kill-switch green first.
@@ -201,6 +240,11 @@ Each new task needs fresh baselines; paired-seed analysis; pre-register effect t
 - Worktree `v2/mambino-lm` off `v2/surprise-gate`; push from the local box (Gilbreth has no GitHub
   auth); env `/scratch/gilbreth/raisul/envs/s5m`. Fable-verify the double-loop gradient + the STE gate
   BEFORE training.
+- **Causal-normalization prerequisite (Fable, char-LM audit):** any chip-noise / ADC / quantization
+  eval on the LM path MUST normalize activations **causally** (running/trailing stats), NOT over the
+  whole sequence — sequence-wide normalization at `bits>0` or `σ>0` leaks future statistics and is
+  acausal. Fix this before ANY noise/PPAC-robustness number on Mambino-LM (the energy story of §2 dies
+  if the noise eval is silently acausal).
 
 ---
 
