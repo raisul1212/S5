@@ -45,12 +45,21 @@ NOC_ENERGY_FRACTION_OF_MAC = 0.10
 CONFIG_TIER = {"config4": "320KB", "config5": "320KB",
                "corner1": "512KB", "corner2": "384KB", "corner3p": "384KB",
                "mambino2p0": "320KB",   # Mambino 2.0 = config4 arch + surprise gate (same tier)
+               # Cluster-B family: config4 arch + fast weight. No new large-footprint
+               # GEMM (biggest is the CxC=64x64 chunk attention and W_o at 8x128), so
+               # the 320KB activation tier still holds. Names per NAMING_AND_STATUS.md.
+               "mambinoF": "320KB", "mambinoFo": "320KB", "mambinoGF": "320KB",
                "default": "384KB"}
 TIER_KB = {"320KB": 320, "384KB": 384, "512KB": 512, "default": 384}
 _cfg_ctx = "default"    # set inside config_ppac to route TIER lookup for F1 fix
 ACC = {"config4": 0.5993, "config5": 0.5917,
        "corner1": 0.6089, "corner2": 0.5991, "corner3p": 0.6138,
-       "mambino2p0": 0.6050}   # 8-seed signed-gate mean (sd 0.0042, n=8; seeds 6554595/42/12345/271828/314159/1/2/3)
+       "mambino2p0": 0.6050,   # 8-seed signed-gate mean (sd 0.0042, n=8; seeds 6554595/42/12345/271828/314159/1/2/3)
+       # Cluster-B accuracies are 4-SEED means (6554595/42/12345/271828) -- 8-seed
+       # sweeps still running. Do NOT compare acc/mJ against the 8-seed entries above
+       # without matching n: on these 4 seeds corner1=0.6110, config4=0.5988,
+       # mambino2p0=0.6025, i.e. the subset runs high for corner1 and low for the gate.
+       "mambinoF": 0.6051, "mambinoFo": 0.5966, "mambinoGF": 0.6024}
 
 # Configs whose K=40/N=40 low-rank gate blocks may relax to >=62.5% util (v1 rule).
 # Module-level so a driver can toggle it for a no-relaxation sensitivity sweep.
@@ -266,7 +275,11 @@ def elemwise_energy(elem_yaml, ert):
     return total_pJ, per_class
 
 # --- State-SRAM (unchanged from direct_ppac) ----------------------------------
-N_TRAJ = {"config4": 3, "config5": 2, "corner1": 2, "corner2": 2, "corner3p": 3, "mambino2p0": 3}
+# Fast-weight M is carried PER CHUNK (d x d, 64 entries at d=8), not per timestep,
+# so it adds no L-scaled state trajectory: the Cluster-B configs keep Mambino's 3
+# (main fwd + main bwd + predictor fwd).
+N_TRAJ = {"config4": 3, "config5": 2, "corner1": 2, "corner2": 2, "corner3p": 3, "mambino2p0": 3,
+          "mambinoF": 3, "mambinoFo": 3, "mambinoGF": 3}
 def state_energy(manifest, config, ert):
     args = manifest["args"]
     L = 2048; n_layers = args["n_layers"]
