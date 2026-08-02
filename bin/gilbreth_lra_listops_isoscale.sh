@@ -71,9 +71,14 @@ SEED=${SEED:-6554595}
 EPOCHS=${EPOCHS:-40}
 
 case "$CONFIG" in
-  G_P16) ARCH="--activation_fn=gelu      --glu_rank=0  --ssm_size_base=32" ;;
-  M3_G)  ARCH="--activation_fn=half_glu2 --glu_rank=40 --ssm_size_base=16" ;;
-  *) echo "unknown CONFIG=$CONFIG (G_P16|M3_G)"; exit 2 ;;
+  # P=14: 179,770 params, -4.63% vs Pure S5. blocks=P keeps block_size=2,
+  # identical to every other config. No integer P lands within 0.1% of
+  # 188,490 (state quantum is 12,336); P=13 d_model=144 hits -0.110% but
+  # breaks the d_model=128 width shared by every other config. Fewer params
+  # AND higher accuracy is the stronger claim anyway.
+  G_P14) ARCH="--activation_fn=gelu      --glu_rank=0  --ssm_size_base=28 --blocks=14" ;;
+  M3_G)  ARCH="--activation_fn=half_glu2 --glu_rank=40 --ssm_size_base=16 --blocks=8" ;;
+  *) echo "unknown CONFIG=$CONFIG (G_P14|M3_G)"; exit 2 ;;
 esac
 
 JOB=$SLURM_JOB_ID
@@ -91,7 +96,7 @@ python -u run_train.py \
     --ckpt_dir="$CKPT_DIR" \
     \
     --C_init=lecun_normal --batchnorm=True \
-    --bidirectional=True --blocks=8 --bsz=50 --d_model=128 \
+    --bidirectional=True --bsz=50 --d_model=128 \
     --dataset=listops-classification \
     --epochs=$EPOCHS --jax_seed=$SEED --lr_factor=3 --n_layers=8 \
     --opt_config=BfastandCdecay \
