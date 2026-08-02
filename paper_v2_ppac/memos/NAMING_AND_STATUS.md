@@ -175,6 +175,40 @@ Corollary already observed: single-epoch val selection is high-variance. Seed
 neighbours sat at 0.59-0.60 (its `test_max` was 0.6035, train loss normal). That
 one artifact moved a 4-seed mean by ~0.6 pp.
 
+### 3.1 Reporting format (agreed 2026-08-02)
+
+> **mean +- std over the 8 matched seeds, with n stated, plus the best seed.**
+> A separate clearly-labelled row gives best-seed best-epoch for EVERY config, so
+> readers can map onto prior work without us picking a convention per config.
+
+### 3.2 Why `test_max` is NOT primary -- the decisive evidence
+
+Switching the primary metric to `test_max` would **delete the paper's core
+mechanism claim**. Iso-param Mambino-0 vs S5-gateless, both 105,738 params:
+
+| metric | Mambino-0 | S5-gateless | diff | seeds ahead |
+|---|---:|---:|---:|---:|
+| `test@peakval` | 0.5993 | 0.5917 | **+0.76 pp** | **7/8** |
+| `test_max` | 0.6038 | 0.6034 | +0.04 pp | 3/8 |
+
+The reason is that `test_max` inflation is **model-dependent**, not a constant
+offset (`test_max` mean minus `test@peakval` mean):
+
+| S5-gateless | Pure S5 P=16 | Pure S5 | Mambino-GF | Mambino-0 | Mambino-G | Mambino-3 |
+|---:|---:|---:|---:|---:|---:|---:|
+| +1.17 | +0.78 | +0.70 | +0.51 | +0.45 | +0.44 | +0.33 |
+
+A 0.84 pp spread. Taking a max over a noisy sequence rewards whichever model has
+the noisier test curve, so `test_max` systematically penalises stable models --
+converting Mambino-3's 49%-lower seed std (master doc 5c "stability win") into a
+scoring *disadvantage*. It also admits no error bar and no paired test, and under
+it Pure S5 and Mambino-3 both read 0.6235, erasing an effect the val-selected
+metric detects at p=0.022.
+
+If single-epoch val-selection noise needs addressing, the leakage-free options
+are: test at the best epoch of a **smoothed** (3-epoch moving average) val curve;
+mean test over the final k epochs; or median-over-seeds. Not test-set selection.
+
 ---
 
 ## 4. Status at 2026-07-31 13:52 EDT
