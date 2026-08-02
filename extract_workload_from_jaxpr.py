@@ -681,6 +681,22 @@ def build_forward(args):
             gate_kappa_init=args.gate_kappa_init,
             gate_bias_init=args.gate_bias_init,
             gate_detach=args.gate_detach,
+            fast_weight=args.fast_weight,
+            fw_dim=args.fw_dim,
+            fw_proj=args.fw_proj,
+            fw_rule=args.fw_rule,
+            fw_kq_source=args.fw_kq_source,
+            fw_v_source=args.fw_v_source,
+            fw_impl=args.fw_impl,
+            fw_chunk=args.fw_chunk,
+            fw_gate_mode=args.fw_gate_mode,
+            fw_kappa_init=args.fw_kappa_init,
+            fw_bias_init=args.fw_bias_init,
+            fw_gamma_init=args.fw_gamma_init,
+            fw_gamma_trainable=args.fw_gamma_trainable,
+            fw_norm_qkv=args.fw_norm_qkv,
+            fw_out_init=args.fw_out_init,
+            fw_read=args.fw_read,
         )
     else:
         ssm_init_fn = init_S5SSM(
@@ -815,6 +831,23 @@ def main():
     p.add_argument("--gate_kappa_init", type=float, default=0.0)
     p.add_argument("--gate_bias_init", type=float, default=2.0)
     p.add_argument("--gate_detach", type=str2bool, default=False)
+    # -- Cluster B fast weight (see paper_v2_ppac/memos/NAMING_AND_STATUS.md) --
+    p.add_argument("--fast_weight", type=str2bool, default=False)
+    p.add_argument("--fw_dim", type=int, default=8)
+    p.add_argument("--fw_proj", type=str, default="shared")
+    p.add_argument("--fw_rule", type=str, default="hebb")
+    p.add_argument("--fw_kq_source", type=str, default="x")
+    p.add_argument("--fw_v_source", type=str, default="eps")
+    p.add_argument("--fw_impl", type=str, default="chunk")
+    p.add_argument("--fw_chunk", type=int, default=64)
+    p.add_argument("--fw_gate_mode", type=str, default="surprise")
+    p.add_argument("--fw_kappa_init", type=float, default=0.0)
+    p.add_argument("--fw_bias_init", type=float, default=0.0)
+    p.add_argument("--fw_gamma_init", type=float, default=0.95)
+    p.add_argument("--fw_gamma_trainable", type=str2bool, default=True)
+    p.add_argument("--fw_norm_qkv", type=str2bool, default=True)
+    p.add_argument("--fw_out_init", type=str, default="zeros")
+    p.add_argument("--fw_read", type=str, default="exclusive")
     p.add_argument("--bsz", type=int, default=1)
     p.add_argument("--p_dropout", type=float, default=0.0)
     p.add_argument("--jax_seed", type=int, default=0)
