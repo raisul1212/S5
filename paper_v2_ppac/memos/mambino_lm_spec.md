@@ -223,6 +223,22 @@ FLOP win.
     - *Still to do (the REAL Stage 1):* repo integration in `MambinoSSM`/`LMModel`, enwik8, the
       CALM-monolith Pareto baseline (§5), kill-switch byte-equivalence. The CPU proof de-risks
       trainability, NOT the enwik8 Pareto.
+  - **REPO INTEGRATION DONE + enwik8 run LAUNCHED (2026-08-02→03).** `MambinoLMModel`/
+    `BatchMambinoLMModel` (`s5/seq_model.py`) + dedicated `mlm_train_step/epoch/validate`
+    (`s5/train_helpers.py`) + `--mambino_lm=2level` wiring (`s5/train.py`, `run_train.py`,
+    `bin/gilbreth_enwik8.sh MODEL=mambinolm`). Verified on CPU **locally AND on Gilbreth (jax
+    0.4.30)**: `paper_v2_ppac/mambino_lm/test_mambino_lm.py` (forward valid; α=0 off-switch EXACT;
+    **causality — zero future leak — under soft AND hard gate**; loss terms sown) + `smoke_mlm_train.py`
+    (full train→validate path, loss drops). **Fable-audited (verdict: safe to launch)**; fixes D1–D4
+    applied (assert causal preconditions; drop deflated last aux target; token-weighted esc rate;
+    softplus κ + no-wd gate scalars; doc reconciled to pooled-FEATURES input). Kill-switch:
+    `--mambino_lm=off` ⇒ `BatchLMModel` bit-identical.
+    - **Gilbreth SLURM job 11454471** (`S5-sgate` @ 7409d02): iso-param **795,396** (ssm_base=128,
+      bottom n_layers=6, top_layers=2, stride=4, gelu, d=256, L=1024, 50k steps, seed 42) — matched to
+      the Pure-S5-gelu anchor **1.7984 @ 795,008**. Reports Test BPC + eval escalation rate (the
+      BPC-vs-compute Pareto point) every 2k steps → `checkpoints/enwik8_mambinolm_*` + `run.log`.
+    - *Next after results:* the CALM-monolith baseline (§5, the rigorous compute-matched arm); then
+      Stage 2 (TTT + the automation curve).
 - **Stage 2 — add TTT to the bottom (the novelty demo).** Measure the **automation curve** with ALL
   controls in §8. Compute the §6 inequality.
 - **Stage 3 — deepen** (>2 levels), cross-level learning, surprise-triggered ticking.
