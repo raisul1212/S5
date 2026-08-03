@@ -199,6 +199,21 @@ FLOP win.
 - **Stage 1 — 2 levels, NO learning.** Bottom + one slow-ticking top; surprise-gated escalation; show
   escalation works, confident tokens skip the top (adaptive compute), and it beats the CALM-monolith
   Pareto (§5). Kill-switch green first.
+  - **CPU MECHANISM PROOF ✅ PASS (2026-08-02, `paper_v2_ppac/mambino_lm/stage1_hierarchy.py`).** Pre-repo
+    de-risk of the §9 load-bearing risk (gate collapse), on a block-regime synthetic task (easy filler
+    blocks vs hard context-dependent blocks; feedforward bottom that *cannot* hold context c, slow top
+    that pools it). Results: **task is top-requiring** (acc α=1 − α=0 = +0.903); **gate selective**
+    (escalation 0.25 easy → 1.00 hard-answer, gap +0.749); **escalation useful** (learned-α recovers
+    the top ceiling 0.097→1.000 while skipping the top ~40%); **no collapse** (mean α 0.60).
+    - *Resolves §11-D3:* pure STE **saturated** (dead ponder gradient → α≡1 collapse); fix =
+      **soft gate in the forward during training, hard threshold at eval** — same discrete skip at
+      inference, gradients stay alive. Adopt this for the repo build.
+    - *Honest caveat:* hard-*filler* escalation is high (0.92) — trailing surprise is a **regime-level**
+      signal (escalates across a hard block, not just answer tokens; the Stage-0 lag). Per-token
+      tightening (surprise-triggered ticking / anticipatory cue) is Stage-2/3.
+    - *Still to do (the REAL Stage 1):* repo integration in `MambinoSSM`/`LMModel`, enwik8, the
+      CALM-monolith Pareto baseline (§5), kill-switch byte-equivalence. The CPU proof de-risks
+      trainability, NOT the enwik8 Pareto.
 - **Stage 2 — add TTT to the bottom (the novelty demo).** Measure the **automation curve** with ALL
   controls in §8. Compute the §6 inequality.
 - **Stage 3 — deepen** (>2 levels), cross-level learning, surprise-triggered ticking.
