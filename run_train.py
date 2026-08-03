@@ -223,5 +223,10 @@ if __name__ == "__main__":
 	parser.add_argument("--mlm_warmup_frac", type=float, default=0.15,
 						help="Fraction of lm_steps with ponder OFF (alpha high so the TOP learns) "
 							 "before the ponder weight ramps in (soft alpha-curriculum).")
+	parser.add_argument("--mlm_alpha_override", type=float, default=-99.0,
+						help="Diagnostic knob for the escalation gate. <-90 (default) = learned gate "
+							 "(soft at train, hard at eval). 1.0 = force alpha=1 (top ALWAYS on -> does "
+							 "the top help BPC at all?). 0.0 = force alpha=0 (bottom only, top dead). "
+							 "Used to measure the top's marginal value independent of the gate.")
 
 	train(parser.parse_args())

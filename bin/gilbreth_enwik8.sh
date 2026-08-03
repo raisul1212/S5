@@ -65,6 +65,7 @@ MLM_LAMBDA_AUX=${MLM_LAMBDA_AUX:-0.1}
 MLM_LAMBDA_POND=${MLM_LAMBDA_POND:-0.05}
 MLM_WARMUP_FRAC=${MLM_WARMUP_FRAC:-0.15}
 MLM_KAPPA=${MLM_KAPPA:-4.0}
+MLM_ALPHA_OVERRIDE=${MLM_ALPHA_OVERRIDE:--99.0}   # -99=learned gate; 1.0=top always on; 0.0=bottom only
 EPOCHS=$(( LM_STEPS / EVAL_EVERY ))
 [ $EPOCHS -lt 1 ] && EPOCHS=1
 
@@ -72,7 +73,8 @@ case $MODEL in
   s5)         MFLAGS="--use_mambino_ssm=False"; TAG="s5" ;;
   mambino)    MFLAGS="--use_mambino_ssm=True --surprise_gate=False"; TAG="mambino" ;;
   mambino2p0) MFLAGS="--use_mambino_ssm=True --surprise_gate=True --gate_range=$GATE_RANGE --gate_kappa_init=0.0 --gate_bias_init=2.0 --gate_alpha=0.9"; TAG="mambino2p0_$GATE_RANGE" ;;
-  mambinolm)  MFLAGS="--use_mambino_ssm=False --mambino_lm=2level --mlm_stride=$MLM_STRIDE --mlm_top_layers=$MLM_TOP_LAYERS --mlm_lambda_aux=$MLM_LAMBDA_AUX --mlm_lambda_pond=$MLM_LAMBDA_POND --mlm_warmup_frac=$MLM_WARMUP_FRAC --mlm_kappa_init=$MLM_KAPPA"; TAG="mambinolm_s${MLM_STRIDE}_top${MLM_TOP_LAYERS}" ;;
+  mambinolm)  MFLAGS="--use_mambino_ssm=False --mambino_lm=2level --mlm_stride=$MLM_STRIDE --mlm_top_layers=$MLM_TOP_LAYERS --mlm_lambda_aux=$MLM_LAMBDA_AUX --mlm_lambda_pond=$MLM_LAMBDA_POND --mlm_warmup_frac=$MLM_WARMUP_FRAC --mlm_kappa_init=$MLM_KAPPA --mlm_alpha_override=$MLM_ALPHA_OVERRIDE"
+              _AO=$(echo $MLM_ALPHA_OVERRIDE | sed 's/[.-]//g'); TAG="mambinolm_s${MLM_STRIDE}_top${MLM_TOP_LAYERS}_a${_AO}" ;;
   *) echo "unknown MODEL=$MODEL"; exit 1 ;;
 esac
 
