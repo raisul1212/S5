@@ -195,4 +195,33 @@ if __name__ == "__main__":
 							 "end of training (e.g. '0,4,5,6,7,8').  0 = no "
 							 "quantization.  Empty = no chip sweep.")
 
+	# ── Mambino-LM (Stage 1): 2-level surprise-gated escalation LM head ──
+	parser.add_argument("--mambino_lm", type=str, default="off",
+						choices=["off", "2level"],
+						help="off (default) => BatchLMModel bit-identical. 2level => "
+							 "MambinoLMModel: bottom (n_layers) + slow-ticking top over "
+							 "pooled bottom features + surprise-gated escalation. Requires "
+							 "--task=lm, --bidirectional=False, --batchnorm=False.")
+	parser.add_argument("--mlm_stride", type=int, default=4,
+						help="s: the top ticks once per s tokens (slow-ticking invariant). "
+							 "lm_seqlen must be divisible by s.")
+	parser.add_argument("--mlm_top_layers", type=int, default=2,
+						help="TOP encoder depth (the deliberate level; keep small).")
+	parser.add_argument("--mlm_alpha_thresh", type=float, default=0.0,
+						help="theta: escalation threshold on trailing surprise z0 (learned; this is init).")
+	parser.add_argument("--mlm_kappa_init", type=float, default=4.0,
+						help="Gate sharpness kappa init (soft-train sigmoid slope).")
+	parser.add_argument("--mlm_beta_init", type=float, default=1.0,
+						help="Nudge magnitude beta init.")
+	parser.add_argument("--mlm_gate_ema", type=float, default=0.9,
+						help="EMA decay of the trailing-surprise normalizer z0.")
+	parser.add_argument("--mlm_lambda_aux", type=float, default=0.1,
+						help="Weight on the Rao-Ballard aux loss (top predicts next-window "
+							 "pooled bottom error -> trains the top even when NOT escalated).")
+	parser.add_argument("--mlm_lambda_pond", type=float, default=0.05,
+						help="Max weight on the ponder (escalation-cost) term = mean soft alpha.")
+	parser.add_argument("--mlm_warmup_frac", type=float, default=0.15,
+						help="Fraction of lm_steps with ponder OFF (alpha high so the TOP learns) "
+							 "before the ponder weight ramps in (soft alpha-curriculum).")
+
 	train(parser.parse_args())

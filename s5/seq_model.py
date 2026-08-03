@@ -294,6 +294,147 @@ BatchLMModel = nn.vmap(
     split_rngs={"params": False, "dropout": True, "noise": True}, axis_name='batch')
 
 
+class MambinoLMModel(nn.Module):
+    """Mambino-LM Stage 1: a 2-level dual-process predictive-coding LM head.
+
+    Bottom (fast, per-token) = the causal StackedEncoderModel -> per-position
+    logits p0.  Top (slow, deliberate) = a SECOND encoder that ticks once per
+    `stride` tokens over the mean-POOLED bottom features (a subsampled/compressed
+    long-range stream a bigger bottom state cannot cheaply represent).  A surprise
+    gate on the bottom's REALIZED TRAILING error z0 decides, per token, whether to
+    escalate (add the top's nudge) -- adaptive compute:
+
+        logits(t) = p0(t) + alpha(t) * beta * nudge(t)
+
+    alpha(t): SOFT sigmoid during training (gradients stay alive), HARD threshold
+    at eval (the discrete skip the chip does).  This is the Stage-1 mechanism
+    validated on CPU (paper_v2_ppac/mambino_lm/stage1_hierarchy.py): soft-train /
+    hard-eval avoids the STE saturation that collapses the gate.
+
+    CAUSALITY (all enforced here):
+      - z0(t) is a trailing EMA of bottom errors e(0..t-1) ONLY (excludes e(t));
+        e(tau)=CE(p0(tau), x[tau+1]) uses inputs up to x[tau+1]<=x[t], never x[t+1].
+      - nudge(t) uses the top's summary through window w(t)-1 (a one-window shift):
+        every token in window w reads only bottom features from windows < w.
+      - the gate DECISION detaches z0 (stop-grad), matching the Cluster-A house
+        rule; beta/nudge get task gradient; the aux target is stop-grad.
+    Sows for the loss (read by mlm_train_step): 'mlm_ponder' (mean soft alpha,
+    the escalation-cost term), 'mlm_aux' (Rao-Ballard: top predicts the NEXT
+    window's pooled bottom error -> trains the top even when NOT escalated),
+    'mlm_esc' (mean hard escalation rate, logged).
+    Requires bidirectional=False, batchnorm=False (causal, no future leak), and
+    sequence length L divisible by `mlm_stride`.
+    """
+    ssm: nn.Module
+    d_output: int          # vocab size
+    d_model: int
+    n_layers: int          # BOTTOM layers
+    padded: bool = False
+    activation: str = "gelu"
+    dropout: float = 0.0
+    training: bool = True
+    mode: str = ""
+    prenorm: bool = False
+    batchnorm: bool = False
+    bn_momentum: float = 0.9
+    step_rescale: float = 1.0
+    glu_rank: int = 0
+    glu_structure: str = "dense"
+    # -- Mambino-LM knobs --
+    mlm_stride: int = 4            # s: top ticks once per s tokens (slow ticking = FIX #1)
+    mlm_top_layers: int = 2       # TOP encoder depth (small, the deliberate level)
+    mlm_alpha_thresh: float = 0.0 # theta init (escalation threshold on z0)
+    mlm_kappa_init: float = 4.0   # gate sharpness init
+    mlm_beta_init: float = 1.0    # nudge magnitude init
+    mlm_gate_ema: float = 0.9     # trailing-surprise EMA decay
+    alpha_override: float = -99.0 # <-90: use training flag (soft/hard); else force this constant
+
+    def setup(self):
+        common = dict(ssm=self.ssm, d_model=self.d_model, activation=self.activation,
+                      dropout=self.dropout, training=self.training, prenorm=self.prenorm,
+                      batchnorm=self.batchnorm, bn_momentum=self.bn_momentum,
+                      step_rescale=self.step_rescale, glu_rank=self.glu_rank,
+                      glu_structure=self.glu_structure)
+        self.bottom = StackedEncoderModel(n_layers=self.n_layers, **common)
+        self.bottom_decoder = nn.Dense(self.d_output)
+        self.top = StackedEncoderModel(n_layers=self.mlm_top_layers, **common)
+        self.nudge_decoder = nn.Dense(self.d_output)
+        self.aux_head = nn.Dense(1)                       # Rao-Ballard: predict pooled bottom error
+        self.mlm_kappa = self.param("mlm_kappa", lambda r, s: np.full(s, self.mlm_kappa_init), (1,))
+        self.mlm_theta = self.param("mlm_theta", lambda r, s: np.full(s, self.mlm_alpha_thresh), (1,))
+        self.mlm_beta = self.param("mlm_beta", lambda r, s: np.full(s, self.mlm_beta_init), (1,))
+
+    def _trailing_z(self, e):
+        """e: (L-1,) bottom errors for positions 0..L-2.  Returns z0: (L,) where
+        z0[t] = bias-corrected EMA of e[0..t-1] (strictly trailing; z0[0]=0)."""
+        a = self.mlm_gate_ema
+
+        def step(carry, et):
+            m, cnt = carry
+            m = a * m + (1.0 - a) * et
+            cnt = cnt + 1.0
+            mu = m / (1.0 - a ** cnt)                      # bias-corrected (Adam-style)
+            return (m, cnt), mu
+
+        _, M = jax.lax.scan(step, (0.0, 0.0), e)           # M[k] = EMA(e[0..k]), length L-1
+        return np.concatenate([np.zeros((1,)), M], axis=0) # z0[t]=M[t-1]; length L
+
+    def __call__(self, x, integration_timesteps):
+        L = x.shape[0]
+        s = self.mlm_stride
+        W = L // s                                          # #windows (caller ensures L % s == 0)
+
+        # ---- bottom (fast, per-token) ----
+        F0 = self.bottom(x, integration_timesteps)          # (L, H)
+        p0 = self.bottom_decoder(F0)                         # (L, V) pre-nudge bottom logits
+        lp0 = nn.log_softmax(p0, axis=-1)
+
+        # ---- realized trailing surprise z0 (causal; excludes current token) ----
+        tgt = np.argmax(x[1:], axis=-1)                     # (L-1,) realized next tokens (pos 0..L-2)
+        e = -lp0[np.arange(L - 1), tgt]                     # (L-1,) bottom CE errors
+        z0 = self._trailing_z(jax.lax.stop_gradient(e))     # (L,) gate DECISION detaches surprise
+
+        # ---- escalation gate: soft (train) / hard (eval) / forced (tests) ----
+        soft_a = jax.nn.sigmoid(self.mlm_kappa[0] * (z0 - self.mlm_theta[0]))
+        hard_a = (z0 > self.mlm_theta[0]).astype(np.float32)
+        if self.alpha_override > -90.0:
+            alpha = np.full((L,), np.float32(self.alpha_override))
+        else:
+            alpha = soft_a if self.training else hard_a
+
+        # ---- top (slow tick over pooled bottom features), causal one-window shift ----
+        Fpool = np.mean(F0.reshape(W, s, -1), axis=1)       # (W, H) window-mean of bottom features
+        Gtop = self.top(Fpool, np.ones((W,)))               # (W, H) causal SSM over subsampled stream
+        nudge_win = self.nudge_decoder(Gtop)                # (W, V)
+        # window w reads the top's summary through window w-1 (all tokens strictly earlier -> causal)
+        nudge_win_sh = np.concatenate([np.zeros((1, self.d_output)), nudge_win[:-1]], axis=0)  # (W,V)
+        nudge = np.repeat(nudge_win_sh, s, axis=0)          # (L, V)
+
+        logits = p0 + alpha[:, None] * self.mlm_beta[0] * nudge
+        log_probs = nn.log_softmax(logits, axis=-1)
+
+        # ---- Rao-Ballard aux: top predicts NEXT window's pooled bottom error ----
+        e_full = np.concatenate([e, np.zeros((1,))], axis=0)          # (L,) pad last (unused as target below)
+        e_pool = np.mean(e_full.reshape(W, s), axis=1)                # (W,) pooled bottom error per window
+        aux_pred = self.aux_head(Gtop)[:, 0]                          # (W,) top's prediction
+        aux_target = jax.lax.stop_gradient(e_pool)
+        aux_loss = np.mean((aux_pred[:-1] - aux_target[1:]) ** 2)     # predict NEXT window (w -> w+1)
+
+        # ---- sow terms for the loss / logging ----
+        self.sow("intermediates", "mlm_aux", aux_loss)
+        self.sow("intermediates", "mlm_ponder", np.mean(soft_a))
+        self.sow("intermediates", "mlm_esc", np.mean(hard_a))
+        return log_probs
+
+
+BatchMambinoLMModel = nn.vmap(
+    MambinoLMModel,
+    in_axes=(0, 0),
+    out_axes=0,
+    variable_axes={"params": None, "dropout": None, 'batch_stats': None, "cache": 0, "prime": None, "intermediates": 0},
+    split_rngs={"params": False, "dropout": True, "noise": True}, axis_name='batch')
+
+
 # For Document matching task (e.g. AAN)
 class RetrievalDecoder(nn.Module):
     """

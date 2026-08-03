@@ -7,11 +7,11 @@ import wandb
 
 from .train_helpers import create_train_state, reduce_lr_on_plateau,\
     linear_warmup, cosine_annealing, constant_lr, make_warmup_cosine, train_epoch, validate,\
-    lm_train_epoch, lm_validate,\
+    lm_train_epoch, lm_validate, mlm_train_epoch, mlm_validate,\
     save_checkpoint, save_checkpoint_msgpack, load_checkpoint_msgpack,\
     compute_predictor_frobenius
 from .dataloading import Datasets
-from .seq_model import BatchClassificationModel, RetrievalModel, BatchLMModel
+from .seq_model import BatchClassificationModel, RetrievalModel, BatchLMModel, BatchMambinoLMModel
 from .ssm import init_S5SSM
 from .ssm_init import make_DPLR_HiPPO
 from .mambino_ssm import init_MambinoSSM
@@ -196,7 +196,9 @@ def train(args):
         )
 
     # --- char-LM: override model_cls with the causal per-position LM head ---
-    if getattr(args, 'task', 'classification') == 'lm':
+    _is_mlm = (getattr(args, 'task', 'classification') == 'lm'
+               and getattr(args, 'mambino_lm', 'off') != 'off')
+    if getattr(args, 'task', 'classification') == 'lm' and not _is_mlm:
         model_cls = partial(
             BatchLMModel,
             ssm=ssm_init_fn,
@@ -211,6 +213,32 @@ def train(args):
             bn_momentum=args.bn_momentum,
             glu_rank=getattr(args, 'glu_rank', 0),
             glu_structure=getattr(args, 'glu_structure', 'dense'),
+        )
+    elif _is_mlm:
+        # Mambino-LM Stage 1: 2-level surprise-gated escalation head.
+        print(f"[*] Using Mambino-LM (2-level, stride={getattr(args,'mlm_stride',4)}, "
+              f"top_layers={getattr(args,'mlm_top_layers',2)}, "
+              f"alpha={getattr(args,'mambino_lm','off')})")
+        model_cls = partial(
+            BatchMambinoLMModel,
+            ssm=ssm_init_fn,
+            d_output=n_classes,
+            d_model=args.d_model,
+            n_layers=args.n_layers,      # BOTTOM layers
+            padded=False,
+            activation=args.activation_fn,
+            dropout=args.p_dropout,
+            prenorm=args.prenorm,
+            batchnorm=args.batchnorm,    # MUST be False (causal)
+            bn_momentum=args.bn_momentum,
+            glu_rank=getattr(args, 'glu_rank', 0),
+            glu_structure=getattr(args, 'glu_structure', 'dense'),
+            mlm_stride=int(getattr(args, 'mlm_stride', 4)),
+            mlm_top_layers=int(getattr(args, 'mlm_top_layers', 2)),
+            mlm_alpha_thresh=float(getattr(args, 'mlm_alpha_thresh', 0.0)),
+            mlm_kappa_init=float(getattr(args, 'mlm_kappa_init', 4.0)),
+            mlm_beta_init=float(getattr(args, 'mlm_beta_init', 1.0)),
+            mlm_gate_ema=float(getattr(args, 'mlm_gate_ema', 0.9)),
         )
 
     # initialize training state
@@ -266,7 +294,16 @@ def train(args):
             lr_params = (decay_function, ssm_lr, lr, step, end_step, args.opt_config, args.lr_min)
 
         train_rng, skey = random.split(train_rng)
-        if getattr(args, 'task', 'classification') == 'lm':
+        if _is_mlm:
+            state, train_loss, step, epoch_metrics = mlm_train_epoch(
+                state, skey, model_cls, trainloader, seq_len, in_dim,
+                args.batchnorm, lr_params,
+                lambda_aux=float(getattr(args, 'mlm_lambda_aux', 0.1)),
+                lambda_pond_max=float(getattr(args, 'mlm_lambda_pond', 0.05)),
+                warmup_frac=float(getattr(args, 'mlm_warmup_frac', 0.15)),
+                total_steps=int(getattr(args, 'lm_steps', 0)),
+                max_steps=int(getattr(args, 'lm_max_steps', 0)))
+        elif getattr(args, 'task', 'classification') == 'lm':
             state, train_loss, step, epoch_metrics = lm_train_epoch(
                 state, skey, model_cls, trainloader, seq_len, in_dim,
                 args.batchnorm, lr_params, lambda_pc=getattr(args, 'lambda_pc', 0.0),
@@ -324,7 +361,20 @@ def train(args):
             if block_intrinsics_str:
                 print(f"[Mambino] E{epoch + 1}  per_block_L_int: {block_intrinsics_str}")
 
-        if getattr(args, 'task', 'classification') == 'lm':
+        if _is_mlm:
+            print(f"[*] Running Epoch {epoch + 1} Validation (BPC + escalation)...")
+            val_bpc, val_esc = mlm_validate(state, model_cls, valloader, seq_len, in_dim, args.batchnorm,
+                                            max_batches=int(getattr(args, 'lm_eval_batches', 0)))
+            test_bpc, test_esc = mlm_validate(state, model_cls, testloader, seq_len, in_dim, args.batchnorm,
+                                              max_batches=int(getattr(args, 'lm_eval_batches', 0)))
+            val_loss, val_acc = val_bpc, -val_bpc
+            test_loss, test_acc = test_bpc, -test_bpc
+            tm = epoch_metrics
+            print(f"\n=>> Epoch {epoch + 1} Metrics (Mambino-LM) ===")
+            print(f"\tTrain NLL: {train_loss:.5f} -- Val BPC: {val_bpc:.4f} -- Test BPC: {test_bpc:.4f}")
+            print(f"\tesc_rate(test): {test_esc:.3f}  |  train: aux {tm.get('aux_loss',0):.4f} "
+                  f"ponder {tm.get('ponder',0):.3f} esc {tm.get('esc_rate',0):.3f}")
+        elif getattr(args, 'task', 'classification') == 'lm':
             print(f"[*] Running Epoch {epoch + 1} Validation (BPC)...")
             val_bpc = lm_validate(state, model_cls, valloader, seq_len, in_dim, args.batchnorm,
                                   max_batches=int(getattr(args, 'lm_eval_batches', 0)))

@@ -863,3 +863,122 @@ def lm_validate(state, model, testloader, seq_len, in_dim, batchnorm, max_batche
         tot_nll += float(np.sum(nll))
         tot_tok += int(nll.size)
     return (tot_nll / tot_tok) / float(np.log(2))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Mambino-LM (Stage 1): a dedicated LM training path that adds the Rao-Ballard
+# aux loss + the ponder (escalation-cost) term to the task CE, and logs the
+# escalation rate.  Kept SEPARATE from the lm_* path so `--mambino_lm=off` uses
+# BatchLMModel bit-identically (house rule: the off-switch changes nothing).
+# ─────────────────────────────────────────────────────────────────────────────
+def _collect_named_scalar(intermediates, name):
+    """Mean of every sown scalar called `name` anywhere in the intermediates tree."""
+    vals = []
+
+    def _walk(node):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if k == name:
+                    vals.append(v[0] if isinstance(v, tuple) else v)
+                else:
+                    _walk(v)
+
+    _walk(intermediates)
+    if not vals:
+        return np.float32(0.0)
+    return np.mean(np.stack([np.mean(v) for v in vals]))
+
+
+@partial(jax.jit, static_argnums=(5, 6))
+def mlm_train_step(state, rng, batch_inputs, batch_targets, batch_its,
+                   model, batchnorm, lambda_aux, lambda_pond):
+    """Mambino-LM train step:  total = task_CE + lambda_aux*mlm_aux + lambda_pond*mlm_ponder.
+    lambda_aux/lambda_pond are TRACED (not static) so the ponder weight can ramp per
+    step without recompiles."""
+    def loss_fn(params):
+        variables = {"params": params}
+        mut = ["intermediates"]
+        if batchnorm:
+            variables["batch_stats"] = state.batch_stats
+            mut = ["intermediates", "batch_stats"]
+        log_probs, mod_vars = model.apply(
+            variables, batch_inputs, batch_its, rngs={"dropout": rng}, mutable=mut)
+        task_loss = lm_cross_entropy(log_probs, batch_targets)
+        inter = mod_vars.get("intermediates", {})
+        aux = _collect_named_scalar(inter, "mlm_aux")
+        pond = _collect_named_scalar(inter, "mlm_ponder")
+        esc = _collect_named_scalar(inter, "mlm_esc")
+        total = task_loss + lambda_aux * aux + lambda_pond * pond
+        return total, (mod_vars, task_loss, aux, pond, esc)
+
+    (loss, (mod_vars, task_loss, aux, pond, esc)), grads = \
+        jax.value_and_grad(loss_fn, has_aux=True)(state.params)
+    if batchnorm:
+        state = state.apply_gradients(grads=grads, batch_stats=mod_vars["batch_stats"])
+    else:
+        state = state.apply_gradients(grads=grads)
+    return state, loss, task_loss, aux, pond, esc
+
+
+def mlm_train_epoch(state, rng, model, trainloader, seq_len, in_dim, batchnorm,
+                    lr_params, lambda_aux=0.1, lambda_pond_max=0.05,
+                    warmup_frac=0.15, pond_ramp_frac=0.25, total_steps=0, max_steps=0):
+    """Mambino-LM epoch.  Ponder weight is 0 during the first `warmup_frac` of
+    `total_steps` (the top learns while alpha is high), then ramps to
+    `lambda_pond_max` over `pond_ramp_frac` of total_steps (soft alpha-curriculum;
+    the soft gate keeps gradients alive -- no STE saturation, per the Stage-1 proof)."""
+    model = model(training=True)
+    decay_function, ssm_lr, lr, step, end_step, opt_config, lr_min = lr_params
+    losses, tasks, auxes, ponds, escs = [], [], [], [], []
+    warm = int(warmup_frac * total_steps) if total_steps else 0
+    ramp = max(1, int(pond_ramp_frac * total_steps)) if total_steps else 1
+    for batch_idx, batch in enumerate(tqdm(trainloader)):
+        if max_steps and batch_idx >= max_steps:
+            break
+        gstep = int(step)
+        lam_pond = 0.0 if gstep < warm else lambda_pond_max * min(1.0, (gstep - warm) / ramp)
+        inputs, targets, its = prep_lm_batch(batch, seq_len, in_dim)
+        rng, drop_rng = jax.random.split(rng)
+        state, loss, task_loss, aux, pond, esc = mlm_train_step(
+            state, drop_rng, inputs, targets, its, model, batchnorm,
+            np.float32(lambda_aux), np.float32(lam_pond))
+        losses.append(loss); tasks.append(task_loss); auxes.append(aux)
+        ponds.append(pond); escs.append(esc)
+        lr_params = (decay_function, ssm_lr, lr, step, end_step, opt_config, lr_min)
+        state, step = update_learning_rate_per_step(lr_params, state)
+    metrics = {
+        "task_loss": float(np.mean(np.array(tasks))),
+        "aux_loss": float(np.mean(np.array(auxes))),
+        "ponder": float(np.mean(np.array(ponds))),
+        "esc_rate": float(np.mean(np.array(escs))),
+    }
+    return state, np.mean(np.array(losses)), step, metrics
+
+
+@partial(jax.jit, static_argnums=(3, 4))
+def _mlm_eval_step(batch_inputs, batch_its, state, model, batchnorm):
+    variables = {"params": state.params}
+    if batchnorm:
+        variables["batch_stats"] = state.batch_stats
+    log_probs, mod_vars = model.apply(variables, batch_inputs, batch_its, mutable=["intermediates"])
+    esc = _collect_named_scalar(mod_vars.get("intermediates", {}), "mlm_esc")
+    return log_probs, esc
+
+
+def mlm_validate(state, model, testloader, seq_len, in_dim, batchnorm, max_batches=0):
+    """Returns (BPC, mean_escalation_rate).  BPC = per-token NLL(nats)/ln2 (HARD gate
+    at eval).  Escalation rate = fraction of tokens that clock the top = the
+    adaptive-compute axis of the BPC-vs-compute Pareto (§5)."""
+    model = model(training=False)
+    tot_nll, tot_tok, escs = 0.0, 0, []
+    for bi, batch in enumerate(tqdm(testloader)):
+        if max_batches and bi >= max_batches:
+            break
+        inputs, targets, its = prep_lm_batch(batch, seq_len, in_dim)
+        log_probs, esc = _mlm_eval_step(inputs, its, state, model, batchnorm)
+        tgt = one_hot(targets, log_probs.shape[-1])
+        nll = -np.sum(tgt * log_probs, axis=-1)
+        tot_nll += float(np.sum(nll)); tot_tok += int(nll.size)
+        escs.append(float(esc))
+    bpc = (tot_nll / tot_tok) / float(np.log(2))
+    return bpc, float(np.mean(np.array(escs))) if escs else 0.0
