@@ -124,6 +124,15 @@ logits(t) = p0(t) + α(t)·β·nudge(t)                   # confident ⇒ skip t
 Kill-switch: `α≡1, s=1, FastWeight off` ⇒ a plain 2-level SSM (byte-equivalence test).
 `use_mambino_lm=off` ⇒ the existing `LMModel` path, bit-identical.
 
+**Stage-1 implementation note (reconciled 2026-08-02, Fable D4a):** the shipped code
+(`MambinoLMModel`) feeds the top the **mean-pooled bottom FEATURES** `pool(F0, s)` — the
+compressed/subsampled long-range stream of §3.2 — NOT the scalar/vector pooled *error*
+`e_pool` sketched above. Feeding features is what the Stage-1 CPU proof validated (pooled
+error alone can't carry which-answer context) and is the faithful Rao-Ballard reading (the
+top models the bottom's activity). The pooled ERROR is still used, but as the **aux target**
+(term 2): the top predicts the *next* window's `e_pool` (`mlm_aux`), which is what trains it
+when un-escalated. `pool(error)`-as-input remains an open variant to A/B later.
+
 ### 3.6 Stage-2 addition — the learner (the novelty)
 ```
 # after observing x_t, update the bottom's fast weights on its PRE-NUDGE loss:

@@ -216,6 +216,13 @@ def train(args):
         )
     elif _is_mlm:
         # Mambino-LM Stage 1: 2-level surprise-gated escalation head.
+        # Causality preconditions are structural, not docstring wishes: a
+        # bidirectional SSM or BatchNorm(axis_name='batch') leaks future tokens
+        # into position t with NO error and a deceptively-good BPC.  Fail loudly.
+        assert not args.bidirectional, \
+            "Mambino-LM is a CAUSAL LM: pass --bidirectional=False (else future leak)."
+        assert not args.batchnorm, \
+            "Mambino-LM is a CAUSAL LM: pass --batchnorm=False / use LayerNorm (else future leak)."
         print(f"[*] Using Mambino-LM (2-level, stride={getattr(args,'mlm_stride',4)}, "
               f"top_layers={getattr(args,'mlm_top_layers',2)}, "
               f"alpha={getattr(args,'mambino_lm','off')})")

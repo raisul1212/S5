@@ -332,14 +332,16 @@ def create_train_state(model_cls,
             ssm_fn = map_nested_fn(
                 lambda k, _: "ssm"
                 if k in ["Lambda_re", "Lambda_im", "norm",
-                         "Lambda_s_re", "Lambda_s_im", "gate_kappa", "gate_bias"]
+                         "Lambda_s_re", "Lambda_s_im", "gate_kappa", "gate_bias",
+                         "mlm_kappa", "mlm_theta", "mlm_beta"]
                 else ("none" if k in [] else "regular")
             )
         else:
             ssm_fn = map_nested_fn(
                 lambda k, _: "ssm"
                 if k in ["Lambda_re", "Lambda_im", "log_step", "norm",
-                         "Lambda_s_re", "Lambda_s_im", "log_step_s", "gate_kappa", "gate_bias"]
+                         "Lambda_s_re", "Lambda_s_im", "log_step_s", "gate_kappa", "gate_bias",
+                         "mlm_kappa", "mlm_theta", "mlm_beta"]
                 else ("none" if k in [] else "regular")
             )
         tx = optax.multi_transform(
@@ -970,7 +972,7 @@ def mlm_validate(state, model, testloader, seq_len, in_dim, batchnorm, max_batch
     at eval).  Escalation rate = fraction of tokens that clock the top = the
     adaptive-compute axis of the BPC-vs-compute Pareto (§5)."""
     model = model(training=False)
-    tot_nll, tot_tok, escs = 0.0, 0, []
+    tot_nll, tot_tok, tot_esc = 0.0, 0, 0.0
     for bi, batch in enumerate(tqdm(testloader)):
         if max_batches and bi >= max_batches:
             break
@@ -978,7 +980,8 @@ def mlm_validate(state, model, testloader, seq_len, in_dim, batchnorm, max_batch
         log_probs, esc = _mlm_eval_step(inputs, its, state, model, batchnorm)
         tgt = one_hot(targets, log_probs.shape[-1])
         nll = -np.sum(tgt * log_probs, axis=-1)
-        tot_nll += float(np.sum(nll)); tot_tok += int(nll.size)
-        escs.append(float(esc))
+        ntok = int(nll.size)
+        tot_nll += float(np.sum(nll)); tot_tok += ntok
+        tot_esc += float(esc) * ntok                   # token-weighted (batches may differ in size)
     bpc = (tot_nll / tot_tok) / float(np.log(2))
-    return bpc, float(np.mean(np.array(escs))) if escs else 0.0
+    return bpc, (tot_esc / tot_tok) if tot_tok else 0.0

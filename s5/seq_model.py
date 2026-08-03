@@ -395,7 +395,11 @@ class MambinoLMModel(nn.Module):
         z0 = self._trailing_z(jax.lax.stop_gradient(e))     # (L,) gate DECISION detaches surprise
 
         # ---- escalation gate: soft (train) / hard (eval) / forced (tests) ----
-        soft_a = jax.nn.sigmoid(self.mlm_kappa[0] * (z0 - self.mlm_theta[0]))
+        # kappa passed through softplus so the slope is ALWAYS positive: the soft
+        # (train) gate can never invert relative to the hard (eval) gate (z0>theta).
+        # softplus(init) ~= init for init>=4 (softplus(4)=4.018), so the init is preserved.
+        kappa = jax.nn.softplus(self.mlm_kappa[0])
+        soft_a = jax.nn.sigmoid(kappa * (z0 - self.mlm_theta[0]))
         hard_a = (z0 > self.mlm_theta[0]).astype(np.float32)
         if self.alpha_override > -90.0:
             alpha = np.full((L,), np.float32(self.alpha_override))
@@ -414,11 +418,14 @@ class MambinoLMModel(nn.Module):
         log_probs = nn.log_softmax(logits, axis=-1)
 
         # ---- Rao-Ballard aux: top predicts NEXT window's pooled bottom error ----
-        e_full = np.concatenate([e, np.zeros((1,))], axis=0)          # (L,) pad last (unused as target below)
+        # e covers positions 0..L-2; position L-1's error is unknown, so window
+        # W-1 would be (s-1)/s-deflated -> exclude it as a target (drop the last
+        # pair): aux_pred[0..W-3] targets the fully-real e_pool[1..W-2].
+        e_full = np.concatenate([e, np.zeros((1,))], axis=0)          # (L,) last entry = padding, never a target
         e_pool = np.mean(e_full.reshape(W, s), axis=1)                # (W,) pooled bottom error per window
         aux_pred = self.aux_head(Gtop)[:, 0]                          # (W,) top's prediction
         aux_target = jax.lax.stop_gradient(e_pool)
-        aux_loss = np.mean((aux_pred[:-1] - aux_target[1:]) ** 2)     # predict NEXT window (w -> w+1)
+        aux_loss = np.mean((aux_pred[:-2] - aux_target[1:-1]) ** 2)   # w -> w+1, real windows only
 
         # ---- sow terms for the loss / logging ----
         self.sow("intermediates", "mlm_aux", aux_loss)
