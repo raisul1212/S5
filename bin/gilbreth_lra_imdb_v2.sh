@@ -18,9 +18,18 @@
 #
 # CONFIGS (params asserted, not estimated — see the memo's table):
 #   S5-Dense   P=96  ssm=192 blocks=12 half_glu2   1,321,154   (S5's own config)
-#   S5-0       P=138 ssm=276 blocks=12 gelu        1,314,230
-#   Mambino-0  P=69  ssm=138 blocks=6  gelu+pred   1,314,230   (== S5-0 exactly)
-#   Mambino-G  P=69  ssm=138 blocks=6  +gate       1,314,242
+#   S5-0       P=138 ssm=276 blocks=6  gelu        1,314,230
+#   Mambino-0  P=69  ssm=138 blocks=3  gelu+pred   1,314,230   (== S5-0 exactly)
+#   Mambino-G  P=69  ssm=138 blocks=3  +gate       1,314,242
+#
+# BLOCKS. train.py does block_size = ssm_size_base/blocks, then halves it under
+# conjugate symmetry and tiles blocks x block_size. So ssm_size_base/blocks must
+# be EVEN or the halving truncates: 276/12 = 23 -> 23//2 = 11 -> 11*12 = 132
+# state entries where 138 are needed, and the run dies with
+#   TypeError: mul got incompatible shapes for broadcasting: (132,), (138,)
+# blocks=6 and blocks=3 both give block_size=46 -> 23 per block. Parameter counts
+# are UNAFFECTED by blocks (it only tiles the HiPPO init), so the pre-registered
+# totals are unchanged.
 #
 # VAL SPLIT. S5 ships no val split for IMDB; their loader puts the TEST set in
 # the validation role ("Use test set as val set, as done in the LRA paper",
@@ -75,11 +84,11 @@ VAL_SPLIT=${VAL_SPLIT:-0.1}
 
 # Names are canonical per mambino-paper/CLAUDE.md section 1.
 case "$CONFIG" in
-  S5-0)       ARCH="--use_mambino_ssm=False --activation_fn=gelu      --glu_rank=0 --ssm_size_base=276 --blocks=12"
+  S5-0)       ARCH="--use_mambino_ssm=False --activation_fn=gelu      --glu_rank=0 --ssm_size_base=276 --blocks=6"
               GATE="" ;;
-  Mambino-0)  ARCH="--use_mambino_ssm=True  --activation_fn=gelu      --glu_rank=0 --ssm_size_base=138 --blocks=6"
+  Mambino-0)  ARCH="--use_mambino_ssm=True  --activation_fn=gelu      --glu_rank=0 --ssm_size_base=138 --blocks=3"
               GATE="--surprise_gate=False --lambda_pc=0.0" ;;
-  Mambino-G)  ARCH="--use_mambino_ssm=True  --activation_fn=gelu      --glu_rank=0 --ssm_size_base=138 --blocks=6"
+  Mambino-G)  ARCH="--use_mambino_ssm=True  --activation_fn=gelu      --glu_rank=0 --ssm_size_base=138 --blocks=3"
               GATE="--surprise_gate=True --gate_range=signed --gate_alpha=0.9 --gate_kappa_init=0.0 --gate_bias_init=2.0 --lambda_pc=0.0" ;;
   S5-Dense)   ARCH="--use_mambino_ssm=False --activation_fn=half_glu2 --glu_rank=0 --ssm_size_base=192 --blocks=12"
               GATE="" ;;
