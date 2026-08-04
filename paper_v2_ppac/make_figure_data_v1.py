@@ -32,15 +32,17 @@ HOME = os.path.expanduser("~")
 WT = f"{HOME}/dev/ssm-baselines"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "figure_data_v1")
 SEEDS = [6554595, 42, 12345, 271828, 314159, 1, 2, 3]
-ORDER = ["S5-gateless", "Mambino-0", "Mambino-G", "Pure S5"]
-PARAMS = {"S5-gateless": 105738, "Mambino-0": 105738, "Mambino-G": 105754, "Pure S5": 188490}
+# Canonical names per mambino-paper/CLAUDE.md section 1 (settled 2026-08-03).
+# Ordering is fixed: the three 106 K configs first, the 188 K reference last.
+ORDER = ["S5-0", "Mambino-0", "Mambino-G", "S5-Dense"]
+PARAMS = {"S5-0": 105738, "Mambino-0": 105738, "Mambino-G": 105754, "S5-Dense": 188490}
 # PPAC at each config's ATP-optimal design point, honest overlap (v5).
 # Regenerate with paper_v2_ppac/chip/multi_array_ppac_v5.py::atp_optimal.
 PPAC = {  # config: (PEs, area_mm2, energy_uJ, latency_ms, peak_mW)
-    "S5-gateless": (3648, 20.62, 421.2, 0.236, 949),
+    "S5-0":        (3648, 20.62, 421.2, 0.236, 949),
     "Mambino-0":   (2368, 16.01, 451.7, 0.528, 502),
     "Mambino-G":   (2368, 16.01, 471.4, 0.528, 502),
-    "Pure S5":     (6208, 32.09, 563.0, 0.300, 2302),
+    "S5-Dense":    (6208, 32.09, 563.0, 0.300, 2302),
 }
 
 
@@ -63,7 +65,7 @@ def classify(a):
     mam, act, sb = arg(a, "use_mambino_ssm", False), arg(a, "activation_fn"), arg(a, "ssm_size_base")
     sg, gr = arg(a, "surprise_gate", False), arg(a, "glu_rank", 0)
     if not mam:
-        return "S5-gateless" if act == "gelu" else ("Pure S5" if (sb == 16 and gr == 0) else None)
+        return "S5-0" if act == "gelu" else ("S5-Dense" if (sb == 16 and gr == 0) else None)
     if act != "gelu" or sb != 16:
         return None
     if sg and arg(a, "gate_range", "signed") != "signed":  # unsigned arm
