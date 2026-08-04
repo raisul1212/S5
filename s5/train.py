@@ -1,4 +1,5 @@
 from functools import partial
+import inspect
 import os
 from jax import random
 import jax.numpy as np
@@ -126,8 +127,14 @@ def train(args):
 
     # Create dataset...
     init_rng, key = random.split(init_rng, num=2)
+    # val_split is forwarded ONLY to loaders that declare it, so every other
+    # dataset factory is called with exactly the arguments it received before
+    # and stays byte-identical. See run_train.py --val_split.
+    _ds_kwargs = dict(seed=args.jax_seed, bsz=args.bsz)
+    if "val_split" in inspect.signature(create_dataset_fn).parameters:
+        _ds_kwargs["val_split"] = getattr(args, "val_split", 0.0)
     trainloader, valloader, testloader, aux_dataloaders, n_classes, seq_len, in_dim, train_size = \
-      create_dataset_fn(args.dir_name, seed=args.jax_seed, bsz=args.bsz)
+      create_dataset_fn(args.dir_name, **_ds_kwargs)
 
     print(f"[*] Starting S5 Training on `{args.dataset}` =>> Initializing...")
 

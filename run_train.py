@@ -18,6 +18,15 @@ if __name__ == "__main__":
 	parser.add_argument("--dataset", type=str, choices=Datasets.keys(),
 						default='mnist-classification',
 						help="dataset name")
+	parser.add_argument("--val_split", type=float, default=0.0,
+						help="Fraction of TRAIN held out as a validation split, for "
+							 "datasets that ship none. 0.0 (default) preserves the "
+							 "released behaviour exactly: the LRA convention assigns "
+							 "the test set to the validation role, so the reported "
+							 "checkpoint is selected on test. Set >0 to select "
+							 "checkpoints on genuinely held-out data instead. "
+							 "Currently honoured by imdb-classification only; other "
+							 "loaders ignore it and are byte-identical either way.")
 
 	# Model Parameters
 	parser.add_argument("--n_layers", type=int, default=6,

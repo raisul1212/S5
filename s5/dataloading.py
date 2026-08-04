@@ -56,12 +56,23 @@ def make_data_loader(dset,
 
 def create_lra_imdb_classification_dataset(cache_dir: Union[str, Path] = DEFAULT_CACHE_DIR_ROOT,
 										   bsz: int = 50,
-										   seed: int = 42) -> ReturnType:
+										   seed: int = 42,
+										   val_split: float = 0.0) -> ReturnType:
 	"""
 
 	:param cache_dir:		(str):		Not currently used.
 	:param bsz:				(int):		Batch size.
 	:param seed:			(int)		Seed for shuffling data.
+	:param val_split:		(float)		Fraction of TRAIN held out for validation.
+										0.0 (default) reproduces the released
+										behaviour byte-for-byte: no val split, so
+										s5/train.py puts the TEST stream in the
+										validation role and selects the reported
+										checkpoint on test, which is the LRA
+										convention (see dataloaders/lra.py:139).
+										>0 carves a genuine validation split from
+										train so checkpoints are selected on
+										held-out data.
 	:return:
 	"""
 	print("[*] Generating LRA-text (IMDB) Classification Dataset")
@@ -70,11 +81,23 @@ def create_lra_imdb_classification_dataset(cache_dir: Union[str, Path] = DEFAULT
 
 	dataset_obj = IMDB('imdb', )
 	dataset_obj.cache_dir = Path(cache_dir) / name
+	# Set before setup(): the split is applied after the cached dataset is loaded
+	# (lra.py:137-149), so this needs no cache invalidation. The split itself is
+	# drawn with the dataset's own fixed seed, NOT jax_seed, so every run and
+	# every configuration selects against the identical validation set.
+	if val_split > 0.0:
+		dataset_obj.val_split = val_split
 	dataset_obj.setup()
+	if val_split > 0.0:
+		print(f"[*] IMDB val split: {len(dataset_obj.dataset_train)} train / "
+			  f"{len(dataset_obj.dataset_val)} val / {len(dataset_obj.dataset_test)} test")
 
 	trainloader = make_data_loader(dataset_obj.dataset_train, dataset_obj, seed=seed, batch_size=bsz)
 	testloader = make_data_loader(dataset_obj.dataset_test, dataset_obj, seed=seed, batch_size=bsz, drop_last=False, shuffle=False)
 	valloader = None
+	if val_split > 0.0:
+		valloader = make_data_loader(dataset_obj.dataset_val, dataset_obj, seed=seed,
+									 batch_size=bsz, drop_last=False, shuffle=False)
 
 	N_CLASSES = dataset_obj.d_output
 	SEQ_LENGTH = dataset_obj.l_max
