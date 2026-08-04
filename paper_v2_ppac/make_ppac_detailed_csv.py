@@ -71,6 +71,15 @@ HEADER = [
     "IPW_acc_per_W_avg", "provenance",
 ]
 
+# Per-inference energy by chip component. The eight fields sum to energy_full_uJ
+# exactly; the generator asserts it, so a stacked bar built from these columns
+# cannot silently disagree with the energy column of the main table.
+E_FIELDS = ["e_mac_uJ", "e_wsram_uJ", "e_asram_uJ", "e_spad_uJ",
+            "e_elem_uJ", "e_state_uJ", "e_noc_ctrl_uJ", "e_leak_uJ"]
+E_HEADER = (["config", "params"]
+            + [f[2:-3] + "_uJ" for f in E_FIELDS]      # strip "e_" prefix only
+            + ["total_uJ", "elementwise_pct", "mac_pct"])
+
 
 def derived(acc, area, energy_uJ, avg_mW):
     return [
@@ -98,10 +107,18 @@ def concurrent_throughput(atp):
 
 
 def main():
-    rows = []
+    rows, erows = [], []
     for name, cfg, params in CONFIGS:
         r = m5.atp_optimal(cfg, honest=True)
         acc = r["acc"]
+
+        # Energy breakdown. Assert the components reconstruct the total.
+        parts = [r[f] for f in E_FIELDS]
+        tot = r["energy_full_uJ"]
+        assert abs(sum(parts) - tot) < 1e-6, f"{name}: components {sum(parts)} != {tot}"
+        erows.append([name, params] + [f"{v:.6f}" for v in parts]
+                     + [f"{tot:.6f}", f"{100 * r['e_elem_uJ'] / tot:.2f}",
+                        f"{100 * r['e_mac_uJ'] / tot:.2f}"])
         assert abs(acc - ACC_FROM_LOGS[cfg]) < 1e-9, (
             f"{name}: model acc {acc} != log-verified {ACC_FROM_LOGS[cfg]}")
 
@@ -153,6 +170,13 @@ def main():
             cw.writerow(HEADER)
             cw.writerows(rows)
         print(f"  wrote {p}  ({len(rows)} rows)")
+
+        pe = os.path.join(d, "energy_breakdown_4corners.csv")
+        with open(pe, "w", newline="") as f:
+            cw = csv.writer(f)
+            cw.writerow(E_HEADER)
+            cw.writerows(erows)
+        print(f"  wrote {pe}  ({len(erows)} rows)")
 
     print()
     for r in rows:
