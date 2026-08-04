@@ -347,7 +347,8 @@ class MambinoLMModel(nn.Module):
     mlm_kappa_init: float = 4.0   # gate sharpness init
     mlm_beta_init: float = 1.0    # nudge magnitude init
     mlm_gate_ema: float = 0.9     # trailing-surprise EMA decay
-    alpha_override: float = -99.0 # <-90: use training flag (soft/hard); else force this constant
+    alpha_override: float = -99.0 # <-90: use training flag (soft/hard); else force this constant (escalation mode)
+    mlm_write_gate: bool = False  # True: persistent-memory mode (top always READ; surprise gates the WRITE)
 
     def setup(self):
         common = dict(ssm=self.ssm, d_model=self.d_model, activation=self.activation,
@@ -389,48 +390,63 @@ class MambinoLMModel(nn.Module):
         p0 = self.bottom_decoder(F0)                         # (L, V) pre-nudge bottom logits
         lp0 = nn.log_softmax(p0, axis=-1)
 
-        # ---- realized trailing surprise z0 (causal; excludes current token) ----
+        # ---- realized bottom errors (causal) + per-window pooled features/error ----
         tgt = np.argmax(x[1:], axis=-1)                     # (L-1,) realized next tokens (pos 0..L-2)
         e = -lp0[np.arange(L - 1), tgt]                     # (L-1,) bottom CE errors
-        z0 = self._trailing_z(jax.lax.stop_gradient(e))     # (L,) gate DECISION detaches surprise
-
-        # ---- escalation gate: soft (train) / hard (eval) / forced (tests) ----
-        # kappa passed through softplus so the slope is ALWAYS positive: the soft
-        # (train) gate can never invert relative to the hard (eval) gate (z0>theta).
-        # softplus(init) ~= init for init>=4 (softplus(4)=4.018), so the init is preserved.
-        kappa = jax.nn.softplus(self.mlm_kappa[0])
-        soft_a = jax.nn.sigmoid(kappa * (z0 - self.mlm_theta[0]))
-        hard_a = (z0 > self.mlm_theta[0]).astype(np.float32)
-        if self.alpha_override > -90.0:
-            alpha = np.full((L,), np.float32(self.alpha_override))
-        else:
-            alpha = soft_a if self.training else hard_a
-
-        # ---- top (slow tick over pooled bottom features), causal one-window shift ----
         Fpool = np.mean(F0.reshape(W, s, -1), axis=1)       # (W, H) window-mean of bottom features
-        Gtop = self.top(Fpool, np.ones((W,)))               # (W, H) causal SSM over subsampled stream
+        e_full = np.concatenate([e, np.zeros((1,))], axis=0)          # (L,) last entry = padding, never a target
+        e_pool = np.mean(e_full.reshape(W, s), axis=1)                # (W,) pooled bottom error per window
+        # kappa via softplus -> slope always positive (soft train-gate can't invert vs hard eval-gate).
+        kappa = jax.nn.softplus(self.mlm_kappa[0])
+
+        if self.mlm_write_gate:
+            # PERSISTENT-MEMORY mode: the top is READ every token (cheap broadcast add,
+            # always on -> cannot collapse the benefit); the surprise gate moves to the
+            # WRITE (state consolidation), fired per-WINDOW only when the window is more
+            # surprising than recent ones. Sparse writes = the write-seldom / read-often
+            # access pattern of a persistent (NVM-like) memory; write rate = the energy axis.
+            tm = self._trailing_z(e_pool[:-1])                        # (W,) trailing mean of past-window surprise
+            zc = jax.lax.stop_gradient(e_pool - tm)                   # (W,) this window vs recent (DECISION detaches)
+            gw_soft = jax.nn.sigmoid(kappa * (zc - self.mlm_theta[0]))
+            gw_hard = (zc > self.mlm_theta[0]).astype(np.float32)
+            gw = gw_soft if self.training else gw_hard
+            Fpool_in = gw[:, None] * Fpool                           # skip the input WRITE on unsurprising windows
+            read_gate = np.ones((L,))                                # READ is always on
+            ponder_term = np.mean(gw_soft)                           # penalize WRITE frequency (energy)
+            hard_rate = np.mean(gw_hard)                             # write rate (efficiency axis)
+        else:
+            # ESCALATION mode (Stage-1 original): gate the per-token READ on trailing surprise.
+            z0 = self._trailing_z(jax.lax.stop_gradient(e))          # (L,) gate DECISION detaches
+            soft_a = jax.nn.sigmoid(kappa * (z0 - self.mlm_theta[0]))
+            hard_a = (z0 > self.mlm_theta[0]).astype(np.float32)
+            if self.alpha_override > -90.0:
+                read_gate = np.full((L,), np.float32(self.alpha_override))
+            else:
+                read_gate = soft_a if self.training else hard_a
+            Fpool_in = Fpool
+            ponder_term = np.mean(soft_a)
+            hard_rate = np.mean(hard_a)
+
+        # ---- top (slow tick), causal one-window shift; read is broadcast-cheap ----
+        Gtop = self.top(Fpool_in, np.ones((W,)))            # (W, H) causal SSM over the subsampled stream
         nudge_win = self.nudge_decoder(Gtop)                # (W, V)
         # window w reads the top's summary through window w-1 (all tokens strictly earlier -> causal)
         nudge_win_sh = np.concatenate([np.zeros((1, self.d_output)), nudge_win[:-1]], axis=0)  # (W,V)
         nudge = np.repeat(nudge_win_sh, s, axis=0)          # (L, V)
 
-        logits = p0 + alpha[:, None] * self.mlm_beta[0] * nudge
+        logits = p0 + read_gate[:, None] * self.mlm_beta[0] * nudge
         log_probs = nn.log_softmax(logits, axis=-1)
 
         # ---- Rao-Ballard aux: top predicts NEXT window's pooled bottom error ----
-        # e covers positions 0..L-2; position L-1's error is unknown, so window
-        # W-1 would be (s-1)/s-deflated -> exclude it as a target (drop the last
-        # pair): aux_pred[0..W-3] targets the fully-real e_pool[1..W-2].
-        e_full = np.concatenate([e, np.zeros((1,))], axis=0)          # (L,) last entry = padding, never a target
-        e_pool = np.mean(e_full.reshape(W, s), axis=1)                # (W,) pooled bottom error per window
+        # (drop the (s-1)/s-deflated last window: position L-1's error is unknown.)
         aux_pred = self.aux_head(Gtop)[:, 0]                          # (W,) top's prediction
         aux_target = jax.lax.stop_gradient(e_pool)
         aux_loss = np.mean((aux_pred[:-2] - aux_target[1:-1]) ** 2)   # w -> w+1, real windows only
 
         # ---- sow terms for the loss / logging ----
         self.sow("intermediates", "mlm_aux", aux_loss)
-        self.sow("intermediates", "mlm_ponder", np.mean(soft_a))
-        self.sow("intermediates", "mlm_esc", np.mean(hard_a))
+        self.sow("intermediates", "mlm_ponder", ponder_term)
+        self.sow("intermediates", "mlm_esc", hard_rate)      # write rate (write-gate) or esc rate (escalation)
         return log_probs
 
 

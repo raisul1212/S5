@@ -31,10 +31,10 @@ ssm_init_fn = init_S5SSM(H=D, P=ssm_size, Lambda_re_init=Lambda.real, Lambda_im_
                          V=Vmat, Vinv=Vinv, C_init="trunc_standard_normal", discretization="zoh",
                          dt_min=0.001, dt_max=0.1, conj_sym=True, clip_eigs=False, bidirectional=False)
 
-def make_model(training, alpha_override=-99.0):
+def make_model(training, alpha_override=-99.0, write_gate=False):
     return MambinoLMModel(ssm=ssm_init_fn, d_output=V, d_model=D, n_layers=NL, activation="gelu",
                           batchnorm=False, prenorm=False, training=training, mlm_stride=STRIDE,
-                          mlm_top_layers=TOPL, alpha_override=alpha_override)
+                          mlm_top_layers=TOPL, alpha_override=alpha_override, mlm_write_gate=write_gate)
 
 key = jax.random.PRNGKey(0)
 ids = jax.random.randint(key, (L,), 0, V)
@@ -88,4 +88,24 @@ for want in ["mlm_aux", "mlm_ponder", "mlm_esc"]:
     assert want in keys, f"missing sown {want}: {keys}"
 print("[4] sown for loss: mlm_aux / mlm_ponder / mlm_esc all present")
 
-print("\nALL TESTS PASS  (causal, exact off-switch, loss terms wired)")
+# 5. write-gate (persistent-memory) mode: still causal (soft AND hard), write rate sown
+pw = make_model(True, write_gate=True).init(jax.random.PRNGKey(1), x, its)
+for training, gate in [(True, "soft"), (False, "hard")]:
+    k = 37
+    ids2 = ids.at[k].set((int(ids[k]) + 5) % V); x2 = jax.nn.one_hot(ids2, V)
+    a = onp.array(make_model(training, write_gate=True).apply(pw, x, its))
+    b = onp.array(make_model(training, write_gate=True).apply(pw, x2, its))
+    md_before = float(onp.max(onp.abs(a[:k] - b[:k])))
+    assert md_before < 1e-6, f"[write-gate {gate}] FUTURE LEAK: outputs<k changed by {md_before:.2e}"
+_, mvw = make_model(True, write_gate=True).apply(pw, x, its, mutable=["intermediates"])
+kw = set(); _walk(mvw["intermediates"])  # reuse _walk (populates `keys`); check via a fresh walk
+kw = set()
+def _walk2(n):
+    if isinstance(n, dict):
+        for k2, v2 in n.items():
+            kw.add(k2); _walk2(v2)
+_walk2(mvw["intermediates"])
+assert "mlm_esc" in kw, "write rate not sown"
+print("[5] write-gate mode: CAUSAL (soft+hard, no future leak), write-rate sown")
+
+print("\nALL TESTS PASS  (causal read-gate AND write-gate, exact off-switch, loss terms wired)")

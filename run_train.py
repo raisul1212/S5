@@ -228,5 +228,12 @@ if __name__ == "__main__":
 							 "(soft at train, hard at eval). 1.0 = force alpha=1 (top ALWAYS on -> does "
 							 "the top help BPC at all?). 0.0 = force alpha=0 (bottom only, top dead). "
 							 "Used to measure the top's marginal value independent of the gate.")
+	parser.add_argument("--mlm_write_gate", type=str2bool, default=False,
+						help="Persistent-memory mode. False (default) = escalation mode (gate the READ). "
+							 "True = the top is READ every token (always on, cheap broadcast) and the "
+							 "surprise gate moves to the WRITE (per-window state consolidation, fired only "
+							 "on surprising windows). Sparse writes = the write-seldom/read-often access "
+							 "pattern of a persistent (NVM-like) memory; --mlm_lambda_pond then penalizes "
+							 "the WRITE rate (the energy axis). Cannot collapse the top (read is always on).")
 
 	train(parser.parse_args())

@@ -247,6 +247,7 @@ def train(args):
             mlm_beta_init=float(getattr(args, 'mlm_beta_init', 1.0)),
             mlm_gate_ema=float(getattr(args, 'mlm_gate_ema', 0.9)),
             alpha_override=float(getattr(args, 'mlm_alpha_override', -99.0)),
+            mlm_write_gate=bool(getattr(args, 'mlm_write_gate', False)),
         )
 
     # initialize training state
