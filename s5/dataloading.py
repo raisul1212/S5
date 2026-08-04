@@ -102,6 +102,23 @@ def create_lra_imdb_classification_dataset(cache_dir: Union[str, Path] = DEFAULT
 	N_CLASSES = dataset_obj.d_output
 	SEQ_LENGTH = dataset_obj.l_max
 	IN_DIM = 135  # We should probably stop this from being hard-coded.
+	# The hardcoded 135 was produced by torchtext's vocab builder on the
+	# script-based `imdb` dataset. On the current Hub parquet conversion, with
+	# this repo's pure-Python vocab fallback, the full-train vocabulary comes out
+	# at 134: one borderline character now falls below min_freq=15. That is
+	# harmless -- 135 is an upper bound, so the encoder simply carries one unused
+	# input column and every parameter count is unchanged -- but it is only
+	# harmless in this direction. Fail loudly if the vocabulary ever exceeds the
+	# hardcoded width, which would silently send out-of-range token ids into the
+	# encoder instead.
+	_vocab_size = len(dataset_obj.vocab)
+	assert _vocab_size <= IN_DIM, (
+		f"IMDB vocabulary is {_vocab_size} but IN_DIM is hardcoded to {IN_DIM}; "
+		f"token ids would exceed the encoder input width. Derive IN_DIM from the "
+		f"vocabulary before running.")
+	if _vocab_size != IN_DIM:
+		print(f"[*] IMDB vocab {_vocab_size} < hardcoded IN_DIM {IN_DIM} "
+			  f"({IN_DIM - _vocab_size} unused encoder input column(s))")
 	TRAIN_SIZE = len(dataset_obj.dataset_train)
 
 	aux_loaders = {}

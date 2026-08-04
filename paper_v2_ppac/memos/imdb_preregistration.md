@@ -111,7 +111,39 @@ Recording this now so that a weaker chip result reads as a confirmed prediction
 about the mechanism's regime of validity rather than as a disappointment
 discovered afterwards.
 
-## 7. Kill-switch
+## 7. Addendum, 2026-08-04 (still before any IMDB run)
+
+Recorded per the rule at the top of this file. **No number in §2 changes.**
+
+Environment findings from preparing the dataset on the Gilbreth login node:
+
+1. `load_dataset("imdb")` fails outright on the cluster env (`datasets` 5.0.0):
+   `huggingface_hub` now requires a namespaced id and raises `HfUriError` on the
+   bare name. The loader now falls back to `stanfordnlp/imdb`, same data.
+   ListOps never exposed this because it reads local TSVs and never touches the
+   Hub.
+2. `torchtext` is unavailable in this environment, so the vocabulary is built by
+   this repo's pure-Python `_build_vocab_from_iterator` fallback. Its `min_freq`
+   boundary (`cnt >= min_freq`) matches torchtext's, so the builder is not the
+   difference.
+3. **The full-train vocabulary is 134, not the hardcoded `IN_DIM = 135`.** The
+   current Hub parquet conversion of IMDB differs slightly from the 2023
+   script-based version, and one borderline character now falls below
+   `min_freq=15`. Highest token id observed is 133.
+
+Consequences, stated plainly: 135 is an upper bound, so no token id can exceed
+the encoder width; the encoder retains one unused input column; the encoder
+parameter count stays 34,816 and therefore **every total in §2 is unaffected**.
+One rare character now maps to `<unk>` instead of carrying its own id, which we
+regard as immaterial to accuracy at this frequency. An assertion now fails
+loudly if the vocabulary ever exceeds `IN_DIM`, which is the direction that
+would genuinely corrupt a run.
+
+This does mean our IMDB preprocessing is not bit-identical to the one behind the
+published 89.31%. The paper should say so rather than claim an exact
+reproduction of their input pipeline.
+
+## 8. Kill-switch
 
 `--val_split` defaults to `0.0`, which reproduces the released loader
 byte-for-byte. Only the IMDB launcher sets it. Every other dataset factory is
