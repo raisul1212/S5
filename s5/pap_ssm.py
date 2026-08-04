@@ -11,8 +11,11 @@ on the layer input u (H-dim), with real diagonal state h (P-dim):
     y     = C_out * rmsnorm(h) + D (.) u
 
 Because g depends on eps (hence h_{t-1}), this is a NONLINEAR recurrence with prediction
-feedback -> a SEQUENTIAL lax.scan (no S5 parallel prefix). With pap_gate=False it collapses to
-a LINEAR error-integrator, which is algebraically an S5 (h=(a-BC)h+B u) -> the T1 baseline.
+feedback -> a SEQUENTIAL lax.scan (no S5 parallel prefix). pap_gate=False gives g=1: the
+error-integrator is then S5-CLASS *in spirit* (h~=(a-BC)h+B u) but NOT literally an S5 -- a is a
+REAL positive diagonal (no oscillatory modes), and the state clip + per-token RMSNorm readout are
+nonlinearities; it also carries a separate C_out (+H*P params/layer). Treat pap_gate=False as an
+ablation of anchor 1 WITHIN the PAP family; the true S5 baseline is the separate MODEL=s5 arm.
 
 Stability (see pap_prototype.py): B,C init SMALL (BC~O(1) at 1/sqrt(H) diverges); state clip;
 RMSNorm readout. Causal (h_t depends on u_{<=t}; x_hat_t reads h_{t-1}); drops into the causal
@@ -60,9 +63,10 @@ class PAPSSM(nn.Module):
             xhat = self.C @ h                                   # (H,)
             eps = u - xhat
             n = np.sqrt(np.sum(eps * eps) + 1e-8)
-            mu = np.where(cnt > 0, m / (1.0 - al ** cnt), 0.0)  # trailing surprise stats (causal)
-            var = np.where(cnt > 0, np.maximum(v / (1.0 - al ** cnt) - mu * mu, 1e-6), 1.0)
-            z = (n - mu) / np.sqrt(var)
+            denom = np.where(cnt > 0, 1.0 - al ** cnt, 1.0)     # avoid 0/0 in the unselected where-branch
+            mu = np.where(cnt > 0, m / denom, 0.0)              # trailing surprise stats (causal)
+            var = np.where(cnt > 0, np.maximum(v / denom - mu * mu, 1e-6), 1.0)
+            z = np.clip((n - mu) / np.sqrt(var), -6.0, 6.0)     # clip: 1e-6 var-floor vs ||eps||~O(10) else saturates/spikes
             g = jax.nn.sigmoid(self.pap_kappa[0] * z + self.pap_bias[0]) if gated else 1.0
             h = np.clip(a * h + g * (self.B @ eps), -self.state_clip, self.state_clip)
             m2 = al * m + (1.0 - al) * n

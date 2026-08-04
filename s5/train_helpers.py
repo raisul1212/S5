@@ -333,7 +333,8 @@ def create_train_state(model_cls,
                 lambda k, _: "ssm"
                 if k in ["Lambda_re", "Lambda_im", "norm",
                          "Lambda_s_re", "Lambda_s_im", "gate_kappa", "gate_bias",
-                         "mlm_kappa", "mlm_theta", "mlm_beta"]
+                         "mlm_kappa", "mlm_theta", "mlm_beta",
+                         "a_raw", "pap_kappa", "pap_bias"]     # PAP pole + gate: slow lr, no wd
                 else ("none" if k in [] else "regular")
             )
         else:
@@ -341,7 +342,8 @@ def create_train_state(model_cls,
                 lambda k, _: "ssm"
                 if k in ["Lambda_re", "Lambda_im", "log_step", "norm",
                          "Lambda_s_re", "Lambda_s_im", "log_step_s", "gate_kappa", "gate_bias",
-                         "mlm_kappa", "mlm_theta", "mlm_beta"]
+                         "mlm_kappa", "mlm_theta", "mlm_beta",
+                         "a_raw", "pap_kappa", "pap_bias"]     # PAP pole + gate: slow lr, no wd
                 else ("none" if k in [] else "regular")
             )
         tx = optax.multi_transform(
