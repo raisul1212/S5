@@ -87,6 +87,9 @@ from .base import default_data_path, SequenceDataset, ImageResolutionSequenceDat
 
 class IMDB(SequenceDataset):
     _name_ = "imdb"
+    # Canonical namespaced id on the Hub. Used only as a fallback when the bare
+    # id is rejected (huggingface_hub now demands "namespace/name"). Same data.
+    _hf_dataset_id = "stanfordnlp/imdb"
     d_output = 2
     l_output = 0
 
@@ -167,7 +170,20 @@ class IMDB(SequenceDataset):
             if cache_dir.is_dir():
                 return self._load_from_cache(cache_dir)
 
-        dataset = load_dataset(self._name_, cache_dir=self.data_dir)
+        # The released code passes the bare id "imdb". huggingface_hub >= ~0.30
+        # requires "namespace/name" and raises HfUriError on a bare id, so on
+        # datasets 5.x this fails outright. Try the original first so behaviour
+        # on the pinned older stack is byte-identical, then fall back to the
+        # canonical namespaced id that the Hub now serves.
+        try:
+            dataset = load_dataset(self._name_, cache_dir=self.data_dir)
+        except Exception as _bare_id_err:
+            hub_id = getattr(self, "_hf_dataset_id", None)
+            if hub_id is None:
+                raise
+            print(f"[lra] load_dataset('{self._name_}') failed "
+                  f"({type(_bare_id_err).__name__}); retrying as '{hub_id}'")
+            dataset = load_dataset(hub_id, cache_dir=self.data_dir)
         dataset = DatasetDict(train=dataset["train"], test=dataset["test"])
         if self.level == "word":
             tokenizer = torchtext.data.utils.get_tokenizer(
