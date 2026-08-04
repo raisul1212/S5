@@ -1,4 +1,4 @@
-epoch,S5-gateless_val_mean,S5-gateless_val_std,S5-gateless_test_mean,S5-gateless_test_std,Mambino-0_val_mean,Mambino-0_val_std,Mambino-0_test_mean,Mambino-0_test_std,Mambino-G_val_mean,Mambino-G_val_std,Mambino-G_test_mean,Mambino-G_test_std,Pure S5_val_mean,Pure S5_val_std,Pure S5_test_mean,Pure S5_test_std
+epoch,S5-0_val_mean,S5-0_val_std,S5-0_test_mean,S5-0_test_std,Mambino-0_val_mean,Mambino-0_val_std,Mambino-0_test_mean,Mambino-0_test_std,Mambino-G_val_mean,Mambino-G_val_std,Mambino-G_test_mean,Mambino-G_test_std,S5-Dense_val_mean,S5-Dense_val_std,S5-Dense_test_mean,S5-Dense_test_std
 1,0.3323,0.0194,0.3538,0.0229,0.3311,0.0215,0.3511,0.0259,0.3372,0.0124,0.3609,0.0138,0.3516,0.0111,0.3674,0.0108
 2,0.3935,0.0137,0.4036,0.0097,0.3607,0.0234,0.3714,0.0273,0.3772,0.0127,0.3936,0.0122,0.4134,0.0255,0.4225,0.0219
 3,0.4381,0.0302,0.4555,0.0309,0.4039,0.0240,0.4246,0.0194,0.3997,0.0333,0.4169,0.0347,0.4816,0.0168,0.4917,0.0181

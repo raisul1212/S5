@@ -138,10 +138,15 @@ def main():
         for b in bad:
             print("   " + b)
 
-    # 1 per-seed accuracy (Origin: bar of mean + scatter overlay of the 8 points)
-    w("fig1_accuracy_per_seed.csv", ["seed"] + ORDER + [c + "_testmax" for c in ORDER],
-      [[s] + [f"{pv[(c,s)]:.4f}" for c in ORDER] + [f"{mx[(c,s)]:.4f}" for c in ORDER]
-       for s in SEEDS])
+    # 1 per-seed accuracy (Origin: bar of mean + scatter overlay of the 8 points).
+    # GUIDING METRIC ONLY. test_max stays out of this figure by policy: it belongs in a
+    # single labelled summary row (fig2's testmax_* columns), not on equal visual footing
+    # with test@peakval. The two metrics disagree about Claim 1 -- Mambino-0 leads S5-0 on
+    # 7/8 seeds under test@peakval but only 3/8 under test_max, because test_max inflation
+    # is model-dependent (+1.17 pp for S5-0 vs +0.45 pp for Mambino-0). Plotting both would
+    # hand a reader a chart that appears to contradict its own caption.
+    w("fig1_accuracy_per_seed.csv", ["seed"] + ORDER,
+      [[s] + [f"{pv[(c,s)]:.4f}" for c in ORDER] for s in SEEDS])
 
     # 2 summary: accuracy vs params, with error bars
     rows = []
