@@ -228,6 +228,14 @@ if __name__ == "__main__":
 							 "(soft at train, hard at eval). 1.0 = force alpha=1 (top ALWAYS on -> does "
 							 "the top help BPC at all?). 0.0 = force alpha=0 (bottom only, top dead). "
 							 "Used to measure the top's marginal value independent of the gate.")
+	# ── Pure Adaptive Predictor (PAP): a pure error-based predictor SSM ──
+	parser.add_argument("--use_pap", type=str2bool, default=False,
+						help="Replace the SSM in the causal LM path with PAPSSM (pure adaptive "
+							 "predictor: sequential surprise-gated error-integrator). P = --ssm_size_base "
+							 "(real state, no conj_sym halving). --pap_gate toggles anchor 1.")
+	parser.add_argument("--pap_gate", type=str2bool, default=True,
+						help="PAP anchor 1: surprise-gated integration g=sigmoid(kappa*z+b). "
+							 "False => g=1 (linear error-integrator, algebraically an S5) = the T1 baseline.")
 	parser.add_argument("--mlm_write_gate", type=str2bool, default=False,
 						help="Persistent-memory mode. False (default) = escalation mode (gate the READ). "
 							 "True = the top is READ every token (always on, cheap broadcast) and the "

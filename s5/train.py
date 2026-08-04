@@ -156,6 +156,18 @@ def train(args):
                                  clip_eigs=args.clip_eigs,
                                  bidirectional=args.bidirectional)
 
+    # PAP override: a pure error-based predictor SSM (sequential, surprise-gated).
+    # Swaps the SSM in the standard causal LM path; no HiPPO/Lambda needed. Uses a
+    # REAL state so P = ssm_size_base directly (no conj_sym halving).
+    if getattr(args, 'use_pap', False):
+        from .pap_ssm import init_PAPSSM
+        _pap_P = int(args.ssm_size_base)
+        print(f"[*] Using PAPSSM (pure adaptive predictor, P={_pap_P}, "
+              f"gate={getattr(args, 'pap_gate', True)})")
+        ssm_init_fn = init_PAPSSM(H=args.d_model, P=_pap_P,
+                                  pap_gate=getattr(args, 'pap_gate', True),
+                                  gate_alpha=getattr(args, 'gate_alpha', 0.9))
+
     if retrieval:
         # Use retrieval head for AAN task
         print("Using Retrieval head for {} task".format(args.dataset))

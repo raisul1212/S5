@@ -74,6 +74,7 @@ case $MODEL in
   s5)         MFLAGS="--use_mambino_ssm=False"; TAG="s5" ;;
   mambino)    MFLAGS="--use_mambino_ssm=True --surprise_gate=False"; TAG="mambino" ;;
   mambino2p0) MFLAGS="--use_mambino_ssm=True --surprise_gate=True --gate_range=$GATE_RANGE --gate_kappa_init=0.0 --gate_bias_init=2.0 --gate_alpha=0.9"; TAG="mambino2p0_$GATE_RANGE" ;;
+  pap)        PAP_GATE=${PAP_GATE:-True}; MFLAGS="--use_pap=True --pap_gate=$PAP_GATE --gate_alpha=0.9"; _PG=$([ "$PAP_GATE" = "True" ] && echo "gated" || echo "linear"); TAG="pap_${_PG}" ;;
   mambinolm)  MFLAGS="--use_mambino_ssm=False --mambino_lm=2level --mlm_stride=$MLM_STRIDE --mlm_top_layers=$MLM_TOP_LAYERS --mlm_lambda_aux=$MLM_LAMBDA_AUX --mlm_lambda_pond=$MLM_LAMBDA_POND --mlm_warmup_frac=$MLM_WARMUP_FRAC --mlm_kappa_init=$MLM_KAPPA --mlm_alpha_override=$MLM_ALPHA_OVERRIDE --mlm_write_gate=$MLM_WRITE_GATE"
               _AO=$(echo $MLM_ALPHA_OVERRIDE | sed 's/[.-]//g'); _WG=$([ "$MLM_WRITE_GATE" = "True" ] && echo "_wg" || echo ""); TAG="mambinolm_s${MLM_STRIDE}_top${MLM_TOP_LAYERS}_a${_AO}${_WG}" ;;
   *) echo "unknown MODEL=$MODEL"; exit 1 ;;
