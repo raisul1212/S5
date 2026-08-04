@@ -1,10 +1,10 @@
 """Emit Origin-importable CSVs for the 4-config v1 paper.
 
-Four configs (canonical names per memos/NAMING_AND_STATUS.md):
-    S5-gateless  105,738   Pure S5, gelu            iso-param control
-    Mambino-0    105,738   Mambino, gelu, no gate   isolates predictive coding
-    Mambino-G    105,754   Mambino-0 + SWG          the hero
-    Pure S5      188,490   Pure S5, half_glu2 r0    baseline of record
+Four configs. Names are canonical per mambino-paper/CLAUDE.md section 1:
+    S5-0       105,738   S5 family, no output GLU, P=16    iso-parameter control
+    Mambino-0  105,738   Mambino family, no surprise gate  isolates the predictor
+    Mambino-G  105,754   Mambino-0 + the 16-scalar gate    the hero
+    S5-Dense   188,490   S5 family, dense half-GLU         baseline of record
 
 Every per-seed value is extracted from run.log and keyed on the seed recorded
 INSIDE the checkpoint (best.meta.pkl['args'].jax_seed) -- never on directory
@@ -191,7 +191,7 @@ def main():
     w("fig5_training_curves.csv", hdr, rows)
 
     # 6 paired per-seed deltas -- the three claims, one column each
-    P = [("Mambino-0", "S5-gateless"), ("Mambino-G", "Mambino-0"), ("Mambino-G", "Pure S5")]
+    P = [("Mambino-0", "S5-0"), ("Mambino-G", "Mambino-0"), ("Mambino-G", "S5-Dense")]
     hdr = ["seed"] + [f"{a}_minus_{b}_pp" for a, b in P]
     rows = [[s] + [f"{100*(pv[(a,s)]-pv[(b,s)]):.2f}" for a, b in P] for s in SEEDS]
     for a, b in P:
