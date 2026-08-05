@@ -286,7 +286,40 @@ If the -iso point estimates come back contradicting ListOps, that is worth
 knowing and reporting even at n=4, and would justify spending the extra four
 seeds to settle it.
 
-## 12. Kill-switch
+## 12. Addendum, 2026-08-05: blocks corrected in §2 (no parameter change)
+
+**§2's `blocks` column and its "block_size = 23" sentence are wrong** and are
+superseded here, per the rule at the top of this file. §2 itself is left intact.
+
+`train.py:93` computes `block_size = ssm_size_base / blocks`, line 145 halves it
+under conjugate symmetry, line 154 tiles `blocks x block_size`. So
+`ssm_size_base / blocks` must be **EVEN**. The values in §2 give 23, which is
+odd, so the halving truncates:
+
+    276 / 12 = 23  ->  23 // 2 = 11  ->  11 * 12 = 132 state entries, 138 needed
+    TypeError: mul got incompatible shapes for broadcasting: (132,), (138,)
+
+Confirmed empirically: of the four §2 configurations only S5-Dense (192/12 = 16,
+even) built at all. Corrected values:
+
+| config | ssm_size_base | blocks §2 | blocks ACTUAL | block_size |
+|---|---:|---:|---:|---:|
+| S5-Dense | 192 | 12 | 12 (unchanged) | 16 |
+| S5-0 | 276 | 12 | **6** | 46 |
+| Mambino-0 | 138 | 6 | **3** | 46 |
+| Mambino-G | 138 | 6 | **3** | 46 |
+
+**No parameter count changes.** `blocks` only tiles the HiPPO initialisation;
+`Lambda` ends up `ssm_size/2` however it is factored. All four §2 totals were
+subsequently verified against the real `run_train.py`: 1,314,230 / 1,314,230 /
+1,314,242 / 1,321,154, exactly as §2 asserts. So §2's *claims* stand; only its
+`blocks` column was unbuildable.
+
+The constraint is documented nowhere in the repo and every pre-existing S5
+config satisfies it accidentally by using powers of two. Now noted in the
+launcher header and in `mambino-paper/CLAUDE.md` §4.
+
+## 13. Kill-switch
 
 `--val_split` defaults to `0.0`, which reproduces the released loader
 byte-for-byte. Only the IMDB launcher sets it. Every other dataset factory is
