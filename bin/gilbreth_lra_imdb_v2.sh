@@ -31,6 +31,10 @@
 # are UNAFFECTED by blocks (it only tiles the HiPPO init), so the pre-registered
 # totals are unchanged.
 #
+# SEEDS. 8825365 42 12345 271828 314159 1 2 3. NOT the ListOps set: 6554595 is
+# the seed S5 published for ListOps and has no standing here; 8825365 is the one
+# they published for IMDB (run_lra_imdb.sh). See memo section 10.
+#
 # VAL SPLIT. S5 ships no val split for IMDB; their loader puts the TEST set in
 # the validation role ("Use test set as val set, as done in the LRA paper",
 # s5/dataloaders/lra.py:139), so their reported checkpoint is test-selected.
@@ -40,13 +44,13 @@
 #
 # Deploy (pilot the mechanism claim FIRST — 6 runs, not 32):
 #   for C in S5-0 Mambino-0; do
-#     for S in 6554595 42 12345; do
+#     for S in 8825365 42 12345; do
 #       CONFIG=$C SEED=$S sbatch --job-name=imdb.$C.$S bin/gilbreth_lra_imdb_v2.sh
 #     done
 #   done
 # Then, only if the sign matches ListOps, the full set:
 #   for C in S5-0 Mambino-0 Mambino-G S5-Dense; do
-#     for S in 6554595 42 12345 271828 314159 1 2 3; do ... done
+#     for S in 8825365 42 12345 271828 314159 1 2 3; do ... done
 #   done
 # ============================================================================
 #SBATCH --job-name=s5-imdb
@@ -78,7 +82,7 @@ cd $SLURM_SUBMIT_DIR
 mkdir -p results/slurm
 
 CONFIG=${CONFIG:-Mambino-0}
-SEED=${SEED:-6554595}
+SEED=${SEED:-8825365}
 EPOCHS=${EPOCHS:-35}
 VAL_SPLIT=${VAL_SPLIT:-0.1}
 

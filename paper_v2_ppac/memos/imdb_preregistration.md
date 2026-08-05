@@ -236,7 +236,29 @@ PPAC for these three configs is not yet run and no chip number is predicted here
 survives on IMDB at all under the fixed optimizer grouping. If pilot 2 is
 negative, C4 is moot and the arm will not be run.
 
-## 10. Kill-switch
+## 10. Addendum, 2026-08-05: seed set corrected to IMDB's published seed
+
+**Defect.** §3 fixed the seed set as "6554595, 42, 12345, 271828, 314159, 1, 2, 3
+-- the same eight as ListOps". Reusing the ListOps set wholesale was wrong.
+6554595 is the seed the S5 authors published for **ListOps**
+(`run_lra_listops.sh`); it carries no special status on IMDB. The seed they
+published for IMDB is **8825365** (`run_lra_imdb.sh`), and it was absent.
+
+**Correction.** The IMDB seed set is
+
+    8825365, 42, 12345, 271828, 314159, 1, 2, 3
+
+i.e. 6554595 is replaced by 8825365; the other seven are unchanged. Having the
+task's own published seed in the set is what makes "at their published seed we
+obtain X" a statement we can make on IMDB, as we already can on ListOps.
+
+**Why this is not results-driven.** The change is motivated by which seed the
+authors published for this task, a fact fixed before any run and independent of
+any outcome. The three pilot-1 runs that used 6554595 are void regardless (§8,
+optimizer divergence), so no valid result is being discarded. Everything else in
+§§1-7 stands.
+
+## 11. Kill-switch
 
 `--val_split` defaults to `0.0`, which reproduces the released loader
 byte-for-byte. Only the IMDB launcher sets it. Every other dataset factory is
