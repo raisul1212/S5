@@ -1,5 +1,25 @@
 # Metric selection sensitivity on LRA-ListOps
 
+> **UPDATE 2026-08-05: the n=16 extension substantially refutes the Claim 1
+> fragility described below.** On the eight new pre-registered seeds all three
+> selection rules agree (+0.74 / +0.74 / +1.03 pp), so the `test_max` anomaly was
+> a property of the original eight seeds, not of the mechanism. Pooled over all
+> sixteen, Claim 1 is positive under every rule and significant under two,
+> including the selection-free one:
+>
+> | metric | orig 8 | new 8 | all 16 |
+> |---|---:|---:|---:|
+> | test@peakval | +0.76 (7/8) | +0.74 (6/8) | **+0.75 pp, t=3.93, 13/16** |
+> | test_max | +0.04 (3/8) | +0.74 (7/8) | +0.39 pp, t=1.94, 10/16 |
+> | last-epoch | +0.30 (5/8) | +1.03 (7/8) | **+0.66 pp, t=2.73, 12/16** |
+>
+> n=16 means: S5-0 0.5933 +- 0.0071, Mambino-0 0.6008 +- 0.0065.
+>
+> The §"What this shows" conclusion that "the gate is the better-supported
+> claim" was true at n=8 and is **no longer true**. Claim 1 now has the stronger
+> statistics. Claim 2 is still at n=8 pending Mambino-G's extension; revisit
+> when it lands. Everything below is retained as the n=8 record.
+
 **Computed 2026-08-04**, from the eight matched-seed run logs, before the n=16
 extension landed. Recorded so that the paper's metric choice is documented as
 having been made *with* the alternatives in hand.
