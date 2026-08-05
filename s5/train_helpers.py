@@ -240,22 +240,67 @@ def create_train_state(model_cls,
         params = _unfreeze(variables["params"])
         # Note: `unfreeze()` is for using Optax.
 
+    # Guard: an opt_config that does not know MambinoSSM's parameter names will
+    # silently drop them into the weight-decayed 'regular' group, which
+    # destabilises the predictor's Lambda and can diverge mid-training. Only
+    # 'standard' and 'BfastandCdecay' have been extended. Fail loudly rather than
+    # let a run look valid and quietly train the wrong thing.
+    _MAMBINO_KEYS = {"B_s", "C_s", "W_eps", "Lambda_s_re", "Lambda_s_im",
+                     "log_step_s", "gate_kappa", "gate_bias"}
+    _OPT_CONFIGS_AWARE_OF_MAMBINO = {"standard", "BfastandCdecay"}
+    _present = set()
+    jax.tree_util.tree_map_with_path(
+        lambda path, _: _present.add(
+            next((str(p.key) for p in reversed(path) if hasattr(p, "key")), "")),
+        params)
+    if (_present & _MAMBINO_KEYS) and opt_config not in _OPT_CONFIGS_AWARE_OF_MAMBINO:
+        raise ValueError(
+            f"opt_config={opt_config!r} has no parameter grouping for MambinoSSM "
+            f"({sorted(_present & _MAMBINO_KEYS)}). Those parameters would be sent "
+            f"to the weight-decayed 'regular' group, which destabilises the "
+            f"predictor's state transition. Extend the grouping for this "
+            f"opt_config, or use 'standard'/'BfastandCdecay'.")
+
     if opt_config in ["standard"]:
         """This option applies weight decay to C, but B is kept with the
             SSM parameters with no weight decay.
+
+           Extended to recognize MambinoSSM's predictor branch parameters, in the
+           same spirit as BfastandCdecay below and mirroring how this config
+           treats their main-scan counterparts:
+             - Lambda_s_re, Lambda_s_im, log_step_s -> 'ssm' (no wd, ssm_lr),
+                                                       same as Lambda_re/im/log_step
+             - B_s   -> 'ssm'      (this config keeps B out of weight decay, so B_s too)
+             - C_s   -> 'regular'  (this config decays C, so C_s too)
+             - W_eps -> 'regular'  (a normal projection)
+             - gate_kappa, gate_bias -> 'ssm' (scalars, must not be decayed)
+
+           WITHOUT this extension every Mambino-specific parameter fell through to
+           'regular', i.e. AdamW at lr_factor x ssm_lr WITH weight decay applied to
+           the predictor's Lambda. Decaying and over-stepping the state-transition
+           eigenvalues destabilises the recurrence: the IMDB pilot of 2026-08-04
+           trained normally for ~11 epochs, then the loss jumped 0.54 -> 19.24 and
+           the model sat at chance for the remaining 24 epochs. ListOps never hit
+           this because it runs BfastandCdecay, which was already extended.
         """
         print("configuring standard optimization setup")
         if dt_global:
             ssm_fn = map_nested_fn(
                 lambda k, _: "ssm"
-                if k in ["B", "Lambda_re", "Lambda_im", "norm"]
+                if k in ["B", "Lambda_re", "Lambda_im", "norm",
+                         "B_s", "Lambda_s_re", "Lambda_s_im",
+                         "gate_kappa", "gate_bias",
+                         "fw_gamma_logit", "fw_kappa", "fw_bias"]
                 else ("none" if k in [] else "regular")
             )
 
         else:
             ssm_fn = map_nested_fn(
                 lambda k, _: "ssm"
-                if k in ["B", "Lambda_re", "Lambda_im", "log_step", "norm"]
+                if k in ["B", "Lambda_re", "Lambda_im", "log_step", "norm",
+                         "B_s", "Lambda_s_re", "Lambda_s_im", "log_step_s",
+                         "gate_kappa", "gate_bias",
+                         "fw_gamma_logit", "fw_kappa", "fw_bias"]
                 else ("none" if k in [] else "regular")
             )
         tx = optax.multi_transform(

@@ -143,7 +143,57 @@ This does mean our IMDB preprocessing is not bit-identical to the one behind the
 published 89.31%. The paper should say so rather than claim an exact
 reproduction of their input pipeline.
 
-## 8. Kill-switch
+## 8. Addendum, 2026-08-05: pilot 1 result and why it is void
+
+**Pilot 1 (jobs 11459360-11459365) ran to completion and produced a large
+negative result for C1.** Recorded here in full before any re-run, because a
+pre-registered test that fails is not something to quietly repeat until it
+passes.
+
+| metric | S5-0 | Mambino-0 | delta |
+|---|---:|---:|---:|
+| test@peakval | 0.8771 | 0.7817 | **-9.54 pp**, 0/3 |
+| test_max | 0.8795 | 0.7822 | -9.73 pp, 0/3 |
+| last-epoch | 0.8790 | 0.7082 | -17.08 pp, 0/3 |
+
+By the falsification rule in §5, C1 fails on this evidence.
+
+**However, the runs are not a valid test of the mechanism, for a reason
+identified in the code and not inferred from the numbers.** Mambino-0 seed
+6554595 trained normally for eleven epochs, reaching 0.7343 test accuracy, and
+then diverged:
+
+    Train Loss:  0.54044  ...  Test Accuracy: 0.7343
+    Train Loss: 19.24254  ...  Test Accuracy: 0.5020
+    Train Loss:  0.71826  ...  Test Accuracy: 0.5356   (chance, for 24 epochs)
+
+S5-0 on the identical seed trained cleanly throughout (loss 0.71 -> 0.01,
+accuracy 0.65 -> 0.88). Mambino-0's three seeds spanned 0.7343/0.7732/0.8376,
+an 11-point range, against S5-0's 0.8763-0.8779.
+
+**Cause.** `opt_config=standard`, which S5's IMDB recipe uses, had no parameter
+grouping for MambinoSSM. Only `BfastandCdecay` (which ListOps uses) was ever
+extended for it. So every Mambino-specific parameter -- including the
+predictor's `Lambda_s_re`/`Lambda_s_im` -- fell through to the `regular` group:
+AdamW at `lr_factor x ssm_lr` = 4x the SSM learning rate, **with weight decay
+0.07 applied to the state-transition eigenvalues**. That destabilises the
+recurrence. IMDB is simply the first Mambino run to use `standard`.
+
+This is an execution defect, not evidence about the predictor. The measurement
+never took place.
+
+**Disposition.** The grouping is fixed (`standard` extended to mirror
+`BfastandCdecay`, plus a guard that now raises if any opt_config lacking a
+Mambino grouping is used with Mambino parameters present). Pilot 1 stands on the
+record as reported above. Pilot 2 will be run on the fixed code and reported
+alongside it, not in place of it. **§§1-7 are unchanged**: same configs, same
+seeds, same metrics, same falsification rules. Nothing was revised in light of
+the numbers.
+
+If pilot 2 also comes back negative on healthy training curves, C1 fails on
+IMDB and that is the finding.
+
+## 9. Kill-switch
 
 `--val_split` defaults to `0.0`, which reproduces the released loader
 byte-for-byte. Only the IMDB launcher sets it. Every other dataset factory is
