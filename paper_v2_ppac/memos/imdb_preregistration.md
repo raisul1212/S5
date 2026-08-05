@@ -258,7 +258,35 @@ any outcome. The three pilot-1 runs that used 6554595 are void regardless (§8,
 optimizer divergence), so no valid result is being discarded. Everything else in
 §§1-7 stands.
 
-## 11. Kill-switch
+## 11. Addendum, 2026-08-05: arm priority and seed allocation
+
+**Two arms, different claims, different n.** Recorded before any of these runs.
+
+| arm | configs | params | claim | seeds |
+|---|---|---:|---|---:|
+| **-R** (reduced) | S5-0-R, Mambino-0-R, Mambino-G-R | 926,402 | **C4**, parameter reduction | **8** |
+| **-iso** | S5-0-iso, Mambino-0-iso, Mambino-G-iso | ~1,314,230 | C1/C2, mechanism at fixed params | **4** |
+| reference | S5-Dense | 1,321,154 | shared by both | 8 |
+
+Rationale: the paper's headline on IMDB is the efficiency claim, so the arm that
+carries it gets the statistical power. The bare names `S5-0` / `Mambino-0` /
+`Mambino-G` remain aliases of the `-iso` arm so pilot-1 job names still resolve.
+
+**Consequence that must be stated in the paper, not buried.** At n=4 the
+mechanism comparisons on IMDB are **descriptive, not inferential**. For
+calibration: on ListOps, C1 was t=2.20 at n=8 and needed n=16 to reach t=3.93.
+At n=4 nothing short of an enormous effect will clear any significance bar, and
+C1/C2 on IMDB should be reported as point estimates with their seed counts and
+no significance language. The pre-registered falsification rules in §5 still
+apply to the direction and the sign test; they simply carry less weight at this
+n, and that is a deliberate resource-allocation choice rather than a discovery
+made after the fact.
+
+If the -iso point estimates come back contradicting ListOps, that is worth
+knowing and reporting even at n=4, and would justify spending the extra four
+seeds to settle it.
+
+## 12. Kill-switch
 
 `--val_split` defaults to `0.0`, which reproduces the released loader
 byte-for-byte. Only the IMDB launcher sets it. Every other dataset factory is

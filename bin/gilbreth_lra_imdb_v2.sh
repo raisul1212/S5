@@ -42,15 +42,25 @@
 # ListOps protocol. --val_split defaults to 0.0 everywhere else, which
 # reproduces the released behaviour byte-for-byte.
 #
-# Deploy (pilot the mechanism claim FIRST — 6 runs, not 32):
-#   for C in S5-0 Mambino-0; do
+# TWO ARMS, different claims and different n (see memo sections 9 and 12):
+#   -R   reduced budget, 926 K = 70.1% of S5-Dense. Carries the efficiency claim
+#        (C4). FULL eight seeds.
+#   -iso iso-parameter, ~1.31 M. Carries the mechanism claims (C1/C2) at REDUCED
+#        n; descriptive rather than inferential at that n.
+#   S5-Dense is the shared reference for both. FULL eight seeds.
+#
+# Deploy (pilot FIRST — 6 runs, not 40 — to confirm the optimizer fix holds):
+#   for C in S5-0-iso Mambino-0-iso; do
 #     for S in 8825365 42 12345; do
 #       CONFIG=$C SEED=$S sbatch --job-name=imdb.$C.$S bin/gilbreth_lra_imdb_v2.sh
 #     done
 #   done
-# Then, only if the sign matches ListOps, the full set:
-#   for C in S5-0 Mambino-0 Mambino-G S5-Dense; do
+# Then, only if pilot 2 is healthy:
+#   for C in S5-0-R Mambino-0-R Mambino-G-R S5-Dense; do        # 8 seeds each
 #     for S in 8825365 42 12345 271828 314159 1 2 3; do ... done
+#   done
+#   for C in S5-0-iso Mambino-0-iso Mambino-G-iso; do           # 4 seeds each
+#     for S in 8825365 42 12345 271828; do ... done
 #   done
 # ============================================================================
 #SBATCH --job-name=s5-imdb
@@ -86,13 +96,20 @@ SEED=${SEED:-8825365}
 EPOCHS=${EPOCHS:-35}
 VAL_SPLIT=${VAL_SPLIT:-0.1}
 
-# Names are canonical per mambino-paper/CLAUDE.md section 1.
+# Names are canonical per mambino-paper/CLAUDE.md section 1, with an arm suffix:
+#   -iso  iso-parameter with S5-Dense (~1.31 M).  Gate budget REALLOCATED to state.
+#   -R    reduced budget (926 K, 70.1%).          Gate budget BANKED.
+# The bare names S5-0 / Mambino-0 / Mambino-G are kept as aliases of the -iso arm
+# so pilot-1 job names still resolve; -iso is the name to use from here.
 case "$CONFIG" in
-  S5-0)       ARCH="--use_mambino_ssm=False --activation_fn=gelu      --glu_rank=0 --ssm_size_base=276 --blocks=6"
+  S5-0|S5-0-iso)
+              ARCH="--use_mambino_ssm=False --activation_fn=gelu      --glu_rank=0 --ssm_size_base=276 --blocks=6"
               GATE="" ;;
-  Mambino-0)  ARCH="--use_mambino_ssm=True  --activation_fn=gelu      --glu_rank=0 --ssm_size_base=138 --blocks=3"
+  Mambino-0|Mambino-0-iso)
+              ARCH="--use_mambino_ssm=True  --activation_fn=gelu      --glu_rank=0 --ssm_size_base=138 --blocks=3"
               GATE="--surprise_gate=False --lambda_pc=0.0" ;;
-  Mambino-G)  ARCH="--use_mambino_ssm=True  --activation_fn=gelu      --glu_rank=0 --ssm_size_base=138 --blocks=3"
+  Mambino-G|Mambino-G-iso)
+              ARCH="--use_mambino_ssm=True  --activation_fn=gelu      --glu_rank=0 --ssm_size_base=138 --blocks=3"
               GATE="--surprise_gate=True --gate_range=signed --gate_alpha=0.9 --gate_kappa_init=0.0 --gate_bias_init=2.0 --lambda_pc=0.0" ;;
   S5-Dense)   ARCH="--use_mambino_ssm=False --activation_fn=half_glu2 --glu_rank=0 --ssm_size_base=192 --blocks=12"
               GATE="" ;;
@@ -116,7 +133,7 @@ case "$CONFIG" in
   Mambino-G-R) ARCH="--use_mambino_ssm=True --activation_fn=gelu      --glu_rank=0 --ssm_size_base=96  --blocks=6"
               GATE="--surprise_gate=True --gate_range=signed --gate_alpha=0.9 --gate_kappa_init=0.0 --gate_bias_init=2.0 --lambda_pc=0.0" ;;
 
-  *) echo "unknown CONFIG=$CONFIG (S5-0|Mambino-0|Mambino-G|S5-Dense|S5-0-R|Mambino-0-R|Mambino-G-R)"; exit 2 ;;
+  *) echo "unknown CONFIG=$CONFIG (S5-Dense | {S5-0,Mambino-0,Mambino-G}{,-iso} | {S5-0,Mambino-0,Mambino-G}-R)"; exit 2 ;;
 esac
 
 JOB=$SLURM_JOB_ID
