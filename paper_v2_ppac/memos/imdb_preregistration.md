@@ -193,7 +193,50 @@ the numbers.
 If pilot 2 also comes back negative on healthy training curves, C1 fails on
 IMDB and that is the finding.
 
-## 9. Kill-switch
+## 9. Addendum, 2026-08-05: reduced-budget arm ADDED (not substituted)
+
+**This is a declared addition, made after pilot 1 and before any of these runs.**
+It does not revise §§1-7. C1, C2 and C3 stand exactly as written, on exactly the
+four configurations named there, and will be reported whatever they show. The
+arm below tests a **different claim** and is reported separately.
+
+**Motivation.** §§1-7 hold parameters constant: all four configs sit within
+0.52% of S5-Dense, because the gate's budget is *reallocated* into state or
+predictor. That design measures mechanism at fixed capacity, which is what C1
+and C2 are about. It cannot measure parameter reduction, and on ListOps the
+headline chip claim is a reduction (Mambino-G at 56% of S5-Dense's parameters).
+IMDB currently has no analogue of that claim.
+
+**The arm.** Bank the gate instead of reallocating it:
+
+| config | P | ssm_size_base | blocks | params | vs S5-Dense |
+|---|---:|---:|---:|---:|---:|
+| S5-0-R | 96 | 192 | 12 | 926,402 | 70.1% |
+| Mambino-0-R | 48 | 96 | 6 | **926,402** | 70.1% |
+| Mambino-G-R | 48 | 96 | 6 | 926,414 | 70.1% |
+
+A 29.9% parameter reduction. Mambino-0-R is exactly iso-parameter with S5-0-R by
+the same structural identity (predictor at P costs what doubling P costs), and
+`block_size = 16` throughout, matching S5-Dense's own blocking. Same recipe,
+same eight seeds, same `--val_split=0.1`, same metrics as §4.
+
+**Claim under test (C4), fixed in advance.** Mambino-G-R reaches within 1.0 pp
+of S5-Dense on `test@peakval` at 70.1% of its parameters. Falsified if the
+shortfall exceeds 1.0 pp. **No direction is predicted for Mambino-G-R against
+Mambino-G**, the iso-parameter config: fewer parameters should cost accuracy,
+and the question is how much.
+
+**Why this arm should carry the chip result.** In the iso-parameter arm the
+64x64 gate array is deleted and the saving is spent on a larger state, buying
+silicon back. Here the saving is kept: `main(48) + predictor(48) = main(96)`, so
+the SSM silicon matches S5-Dense's while the gate array disappears entirely.
+PPAC for these three configs is not yet run and no chip number is predicted here.
+
+**Ordering.** This arm runs only after pilot 2 establishes that the mechanism
+survives on IMDB at all under the fixed optimizer grouping. If pilot 2 is
+negative, C4 is moot and the arm will not be run.
+
+## 10. Kill-switch
 
 `--val_split` defaults to `0.0`, which reproduces the released loader
 byte-for-byte. Only the IMDB launcher sets it. Every other dataset factory is

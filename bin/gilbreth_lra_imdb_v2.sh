@@ -92,7 +92,27 @@ case "$CONFIG" in
               GATE="--surprise_gate=True --gate_range=signed --gate_alpha=0.9 --gate_kappa_init=0.0 --gate_bias_init=2.0 --lambda_pc=0.0" ;;
   S5-Dense)   ARCH="--use_mambino_ssm=False --activation_fn=half_glu2 --glu_rank=0 --ssm_size_base=192 --blocks=12"
               GATE="" ;;
-  *) echo "unknown CONFIG=$CONFIG (S5-0|Mambino-0|Mambino-G|S5-Dense)"; exit 2 ;;
+
+  # ---- REDUCED-BUDGET ARM (suffix -R). Tests a DIFFERENT claim from C1-C3: ----
+  # parameter reduction, not mechanism-at-fixed-parameters. Here the gate's
+  # budget is BANKED rather than reallocated, giving 926,402 params = 70.1% of
+  # S5-Dense (-29.9%). Mambino-0-R at P=48 is still exactly iso-parameter with
+  # S5-0-R at P=96, by the same identity (predictor at P == doubling P).
+  # block_size = 16 throughout, matching S5-Dense's own blocking.
+  # This is the arm where the chip result should be strongest: the 64x64 gate
+  # array is deleted and the saving is kept, instead of being spent on a larger
+  # state as in the iso-parameter arm above.
+  #   S5-0-R       P=96 ssm=192 blocks=12 gelu           926,402
+  #   Mambino-0-R  P=48 ssm=96  blocks=6  gelu+pred      926,402  (== S5-0-R)
+  #   Mambino-G-R  P=48 ssm=96  blocks=6  +gate          926,414
+  S5-0-R)     ARCH="--use_mambino_ssm=False --activation_fn=gelu      --glu_rank=0 --ssm_size_base=192 --blocks=12"
+              GATE="" ;;
+  Mambino-0-R) ARCH="--use_mambino_ssm=True --activation_fn=gelu      --glu_rank=0 --ssm_size_base=96  --blocks=6"
+              GATE="--surprise_gate=False --lambda_pc=0.0" ;;
+  Mambino-G-R) ARCH="--use_mambino_ssm=True --activation_fn=gelu      --glu_rank=0 --ssm_size_base=96  --blocks=6"
+              GATE="--surprise_gate=True --gate_range=signed --gate_alpha=0.9 --gate_kappa_init=0.0 --gate_bias_init=2.0 --lambda_pc=0.0" ;;
+
+  *) echo "unknown CONFIG=$CONFIG (S5-0|Mambino-0|Mambino-G|S5-Dense|S5-0-R|Mambino-0-R|Mambino-G-R)"; exit 2 ;;
 esac
 
 JOB=$SLURM_JOB_ID
