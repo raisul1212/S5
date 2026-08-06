@@ -81,8 +81,16 @@ _cfg_ctx = "default"    # set inside config_ppac to route TIER lookup for F1 fix
 # figures. A smaller SRAM has lower per-access energy, so the energy numbers are
 # conservative for the smaller configurations; only area responds to this change.
 PARAM_COUNT = {
+    # ListOps (d_model=128, 8 layers)
     "config5": 105_738, "config4": 105_738, "mambino2p0": 105_754,
     "corner1": 188_490, "corner2": 139_402, "corner3p": 188_682,
+    # LRA-Text / IMDB (d_model=256, 6 layers). Read from the training logs;
+    # newer extractions carry n_params in the workload manifest and
+    # param_count() prefers that.
+    "imdb-S5-0": 1_314_230, "imdb-Mambino-0": 1_314_230,
+    "imdb-Mambino-G": 1_314_242, "imdb-S5-Dense": 1_321_154,
+    "imdb-S5-0-R": 926_402, "imdb-Mambino-0-R": 926_402,
+    "imdb-Mambino-G-R": 926_414,
 }
 WSRAM_GRANULARITY = 64 * 1024
 
@@ -159,7 +167,7 @@ def param_count(config):
         return PARAM_COUNT[config]
     man = yaml.safe_load(open(WORKLOADS / f"workload_{config}_manifest.yaml"))
     for k in ("n_params", "params", "trainable_parameters", "param_count"):
-        if k in man:
+        if man.get(k):
             return int(man[k])
     raise KeyError(f"{config}: no parameter count in PARAM_COUNT or manifest")
 

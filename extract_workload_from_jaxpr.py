@@ -383,7 +383,7 @@ class WorkloadEmitter:
     def emit_manifest(self, path: str, walker_totals: dict,
                       checkpoint_path: str, args: dict,
                       git_sha: str, invariant_ok: bool,
-                      invariant_msg: str):
+                      invariant_msg: str, n_params: int = None):
         """Master manifest with provenance + hard invariant check result."""
         payload = dict(
             format="workload-manifest-v1",
@@ -391,6 +391,7 @@ class WorkloadEmitter:
             generated_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             git_sha=git_sha,
             checkpoint_path=checkpoint_path,
+            n_params=int(n_params) if n_params is not None else None,
             args=args,
             jaxpr_walker_totals={
                 k: int(v) for k, v in walker_totals.items()
@@ -924,7 +925,8 @@ def main():
                           args=vars(args),
                           git_sha=resolve_git_sha(),
                           invariant_ok=invariant_ok,
-                          invariant_msg=invariant_msg)
+                          invariant_msg=invariant_msg,
+                          n_params=n_params)
 
     print(f"[extract] wrote to {stem}_*.{{csv,yaml}}", flush=True)
 
