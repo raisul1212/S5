@@ -69,8 +69,8 @@ ACC_FROM_LOGS = {
 HEADER = [
     "config", "schedule", "params", "PEs", "area_mm2", "latency_ms",
     "throughput_ips", "energy_uJ", "avg_mW", "peak_datapath_mW",
-    "peak_chip_lo_mW", "peak_chip_hi_mW", "acc", "acc_per_mJ", "acc_per_mm2",
-    "IPW_acc_per_W_avg", "provenance",
+    "peak_chip_lo_mW", "peak_chip_hi_mW", "acc", "acc_per_Mparam", "acc_per_mJ",
+    "acc_per_mm2", "IPW_acc_per_W_avg", "provenance",
 ]
 
 # Per-inference energy by chip component. The eight fields sum to energy_full_uJ
@@ -83,8 +83,9 @@ E_HEADER = (["config", "params"]
             + ["total_uJ", "elementwise_pct", "mac_pct"])
 
 
-def derived(acc, area, energy_uJ, avg_mW):
+def derived(acc, area, energy_uJ, avg_mW, params):
     return [
+        f"{acc / (params / 1e6):.6f}",         # acc per million parameters
         f"{1000.0 * acc / energy_uJ:.6f}",     # acc per mJ
         f"{acc / area:.8f}",                   # acc per mm2
         f"{acc / (avg_mW / 1000.0):.6f}",      # IPW, average-power basis
@@ -135,7 +136,7 @@ def main():
             f"{r['throughput_ips']:.4f}", f"{energy:.6f}", f"{avg:.6f}",
             f"{r['peak_serial_mW']:.6f}",
             f"{serial['total_lo']:.6f}", f"{serial['total_hi']:.6f}",
-            f"{acc:.4f}", *derived(acc, area, energy, avg), "executed",
+            f"{acc:.4f}", *derived(acc, area, energy, avg, params), "executed",
         ])
 
         # Mambino-G additionally reports a concurrent-predictor schedule.
@@ -153,7 +154,7 @@ def main():
                 f"{area_c:.6f}", f"{lat_c:.6f}", f"{tput:.4f}",
                 f"{energy_c:.6f}", f"{avg_c:.6f}", f"{peak_c:.6f}",
                 f"{peak_c:.6f}", f"{peak_c + bg_pow:.6f}",
-                f"{acc:.4f}", *derived(acc, area_c, energy_c, avg_c),
+                f"{acc:.4f}", *derived(acc, area_c, energy_c, avg_c, params),
                 f"executed; PEs +512 and throughput derived "
                 f"({shape} rep x{rep_ratio:.4f})",
             ])
