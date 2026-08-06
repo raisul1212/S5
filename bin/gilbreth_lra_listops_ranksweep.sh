@@ -73,6 +73,13 @@ FAMILY=${FAMILY:-Mambino}
 RANK=${RANK:-40}
 SEED=${SEED:-6554595}
 EPOCHS=${EPOCHS:-40}
+# SSM_SIZE = 2P under conjugate symmetry. 16 -> P=8, 32 -> P=16.
+# THE IDENTITY: main(P) + predictor(P) == main(2P), for any H. So a Mambino at
+# P and an S5 at 2P are ISO-PARAMETER at every gate rank -- both come to
+# 12,720 + gate(r) per layer at H=128. That is the pairing for the iso-param
+# figure. Holding SSM_SIZE equal across families instead gives the iso-RANK,
+# iso-STATE comparison, where Mambino simply costs 6,168/layer more.
+SSM_SIZE=${SSM_SIZE:-16}
 
 case "$FAMILY" in
   S5)      MAMB="--use_mambino_ssm=False" ;;
@@ -92,9 +99,9 @@ esac
 
 JOB=$SLURM_JOB_ID
 SHA=$(git rev-parse HEAD)
-CKPT_DIR="./checkpoints/rs_${FAMILY}_r${RANK}_s${SEED}_${JOB}"
+CKPT_DIR="./checkpoints/rs_${FAMILY}_P$((SSM_SIZE/2))_r${RANK}_s${SEED}_${JOB}"
 mkdir -p "$CKPT_DIR"
-echo "RANKSWEEP | FAMILY=$FAMILY RANK=$RANK seed=$SEED epochs=$EPOCHS"
+echo "RANKSWEEP | FAMILY=$FAMILY P=$((SSM_SIZE/2)) RANK=$RANK seed=$SEED epochs=$EPOCHS"
 echo "  $MAMB $GATEA"
 echo "JOB=$JOB SHA=$SHA ckpt=$CKPT_DIR"
 
@@ -108,7 +115,7 @@ python -u run_train.py \
     --dataset=listops-classification \
     --epochs=$EPOCHS --jax_seed=$SEED --lr_factor=3 --n_layers=8 \
     --opt_config=BfastandCdecay \
-    --p_dropout=0 --ssm_lr_base=0.001 --ssm_size_base=16 \
+    --p_dropout=0 --ssm_lr_base=0.001 --ssm_size_base=$SSM_SIZE \
     --warmup_end=1 --weight_decay=0.04 \
     \
     2>&1 | tee "$CKPT_DIR/run.log"
