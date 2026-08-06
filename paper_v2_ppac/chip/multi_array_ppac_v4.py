@@ -50,7 +50,10 @@ CONFIG_TIER = {"config4": "320KB", "config5": "320KB",
                # the 320KB activation tier still holds. Names per NAMING_AND_STATUS.md.
                "mambinoF": "320KB", "mambinoFo": "320KB", "mambinoGF": "320KB",
                "default": "384KB"}
-TIER_KB = {"320KB": 320, "384KB": 384, "512KB": 512, "default": 384}
+TIER_KB = {"320KB": 320, "384KB": 384, "512KB": 512,
+           "1024KB": 1024, "1600KB": 1600, "2048KB": 2048, "default": 384}
+# Ladder for auto_tier(); extended past 512 KB for the L=4096, d_model=256 tasks.
+TIER_LADDER = [320, 384, 512, 1024, 1600, 2048, 2560, 3072]
 _cfg_ctx = "default"    # set inside config_ppac to route TIER lookup for F1 fix
 # ---------------------------------------------------------------------------
 # n=16 UPDATE (2026-08-06). The four v1-paper configurations are now at SIXTEEN
@@ -86,7 +89,7 @@ WSRAM_GRANULARITY = 64 * 1024
 
 def weight_sram_bytes(config):
     """INT8 weights, rounded up to the next 64 KB bank."""
-    need = PARAM_COUNT[config]          # 1 byte per parameter at INT8
+    need = param_count(config)          # 1 byte per parameter at INT8
     banks = -(-need // WSRAM_GRANULARITY)
     return banks * WSRAM_GRANULARITY
 
@@ -117,6 +120,48 @@ ELEMWISE_COMPUTE_COEFF = {"trivial": 1.0, "moderate": 3.0, "transcendental": 10.
 STRUCTURAL_MATERIALIZING_FRAC = 0.30
 
 def sram_area_mm2(bytes_): return (bytes_ * 8 / 1e6) / SRAM_MBITS_PER_MM2
+
+
+def workload_footprint_kb(config):
+    """Max activation footprint over the config's GEMMs, in KB.
+
+    The rule the model actually implements (direct_ppac.py:155-159):
+        footprint(GEMM) = M*K + M*N bytes, ONE byte per element for every dtype,
+        no partial-sum term. M-chunking is applied against the tier afterwards
+        and is not part of the sizing quantity.
+    Verified to reproduce every hand-assigned tier in CONFIG_TIER.
+    """
+    g = yaml.safe_load(open(WORKLOADS / f"workload_{config}_gemms.yaml"))["gemms"]
+    return max(k["M"] * k["K"] + k["M"] * k["N"] for k in g) / 1024.0
+
+
+def auto_tier(config):
+    """Smallest ladder tier that holds the config's max GEMM footprint."""
+    need = workload_footprint_kb(config)
+    for t in TIER_LADDER:
+        if t >= need:
+            return f"{t}KB"
+    raise ValueError(f"{config}: footprint {need:.0f} KB exceeds the tier ladder")
+
+
+def tier_of(config):
+    """Hand-assigned tier if one exists, otherwise derive it from the workload."""
+    if config in CONFIG_TIER:
+        return CONFIG_TIER[config]
+    t = auto_tier(config)
+    TIER_KB.setdefault(t, int(t[:-2]))
+    return t
+
+
+def param_count(config):
+    """Parameter count from the workload manifest, falling back to the table."""
+    if config in PARAM_COUNT:
+        return PARAM_COUNT[config]
+    man = yaml.safe_load(open(WORKLOADS / f"workload_{config}_manifest.yaml"))
+    for k in ("n_params", "params", "trainable_parameters", "param_count"):
+        if k in man:
+            return int(man[k])
+    raise KeyError(f"{config}: no parameter count in PARAM_COUNT or manifest")
 
 def wall_clock_rep(shape, jaxpr_rep):
     """Predictor overlap collapses SSM main only for Corner 3' (jaxpr_rep=24)."""
@@ -190,7 +235,7 @@ def block_ppac(g, ay, ax, ert, wc_rep, energy_rep, elem_energy_pJ_share=0):
     # M-chunk the matmul so each chunk's psum residency fits: M' = act_sram_budget / (N*4).
     # act_sram_budget approximated from CONFIG_TIER; use 75% for psum residency budget
     # (25% headroom for weight/act traffic staging).
-    act_sram_bytes = TIER_KB.get(CONFIG_TIER.get(_cfg_ctx, 'default'), 384) * 1024
+    act_sram_bytes = TIER_KB.get(tier_of(_cfg_ctx) if _cfg_ctx != 'default' else 'default', 384) * 1024
     psum_budget = int(act_sram_bytes * 0.75)
     psum_full = M * N * 4
     if psum_full > psum_budget and psum_full > 0:
@@ -338,7 +383,7 @@ def config_ppac(config, target_cyc):
     gemms = yaml.safe_load(open(WORKLOADS / f"workload_{config}_gemms.yaml"))["gemms"]
     elem = yaml.safe_load(open(WORKLOADS / f"workload_{config}_elemwise.yaml"))
     manif = yaml.safe_load(open(WORKLOADS / f"workload_{config}_manifest.yaml"))
-    tier = CONFIG_TIER[config]
+    tier = tier_of(config)
     ert = parse_ert(CHIP / f"out_accelergy_{tier}_16x16" / "ERT_summary.yaml")
     ERT_DUMMY = ert
 
@@ -382,7 +427,7 @@ def config_ppac(config, target_cyc):
     noc_area_mm2 = pe_area_mm2 * NOC_AREA_FRACTION_OF_PE
     control_area_mm2 = pe_area_mm2 * CONTROL_AREA_FRACTION_OF_PE
     wsram_area = sram_area_mm2(weight_sram_bytes(config))
-    asram_area = sram_area_mm2(TIER_KB[CONFIG_TIER[config]] * 1024)
+    asram_area = sram_area_mm2(TIER_KB[tier_of(config)] * 1024)
     ssram_area = sram_area_mm2(64 * 1024)
     total_area_mm2 = pe_area_mm2 + noc_area_mm2 + control_area_mm2 + wsram_area + asram_area + ssram_area
 
