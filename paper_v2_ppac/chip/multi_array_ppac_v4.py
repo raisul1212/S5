@@ -52,9 +52,22 @@ CONFIG_TIER = {"config4": "320KB", "config5": "320KB",
                "default": "384KB"}
 TIER_KB = {"320KB": 320, "384KB": 384, "512KB": 512, "default": 384}
 _cfg_ctx = "default"    # set inside config_ppac to route TIER lookup for F1 fix
-ACC = {"config4": 0.5993, "config5": 0.5917,
-       "corner1": 0.6089, "corner2": 0.5991, "corner3p": 0.6138,
-       "mambino2p0": 0.6050,   # 8-seed signed-gate mean (sd 0.0042, n=8; seeds 6554595/42/12345/271828/314159/1/2/3)
+# ---------------------------------------------------------------------------
+# n=16 UPDATE (2026-08-06). The four v1-paper configurations are now at SIXTEEN
+# matched seeds: the original eight (6554595/42/12345/271828/314159/1/2/3) plus
+# the pre-registered extension (4..11). These supersede the 8-seed values.
+#     config5    S5-0        0.5917 -> 0.5933  (sd 0.0071)
+#     config4    Mambino-0   0.5993 -> 0.6008  (sd 0.0065)
+#     mambino2p0 Mambino-G   0.6050 -> 0.6018  (sd 0.0052)
+#     corner1    S5-Dense    0.6089 -> 0.6102  (sd 0.0054)
+# What the extension changed: the predictor claim hardened (+0.75 pp, p=0.0013,
+# 13/16), the surprise-gate claim collapsed to null (+0.10 pp, p=0.70, 8/16),
+# and the gap to the baseline doubled and became significant (-0.83 pp,
+# p=0.0029). corner2/corner3p are RETIRED configs still at n=8; do not mix them
+# with the four above in any comparison without stating the differing n.
+ACC = {"config4": 0.6008, "config5": 0.5933,
+       "corner1": 0.6102, "corner2": 0.5991, "corner3p": 0.6138,
+       "mambino2p0": 0.6018,   # 16-seed signed-gate mean (sd 0.0052)
        # Cluster-B accuracies are 4-SEED means (6554595/42/12345/271828) -- 8-seed
        # sweeps still running. Do NOT compare acc/mJ against the 8-seed entries above
        # without matching n: on these 4 seeds corner1=0.6110, config4=0.5988,

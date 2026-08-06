@@ -61,8 +61,10 @@ CONFIGS = [
 # The model bakes accuracy in; assert the two agree so a drift in either fails
 # loudly instead of silently publishing a stale number.
 ACC_FROM_LOGS = {
-    "config5": 0.5917, "config4": 0.5993, "mambino2p0": 0.6050, "corner1": 0.6089,
+    "config5": 0.5933, "config4": 0.6008, "mambino2p0": 0.6018, "corner1": 0.6102,
 }
+# n=16 (2026-08-06): original eight seeds plus the pre-registered extension 4..11.
+# Supersedes the n=8 values 0.5917 / 0.5993 / 0.6050 / 0.6089.
 
 HEADER = [
     "config", "schedule", "params", "PEs", "area_mm2", "latency_ms",
