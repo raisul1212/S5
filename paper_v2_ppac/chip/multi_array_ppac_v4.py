@@ -372,12 +372,44 @@ def elemwise_energy(elem_yaml, ert):
 # (main fwd + main bwd + predictor fwd).
 N_TRAJ = {"config4": 3, "config5": 2, "corner1": 2, "corner2": 2, "corner3p": 3, "mambino2p0": 3,
           "mambinoF": 3, "mambinoFo": 3, "mambinoGF": 3}
+
+# Sequence length per task. state_energy() previously hardcoded L = 2048, which
+# is the ListOps length; any other task silently got the wrong state traffic
+# (IMDB at L = 4096 would have been charged half). ListOps values are unchanged
+# by this fix because 2048 is what the table returns for it.
+DATASET_L = {"listops-classification": 2048, "imdb-classification": 4096,
+             "aan-classification": 4000, "lra-cifar-classification": 1024}
+
+
+def seq_len_of(manifest, gemms=None):
+    """Sequence length from the task, falling back to the widest GEMM dimension."""
+    ds = manifest["args"].get("dataset")
+    if ds in DATASET_L:
+        return DATASET_L[ds]
+    if manifest["args"].get("seq_len"):
+        return int(manifest["args"]["seq_len"])
+    if gemms:
+        return max(max(g["M"], g["N"]) for g in gemms)
+    raise KeyError(f"cannot determine sequence length for dataset {ds!r}")
+
+
+def n_traj_of(manifest, config):
+    """State trajectories held per timestep.
+
+    Two for a plain bidirectional S5 layer (forward + backward main scan); three
+    when a predictor branch is present, which adds one forward trajectory.
+    """
+    if config in N_TRAJ:
+        return N_TRAJ[config]
+    return 3 if manifest["args"].get("use_mambino_ssm") else 2
+
+
 def state_energy(manifest, config, ert):
     args = manifest["args"]
-    L = 2048; n_layers = args["n_layers"]
+    L = seq_len_of(manifest); n_layers = args["n_layers"]
     n_dir = 2 if args["bidirectional"] else 1
     P = args["ssm_size_base"] // 2
-    n_traj = N_TRAJ[config]
+    n_traj = n_traj_of(manifest, config)
     lines_per_step = math.ceil(2 * P / LINE_BYTES)
     reads = L * n_layers * n_dir * n_traj * lines_per_step
     return (reads * ert['state_sram']['read'] + reads * ert['state_sram']['write']), reads
