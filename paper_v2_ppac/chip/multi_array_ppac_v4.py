@@ -65,6 +65,32 @@ _cfg_ctx = "default"    # set inside config_ppac to route TIER lookup for F1 fix
 # and the gap to the baseline doubled and became significant (-0.83 pp,
 # p=0.0029). corner2/corner3p are RETIRED configs still at n=8; do not mix them
 # with the four above in any comparison without stating the differing n.
+# ---------------------------------------------------------------------------
+# Weight SRAM is sized PER CONFIGURATION from its actual parameter count, not
+# fixed. At INT8 one parameter is one byte; capacity is rounded up to the next
+# 64 KB bank granularity. The previous hardcoded 256 KB was defensible on
+# ListOps, where every configuration fits under it, but it gave a configuration
+# using 56% of the baseline's parameters no area credit for doing so, and it is
+# not physically valid at IMDB scale, where ~1.31 M parameters need ~1.28 MB.
+#
+# CAVEAT, stated rather than hidden: the Accelergy ERTs are generated per
+# ACTIVATION tier, so per-access weight-SRAM ENERGY still uses the 256 KB-tier
+# figures. A smaller SRAM has lower per-access energy, so the energy numbers are
+# conservative for the smaller configurations; only area responds to this change.
+PARAM_COUNT = {
+    "config5": 105_738, "config4": 105_738, "mambino2p0": 105_754,
+    "corner1": 188_490, "corner2": 139_402, "corner3p": 188_682,
+}
+WSRAM_GRANULARITY = 64 * 1024
+
+
+def weight_sram_bytes(config):
+    """INT8 weights, rounded up to the next 64 KB bank."""
+    need = PARAM_COUNT[config]          # 1 byte per parameter at INT8
+    banks = -(-need // WSRAM_GRANULARITY)
+    return banks * WSRAM_GRANULARITY
+
+
 ACC = {"config4": 0.6008, "config5": 0.5933,
        "corner1": 0.6102, "corner2": 0.5991, "corner3p": 0.6138,
        "mambino2p0": 0.6018,   # 16-seed signed-gate mean (sd 0.0052)
@@ -355,7 +381,7 @@ def config_ppac(config, target_cyc):
     pe_area_mm2 = total_pe * PE_AREA_UM2 / 1e6
     noc_area_mm2 = pe_area_mm2 * NOC_AREA_FRACTION_OF_PE
     control_area_mm2 = pe_area_mm2 * CONTROL_AREA_FRACTION_OF_PE
-    wsram_area = sram_area_mm2(256 * 1024)
+    wsram_area = sram_area_mm2(weight_sram_bytes(config))
     asram_area = sram_area_mm2(TIER_KB[CONFIG_TIER[config]] * 1024)
     ssram_area = sram_area_mm2(64 * 1024)
     total_area_mm2 = pe_area_mm2 + noc_area_mm2 + control_area_mm2 + wsram_area + asram_area + ssram_area
