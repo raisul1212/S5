@@ -31,7 +31,10 @@ from jax.nn.initializers import normal
 class PAPSSM(nn.Module):
     H: int
     P: int
-    pap_gate: bool = True          # anchor 1 on/off (False => linear error-integrator == S5)
+    pap_gate: bool = True          # anchor 1 on/off (False => linear error-integrator)
+    pap_predict: bool = True       # PREDICTOR mechanism: eps=u-C h (True) vs eps=u (False, input-integration).
+                                   #   False is the T1 ATTRIBUTION ablation: identical arch (real pole, RMSNorm,
+                                   #   C_out, param count) EXCEPT no prediction feedback -> isolates the predictor.
     gate_alpha: float = 0.9        # surprise-EMA decay
     a_init: float = 2.2            # sigmoid(2.2) ~ 0.90 decay
     bc_scale: float = 0.5          # B,C init stddev = bc_scale/H  (keeps BC~O(bc_scale) -> stable)
@@ -58,10 +61,12 @@ class PAPSSM(nn.Module):
         al = self.gate_alpha
         gated = self.pap_gate
 
+        predict = self.pap_predict
+
         def step(carry, u):
             h, m, v, cnt = carry
-            xhat = self.C @ h                                   # (H,)
-            eps = u - xhat
+            xhat = self.C @ h                                   # (H,) always computed (iso-param/graph parity)
+            eps = (u - xhat) if predict else u                  # predictor feedback (True) vs input-integration (False)
             n = np.sqrt(np.sum(eps * eps) + 1e-8)
             denom = np.where(cnt > 0, 1.0 - al ** cnt, 1.0)     # avoid 0/0 in the unselected where-branch
             mu = np.where(cnt > 0, m / denom, 0.0)              # trailing surprise stats (causal)
@@ -80,7 +85,7 @@ class PAPSSM(nn.Module):
         return ys
 
 
-def init_PAPSSM(H, P, pap_gate=True, gate_alpha=0.9, **unused):
+def init_PAPSSM(H, P, pap_gate=True, pap_predict=True, gate_alpha=0.9, **unused):
     """Mirror the init_S5SSM(...) -> partial(SSM, ...) convention so train.py can swap it in.
     PAP needs no HiPPO/Lambda/V; the extra S5 kwargs (Lambda_*_init, V, ...) are accepted+ignored."""
-    return partial(PAPSSM, H=H, P=P, pap_gate=pap_gate, gate_alpha=gate_alpha)
+    return partial(PAPSSM, H=H, P=P, pap_gate=pap_gate, pap_predict=pap_predict, gate_alpha=gate_alpha)

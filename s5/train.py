@@ -166,6 +166,7 @@ def train(args):
               f"gate={getattr(args, 'pap_gate', True)})")
         ssm_init_fn = init_PAPSSM(H=args.d_model, P=_pap_P,
                                   pap_gate=getattr(args, 'pap_gate', True),
+                                  pap_predict=getattr(args, 'pap_predict', True),
                                   gate_alpha=getattr(args, 'gate_alpha', 0.9))
 
     if retrieval:

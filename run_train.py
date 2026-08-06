@@ -235,7 +235,11 @@ if __name__ == "__main__":
 							 "(real state, no conj_sym halving). --pap_gate toggles anchor 1.")
 	parser.add_argument("--pap_gate", type=str2bool, default=True,
 						help="PAP anchor 1: surprise-gated integration g=sigmoid(kappa*z+b). "
-							 "False => g=1 (linear error-integrator, algebraically an S5) = the T1 baseline.")
+							 "False => g=1 (linear error-integrator). Deprioritized (diverges; win is the predictor).")
+	parser.add_argument("--pap_predict", type=str2bool, default=True,
+						help="PAP predictor mechanism: eps=u-C*h (True) vs eps=u (False, input-integration). "
+							 "False = the T1 ATTRIBUTION ablation: identical arch (real pole, RMSNorm, C_out, param "
+							 "count) minus ONLY the prediction feedback -> isolates whether the predictor is the win.")
 	parser.add_argument("--mlm_write_gate", type=str2bool, default=False,
 						help="Persistent-memory mode. False (default) = escalation mode (gate the READ). "
 							 "True = the top is READ every token (always on, cheap broadcast) and the "
