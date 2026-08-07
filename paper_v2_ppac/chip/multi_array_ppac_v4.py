@@ -111,9 +111,23 @@ ACC = {"config4": 0.6008, "config5": 0.5933,
        # mambino2p0=0.6025, i.e. the subset runs high for corner1 and low for the gate.
        "mambinoF": 0.6051, "mambinoFo": 0.5966, "mambinoGF": 0.6024}
 
-# Configs whose K=40/N=40 low-rank gate blocks may relax to >=62.5% util (v1 rule).
-# Module-level so a driver can toggle it for a no-relaxation sensitivity sweep.
-RELAX_SET = {"corner2", "corner3p", "v2pilot_dense_r40"}
+# Gate ranks that do not tile onto a standard {8,16,32,64} array width without
+# extra contraction tiles, and therefore get the util-vs-latency relaxation.
+# Rank 40 reaches 100% util only on an 8-wide axis (40 = 5x8), which costs 5
+# contraction tiles and can exceed the per-config bottleneck target; the relaxed
+# rule lets the picker take a 64-wide array at 62.5% util with one tile instead.
+# Powers of two (8, 16, 32, 64) tile exactly and need no relaxation.
+#
+# This is SHAPE-driven, not name-driven. It used to be gated on a config
+# allowlist (RELAX_SET = corner2, corner3p, v2pilot_dense_r40), which meant an
+# identical architecture registered under a different config name would be held
+# to 100% util and priced differently. The rank sweep registers rank-40 points
+# under new names, so the allowlist would have made rs_Mambino_r40 and corner3p
+# disagree about the same design. Behaviour is unchanged for every existing
+# config: the retired ones have K=40 blocks and were already in the set, and the
+# four v1 configs contain no K=40 block at all.
+RELAX_RANKS = {40}
+RELAX_SET = {"corner2", "corner3p", "v2pilot_dense_r40"}   # retained for reference
 
 # Elemwise cost coefficients (units of mac_energy per scalar op) — H3 keeps compute
 # side of the earlier model but adds memory traffic below.
@@ -442,7 +456,7 @@ def config_ppac(config, target_cyc):
         # Relax util threshold only for low-rank gate shapes where K=40 or N=40 in
         # Corner 2 (Pure S5 low-rank) and Corner 3' (Mambino low-rank). This is a
         # util-vs-latency policy, not a divisibility limitation.
-        is_low_rank_gate = (g['K'] == 40 or g['N'] == 40) and config in RELAX_SET
+        is_low_rank_gate = (g['K'] in RELAX_RANKS or g['N'] in RELAX_RANKS)
         min_util = 62.5 if is_low_rank_gate else 100.0
         _, _, _, ay, ax = choose_array(g, target_cyc, wc_rep, min_util=min_util)
         b = block_ppac(g, ay, ax, ert, wc_rep, energy_rep)
