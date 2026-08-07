@@ -11,6 +11,8 @@ def load_bytes(path, n=None, offset=0):
     with open(path, "rb") as f:
         b = f.read()
     b = b[offset:] if n is None else b[offset:offset + n]
+    if n is not None:
+        assert len(b) == n, f"{path}: wanted {n} bytes at offset {offset}, got {len(b)} (file too short)"
     return np.frombuffer(b, dtype=np.uint8).astype(np.int64)
 
 

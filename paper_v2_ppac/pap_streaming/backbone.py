@@ -21,7 +21,7 @@ def _make_ssm_init(a):
         from s5.pap_ssm import init_PAPSSM
         pred = a.get("pap_predict")
         return init_PAPSSM(H=a["d_model"], P=a["ssm_size_base"],
-                           pap_gate=a.get("pap_gate", False),
+                           pap_gate=a.get("pap_gate", True),   # mirror train.py default (meta always has the key)
                            pap_predict=(True if pred is None else pred),
                            gate_alpha=a.get("gate_alpha", 0.9))
     from s5.ssm import init_S5SSM
@@ -48,7 +48,8 @@ def build_model(a, training=False):
     from s5.seq_model import LMModel
     return LMModel(ssm=_make_ssm_init(a), d_output=V, d_model=a["d_model"], n_layers=a["n_layers"],
                    activation=a.get("activation_fn", "gelu"), batchnorm=False,
-                   prenorm=a.get("prenorm", True), glu_rank=a.get("glu_rank", 0), training=training)
+                   prenorm=a.get("prenorm", True), glu_rank=a.get("glu_rank", 0),
+                   glu_structure=a.get("glu_structure", "dense"), training=training)
 
 
 def load_backbone(msgpack_path, meta_path):
