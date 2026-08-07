@@ -24,21 +24,21 @@ def _seg_stream(eng_path, mid_path, seg, eng_off, mid_off, mid_label, mid_is_eng
     return S.build_stream([("EN", en[:seg]), (mid_label, mid), ("EN2", en[seg:2 * seg])])
 
 
-def run_condition(pap, s5, eng, midpath, seg, n, chunk, etas, mid_label, mid_is_eng, en_base):
+def run_condition(backbones, eng, midpath, seg, n, chunk, etas, mid_label, mid_is_eng, en_base):
     """Returns per-arm arrays of L2-segment BPC over n samples + averaged recovery curves."""
     rng = np.random.RandomState(1234)
     arms = ["frozen", "bias", "random"] + [f"adapt_e{e}" for e in etas]
     L2 = mid_label
-    acc = {bk: {arm: [] for arm in arms} for bk in ("PAP", "S5")}
-    probe = {bk: {"early": [], "late": []} for bk in ("PAP", "S5")}   # FROZEN L2 early/late thirds
-    curves = {bk: {} for bk in ("PAP", "S5")}     # arm -> list of (centers, binned) for L2 region
+    acc = {bk: {arm: [] for arm in arms} for bk, _ in backbones}
+    probe = {bk: {"early": [], "late": []} for bk, _ in backbones}   # FROZEN L2 early/late thirds
+    curves = {bk: {} for bk, _ in backbones}      # arm -> list of (centers, binned) for L2 region
     for s in range(n):
         eoff = en_base + s * (3 * seg + 5000)
         moff = s * (2 * seg + 3000)
         st = _seg_stream(eng, midpath, seg, eoff, moff, L2, mid_is_eng)
         ids = st["ids"]; tgt = ids[1:]; spans = st["spans"]
         la, lb = spans[1][1], spans[1][2]                     # L2 segment [la, lb)
-        for bk, (model, params) in (("PAP", pap), ("S5", s5)):
+        for bk, (model, params) in backbones:
             feat, base = B.extract(model, params, ids[:-1])
             randf = rng.standard_normal(feat.shape).astype(np.float32)
             runs = {
@@ -61,6 +61,7 @@ def run_condition(pap, s5, eng, midpath, seg, n, chunk, etas, mid_label, mid_is_
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pap_msgpack", required=True); ap.add_argument("--pap_meta", required=True)
+    ap.add_argument("--pap_inp_msgpack", default=""); ap.add_argument("--pap_inp_meta", default="")  # error-feedback OFF control
     ap.add_argument("--s5_msgpack", required=True); ap.add_argument("--s5_meta", required=True)
     ap.add_argument("--eng", required=True); ap.add_argument("--l2_fr", required=True); ap.add_argument("--l2_ru", required=True)
     ap.add_argument("--seg", type=int, default=20000); ap.add_argument("--n", type=int, default=4)
@@ -70,16 +71,19 @@ def main():
     etas = [float(x) for x in args.etas.split(",")]
 
     print(f"VERIFY  seg={args.seg} n={args.n} chunk={args.chunk} etas={etas}")
-    pap = B.load_backbone(args.pap_msgpack, args.pap_meta)[:2]
-    s5 = B.load_backbone(args.s5_msgpack, args.s5_meta)[:2]
+    backbones = [("PAP", B.load_backbone(args.pap_msgpack, args.pap_meta)[:2])]
+    if args.pap_inp_msgpack:   # error-feedback OFF (eps=u) -- the causal control for in-context adaptation
+        backbones.append(("PAPinp", B.load_backbone(args.pap_inp_msgpack, args.pap_inp_meta)[:2]))
+    backbones.append(("S5", B.load_backbone(args.s5_msgpack, args.s5_meta)[:2]))
+    names = [bk for bk, _ in backbones]
 
     conds = [("FR", args.l2_fr, False), ("RU", args.l2_ru, False), ("EN-noshift", None, True)]
     allsave = {}
     for label, midpath, mid_is_eng in conds:
-        acc, curves, arms, probe = run_condition(pap, s5, args.eng, midpath, args.seg, args.n,
+        acc, curves, arms, probe = run_condition(backbones, args.eng, midpath, args.seg, args.n,
                                                  args.chunk, etas, label, mid_is_eng, args.eng_base)
         print(f"\n==================== {label}  (L2-segment BPC, mean+/-std over n={args.n}) ====================")
-        for bk in ("PAP", "S5"):
+        for bk in names:
             fr = np.array(acc[bk]["frozen"])
             print(f"  {bk}:")
             for arm in arms:
@@ -91,7 +95,7 @@ def main():
             print(f"      in-context(frozen): L2 early-third {e:.3f} -> late-third {l:.3f} "
                   f"({100*(e-l)/e:+.1f}% within-segment drop = recurrence adapting in-context)")
         # save curves (averaged across samples) for plotting
-        for bk in ("PAP", "S5"):
+        for bk in names:
             for arm, lst in curves[bk].items():
                 m = min(len(x) for x in lst); allsave[f"{label}_{bk}_{arm}"] = np.mean([x[:m] for x in lst], 0)
     if args.out:
