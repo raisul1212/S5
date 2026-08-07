@@ -281,6 +281,7 @@ class LMModel(nn.Module):
 
     def __call__(self, x, integration_timesteps):
         x = self.encoder(x, integration_timesteps)   # (L, d_model) -- no pooling
+        self.sow("intermediates", "pre_decode", x)   # Stage-C: expose pre-decoder features (no-op w/o mutable)
         x = self.decoder(x)                           # (L, vocab)
         return nn.log_softmax(x, axis=-1)             # (L, vocab) per-position log-probs
 
