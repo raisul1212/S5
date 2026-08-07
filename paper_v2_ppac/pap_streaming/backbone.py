@@ -40,7 +40,7 @@ def _make_ssm_init(a):
                       Lambda_im_init=Lambda.imag, V=Vm, Vinv=Vinv, C_init=a["C_init"],
                       discretization=a["discretization"], dt_min=a["dt_min"], dt_max=a["dt_max"],
                       conj_sym=a.get("conj_sym", True), clip_eigs=a.get("clip_eigs", False),
-                      bidirectional=False)
+                      bidirectional=False, out_rmsnorm=a.get("s5_out_rmsnorm", False))
 
 
 def build_model(a, training=False):

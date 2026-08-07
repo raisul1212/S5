@@ -154,7 +154,8 @@ def train(args):
                                  dt_max=args.dt_max,
                                  conj_sym=args.conj_sym,
                                  clip_eigs=args.clip_eigs,
-                                 bidirectional=args.bidirectional)
+                                 bidirectional=args.bidirectional,
+                                 out_rmsnorm=getattr(args, 's5_out_rmsnorm', False))
 
     # PAP override: a pure error-based predictor SSM (sequential, surprise-gated).
     # Swaps the SSM in the standard causal LM path; no HiPPO/Lambda needed. Uses a

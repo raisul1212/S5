@@ -229,6 +229,10 @@ if __name__ == "__main__":
 							 "the top help BPC at all?). 0.0 = force alpha=0 (bottom only, top dead). "
 							 "Used to measure the top's marginal value independent of the gate.")
 	# ── Pure Adaptive Predictor (PAP): a pure error-based predictor SSM ──
+	parser.add_argument("--s5_out_rmsnorm", type=str2bool, default=False,
+						help="Stage-C control: per-token RMSNorm on the S5 SSM output (mirrors PAP's state "
+							 "normalization). Off = byte-identical S5. Tests whether output normalization gives "
+							 "S5 the OOD stability PAP has.")
 	parser.add_argument("--use_pap", type=str2bool, default=False,
 						help="Replace the SSM in the causal LM path with PAPSSM (pure adaptive "
 							 "predictor: sequential surprise-gated error-integrator). P = --ssm_size_base "

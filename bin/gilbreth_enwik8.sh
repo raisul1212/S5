@@ -72,6 +72,7 @@ EPOCHS=$(( LM_STEPS / EVAL_EVERY ))
 
 case $MODEL in
   s5)         MFLAGS="--use_mambino_ssm=False"; TAG="s5" ;;
+  s5rms)      MFLAGS="--use_mambino_ssm=False --s5_out_rmsnorm=True"; TAG="s5rms" ;;
   mambino)    MFLAGS="--use_mambino_ssm=True --surprise_gate=False"; TAG="mambino" ;;
   mambino2p0) MFLAGS="--use_mambino_ssm=True --surprise_gate=True --gate_range=$GATE_RANGE --gate_kappa_init=0.0 --gate_bias_init=2.0 --gate_alpha=0.9"; TAG="mambino2p0_$GATE_RANGE" ;;
   pap)        PAP_GATE=${PAP_GATE:-True}; PAP_PREDICT=${PAP_PREDICT:-True}; MFLAGS="--use_pap=True --pap_gate=$PAP_GATE --pap_predict=$PAP_PREDICT --gate_alpha=0.9"; _PG=$([ "$PAP_GATE" = "True" ] && echo "gated" || echo "linear"); _PR=$([ "$PAP_PREDICT" = "True" ] && echo "err" || echo "inp"); TAG="pap_${_PG}_${_PR}" ;;

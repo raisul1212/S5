@@ -173,6 +173,10 @@ class S5SSM(nn.Module):
     # values: 0.005 - 0.03.  Applied as post-scan Gaussian to xs before
     # C_tilde readout.
     read_sigma: float = 0.0
+    # Stage-C control: per-token RMSNorm on the SSM output (mirrors PAP's state
+    # normalization). Off (default) => byte-identical. Tests whether output
+    # normalization confers PAP's OOD stability on an otherwise-standard S5.
+    out_rmsnorm: bool = False
 
     """ The S5 SSM
         Args:
@@ -318,6 +322,8 @@ class S5SSM(nn.Module):
                            input_sequence,
                            self.conj_sym,
                            self.bidirectional)
+            if self.out_rmsnorm:   # Stage-C control: magnitude-invariant SSM output (per token)
+                ys = ys * jax.lax.rsqrt(np.mean(ys * ys, axis=-1, keepdims=True) + 1e-6)
             Du = jax.vmap(lambda u: self.D * u)(input_sequence)
             return ys + Du
 
@@ -406,6 +412,7 @@ def init_S5SSM(H,
                adc_out_enabled=True,
                retention_sigma=0.0,
                read_sigma=0.0,
+               out_rmsnorm=False,
                ):
     """Convenience function that will be used to initialize the SSM.
        Same arguments as defined in S5SSM above.  noise_sigma/adc_bits/
@@ -434,4 +441,5 @@ def init_S5SSM(H,
                    dac_in_enabled=dac_in_enabled,
                    adc_out_enabled=adc_out_enabled,
                    retention_sigma=retention_sigma,
-                   read_sigma=read_sigma)
+                   read_sigma=read_sigma,
+                   out_rmsnorm=out_rmsnorm)
